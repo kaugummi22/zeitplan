@@ -711,7 +711,15 @@ html.fit body { touch-action: pan-x pan-y; }
 .cell .tdo.done { background: var(--accent); border-color: var(--accent); }
 .cell.has-todo > .inp, .pw.has-todo > .inp { padding-left: 26px; }
 .cell.is-done > .inp, .pw.is-done > .inp { text-decoration: line-through; opacity: 0.6; }
-.cal-e.done { text-decoration: line-through; opacity: 0.6; }
+.cal-ln { display: block; }
+.cal-ln.td { display: flex; gap: 5px; align-items: flex-start; }
+.cal-ck { flex: none; position: relative; box-sizing: border-box; width: 12px; height: 12px; margin-top: 0.15em; border: 1.5px solid color-mix(in srgb, var(--ink) 55%, transparent); border-radius: 3px; background: var(--surface); cursor: pointer; }
+.cal-ln.on .cal-ck { background: var(--accent); border-color: var(--accent); }
+.cal-ln.on .cal-ck::after { content: "✓"; position: absolute; inset: 0; display: grid; place-items: center; color: var(--surface); font-size: 9px; font-weight: 700; font-style: normal; line-height: 1; }
+.cal-ln.on > span { text-decoration: line-through; opacity: 0.6; }
+.cal-e.has-list { -webkit-line-clamp: 8; }
+.cal-week .cal-ck, .cal-dayview .cal-ck { width: 16px; height: 16px; margin-top: 0.1em; border-radius: 4px; }
+.cal-week .cal-ln.on .cal-ck::after, .cal-dayview .cal-ln.on .cal-ck::after { font-size: 12px; }
 .d-todof { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
 /* Mehrere To-do-Punkte in einem Eintrag */
 .tdp { cursor: pointer; position: relative; display: inline-block; box-sizing: border-box; width: 15px; height: 15px; margin-right: 2px; vertical-align: -2px; overflow: hidden; color: transparent; font-size: 11px; line-height: 13px; font-weight: 400; font-style: normal; text-decoration: none; border: 1.5px solid color-mix(in srgb, var(--ink) 55%, transparent); border-radius: 4px; background: var(--surface); }
@@ -2636,6 +2644,16 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
 
   // ---------- Kalenderansicht (Woche/Monat) – zeigt dieselben Einträge wie die Liste ----------
   const SLOT_SHORT = { morgen: "Morgen", nachmittag: "Nachmittag", abend: "Abend", notiz: "Notiz" };
+  // Kalender: Eintrag mit Formatierung (durchgestrichen usw.), jede Zeile für sich, To-dos untereinander mit Kästchen zum Abhaken
+  function calBody(pp, k, s, part) {
+    const ct = (n) => ' data-ct="' + k + "|" + s + "|" + part + "|" + n + '"';
+    const lines = tdpLines(pp.html || "").filter((l) => htmlToPlain(l).trim());
+    let out = lines.map((l, j) => { const m = TDP_RE.exec(l); if (!m) return '<span class="cal-ln">' + l + "</span>";
+      const n = lines.slice(0, j).filter((q) => TDP_RE.test(q)).length, on = m[2] === "☑";
+      return '<span class="cal-ln td' + (on ? " on" : "") + '"><i class="cal-ck"' + ct(n) + ' role="checkbox" aria-checked="' + on + '" title="' + (on ? "Erledigt – antippen, um es wieder zu öffnen" : "Abhaken") + '"></i><span>' + m[1] + l.slice(m[0].length).replace(/^\s/, "") + "</span></span>"; }).join("");
+    if (pp.todo && !tdpHas(pp.html)) out = '<span class="cal-ln td' + (pp.done ? " on" : "") + '"><i class="cal-ck"' + ct(-1) + ' role="checkbox" aria-checked="' + !!pp.done + '"></i><span>' + (out || "To-do") + "</span></span>";
+    return out;
+  }
   function slotText(x) {
     if (!x) return "";
     const parts = [x.text || htmlToPlain(x.html || "")];
@@ -2670,8 +2688,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         const x = day[s]; if (!slotText(x)) return;
         partsOf(x).forEach((pp, i) => {
           const txt = htmlToPlain(pp.html || "").replace(/\s+/g, " ").trim(); if (!txt && !pp.todo) return;
-          const tt = timeTxt(pp), col = pp.color || "", ck = pp.todo && !tdpHas(pp.html) ? (pp.done ? "☑ " : "☐ ") : "";
-          inner += '<button type="button" class="cal-e' + (col ? " f-" + col : "") + (pp.todo && pp.done ? " done" : "") + '" data-copen="' + k + "|" + s + "|" + (i + 1) + '" title="' + esc(SLOT_SHORT[s] + ": " + txt + (tt ? " · " + tt : "")) + '">' + (week ? '<span class="cal-s">' + SLOT_SHORT[s] + (tt ? " · " + esc(tt) : "") + "</span>" : "") + esc(ck + txt) + "</button>";
+          const tt = timeTxt(pp), col = pp.color || "";
+          inner += '<button type="button" class="cal-e' + (col ? " f-" + col : "") + (tdpHas(pp.html) ? " has-list" : "") + '" data-copen="' + k + "|" + s + "|" + (i + 1) + '" title="' + esc(SLOT_SHORT[s] + ": " + txt + (tt ? " · " + tt : "")) + '">' + (week ? '<span class="cal-s">' + SLOT_SHORT[s] + (tt ? " · " + esc(tt) : "") + "</span>" : "") + calBody(pp, k, s, i + 1) + "</button>";
         });
       });
       SLOTS.forEach(([s]) => seriesOn(k, s).forEach((sr) => { inner += '<button type="button" class="cal-e cal-ser' + (sr.color ? " f-" + sr.color : "") + '" data-ser="' + esc(sr.id) + "|" + k + '" title="Regelmässig: ' + esc((sr.text || "Termin") + (sr.from ? " · " + timeTxt(sr) : "")) + '">' + (week ? '<span class="cal-s">' + SLOT_SHORT[s] + (sr.from ? " · " + esc(timeTxt(sr)) : "") + "</span>" : "") + "↻ " + esc(sr.text || "Termin") + "</button>"; }));
@@ -2684,7 +2702,9 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const sd = fromKey(selK), day = state.days[selK] || {};
       let dv = '<div class="cal-dayview"><h4>' + esc(TAGE[sd.getDay()] + ", " + fmt(sd)) + "</h4>";
       let any = false;
-      SLOTS.forEach(([s]) => { const x = day[s], txt = slotText(x); if (!txt) return; any = true; const col = (x && x.color) || (x && x.pcolors && x.pcolors[0]) || ""; dv += '<button type="button" class="cal-e' + (col ? " f-" + col : "") + '" data-copen="' + selK + "|" + s + '"><span class="cal-s">' + SLOT_SHORT[s] + "</span>" + esc(txt) + "</button>"; });
+      SLOTS.forEach(([s]) => { const x = day[s]; if (!slotText(x) && !(x && x.todo)) return; any = true;
+        partsOf(x).forEach((pp, i) => { const body = calBody(pp, selK, s, i + 1); if (!body) return; const tt = timeTxt(pp);
+          dv += '<button type="button" class="cal-e' + (pp.color ? " f-" + pp.color : "") + '" data-copen="' + selK + "|" + s + "|" + (i + 1) + '"><span class="cal-s">' + SLOT_SHORT[s] + (tt ? " · " + esc(tt) : "") + "</span>" + body + "</button>"; }); });
       if (!any) dv += '<span style="color:var(--muted)">Keine Einträge.</span>';
       dv += '<button type="button" class="btn ghost cal-add" data-copen="' + selK + '|morgen">＋ Eintrag</button></div>';
       h += dv;
@@ -3054,6 +3074,15 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     openDetail(b.closest(".day").dataset.key, cell.dataset.slot, part);
   });
 
+  // Kalender: Kästchen antippen hakt ab (ohne den Eintrag zu öffnen)
+  document.addEventListener("click", (e) => {
+    const c = e.target.closest && e.target.closest("#cal .cal-ck[data-ct]"); if (!c) return;
+    e.preventDefault(); e.stopPropagation();
+    const [k, s, pt, nn] = c.dataset.ct.split("|"), part = +pt, n = +nn, x = slotOf(k, s), sf = sfx(part);
+    if (n < 0) { x["done" + sf] = !x["done" + sf]; if (!x["done" + sf]) delete x["done" + sf]; }
+    else { const h = richOf(x, part), it = tdpItems(h)[n]; if (!it) return; x["html" + sf] = tdpSet(h, n, !it.done); x["text" + sf] = htmlToPlain(x["html" + sf]); }
+    scheduleSave(k, 300); render();
+  }, true);
   // ---------- Einträge mit der Maus auf einen anderen Tag ziehen (Computer) ----------
   // Leeres Ziel: Eintrag wird verschoben. Besetztes Ziel: die beiden Einträge tauschen den Platz. «↶ Rückgängig» oben und Strg+Z.
   const MV = { undo: [], skipClick: false };
@@ -3098,7 +3127,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   // Anfassen: Liste (Feld eines Tages) oder Kalender (Eintrag); loslassen über einem Feld bzw. einem Kalendertag
   function mvSource(e) {
     if (e.pointerType !== "mouse" || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey) return null;
-    if (e.target.closest(".tdp, .tdo, .tdb, .exp, .rz, .tl, .ts, .lband, a, button:not(.cal-e)")) return null;
+    if (e.target.closest(".tdp, .tdo, .tdb, .cal-ck, .exp, .rz, .tl, .ts, .lband, a, button:not(.cal-e)")) return null;
     const ce = e.target.closest("#cal .cal-e[data-copen]");
     if (ce) { const p = ce.dataset.copen.split("|"); if (p.length < 3) return null; return { key: p[0], slot: p[1], cal: true, label: ce.textContent }; }
     const t = e.target.closest("#list .day .cell .inp"); if (!t || t.isContentEditable) return null;
