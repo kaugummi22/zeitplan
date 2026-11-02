@@ -81,6 +81,7 @@ umfrage/index.html    ← Abstimmungsseite für die Handys der Klasse (eigenstä
   - Ausblenden mit dem Auge.
   - Spaltenhöhen einzeln einstellbar.
   - Reihen zwischen Jahren ziehen.
+  - Materialsammlung mit Lektionsplanung oder Bildern in den Notizen (z. B. aus einer Lektion umgewandelt, `matFull` in `openLessonDetail`) öffnet wie eine Lektion: Lektionsplanung, Lernziele, Notizen mit Bildern. Sonst das einfache Fenster.
   - Materialsammlungen: «◂ Notiz klein» / «▸ Notiz zeigen» (`m.slim`, ohne Wahl klein ab 7 Dokumenten und leerer Notiz) – Dokumente dann in Spalten über die ganze Breite.
   - Literatur-Zeichen «Lit» (kleines Kästchen, kein Emoji; `r.lit`): Häkchen in der Reihe oder Rechtsklick im Jahresplan; Filter «Reihen ▾» → Nur Lit / Ohne Lit (`UP.lit`).
   - Neben «Leitfrage oder Leitproblem» aufklappbare «Notizen» (`r.arbnotiz`, Arbeitsnotizen zur Überarbeitung; offen, wenn gefüllt; Zustand pro Gerät `zeitplan-arb`), werden durchsucht, aber nicht gedruckt.
