@@ -5348,7 +5348,9 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     if (isLN(i)) {
       const x = lessonX(r, i); dirtyU.add(id);
       const isMat = !!lnItemOf(r, i).mat;
-      openDetailBox({ editDocs: true, title: r.title || "Reihe", sub: lnLabel(r, i), x, textLabel: isMat ? "Kurzzusammenfassung" : "Kurzeintrag in der Tabelle", plan: isMat ? undefined : x.plan, reiheFiles: [...(r.mainFiles || []), ...(r.files || [])],
+      // Materialsammlung mit Lektionsplanung oder Bildern in den Notizen (z. B. aus einer Lektion umgewandelt): ganzes Lektionsfenster
+      const matFull = isMat && (hasPlan(x.plan) || /<(img|figure)\b/i.test(x.notesHtml || ""));
+      openDetailBox({ editDocs: true, title: r.title || "Reihe", sub: lnLabel(r, i), x, textLabel: isMat ? "Kurzzusammenfassung" : "Kurzeintrag in der Tabelle", plan: isMat && !matFull ? undefined : x.plan, reiheFiles: [...(r.mainFiles || []), ...(r.files || [])],
         onPrint: () => { const rr = U.reihen[id]; if (rr) printLesson(rr, i); },
         changed: () => { const rr = U.reihen[id]; if (rr) { putLessonX(rr, i, x); saveReihe(id, 900); } },
         onClose: () => { uFlush("r:" + id); renderU(); if (after) after(); } });
