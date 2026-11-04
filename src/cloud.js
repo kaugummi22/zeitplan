@@ -370,6 +370,12 @@
       return { id, url: "/_blob/" + id, sizeBytes: blob.size, contentType: (opts && opts.type) || blob.type || "application/octet-stream" };
     },
     async delete(id) { try { const m = await getMeta(DOKS + "/" + id); if (m) await g("/me/drive/items/" + m.id, { method: "DELETE" }); } catch (e) {} },
+    // dasselbe Dokument mit neuem Inhalt überschreiben (keine Kopie)
+    async replace(id, blob) {
+      if (!/^[0-9a-f]{8,64}$/.test(id)) throw new Error("Dokument unbekannt");
+      const r = await putFile(DOKS + "/" + id, blob); if (!r.ok) { const e = new Error("Speichern in OneDrive: " + r.status); e.status = r.status; throw e; }
+      delete docCache[id]; return true;
+    },
   };
   const downloads = {
     async save(o) {
@@ -473,6 +479,13 @@
       },
       async saveVersion() { throw new Error("nicht verfügbar"); },
       async exists(path) { return !!(await getMeta(toDrive(path))); },
+      // Datei samt Versionsstand lesen bzw. nur dann überschreiben, wenn sie seither nicht anderswo geändert wurde (Word-Dokumente in der App bearbeiten)
+      async readEx(path) { const m = await getMeta(toDrive(path)); if (!m) throw new Error("nicht gefunden"); return { blob: await download(m), etag: m.eTag }; },
+      async writeIf(path, blob, etag) {
+        const r = await putFile(toDrive(path), blob, etag || null);
+        if (!r.ok) { const e = new Error(r.status === 423 ? "Die Datei ist gerade geöffnet" : r.status === 412 ? "Die Datei wurde inzwischen geändert" : "Speichern in OneDrive: " + r.status); e.status = r.status; throw e; }
+        return (await r.json()).eTag;
+      },
       // Datei überschreiben (für «Als Original übernehmen»; die alte Fassung wird vorher von der App gesichert)
       async write(path, blob) { const r = await putFile(toDrive(path), blob); if (!r.ok) throw new Error("Speichern in OneDrive: " + r.status); return path; },
       // PowerPoint/Word von Microsoft in ein PDF umwandeln lassen (für einzelne Folien/Seiten in der Lektionsseite).

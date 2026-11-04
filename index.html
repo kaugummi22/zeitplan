@@ -383,6 +383,12 @@
       return { id, url: "/_blob/" + id, sizeBytes: blob.size, contentType: (opts && opts.type) || blob.type || "application/octet-stream" };
     },
     async delete(id) { try { const m = await getMeta(DOKS + "/" + id); if (m) await g("/me/drive/items/" + m.id, { method: "DELETE" }); } catch (e) {} },
+    // dasselbe Dokument mit neuem Inhalt überschreiben (keine Kopie)
+    async replace(id, blob) {
+      if (!/^[0-9a-f]{8,64}$/.test(id)) throw new Error("Dokument unbekannt");
+      const r = await putFile(DOKS + "/" + id, blob); if (!r.ok) { const e = new Error("Speichern in OneDrive: " + r.status); e.status = r.status; throw e; }
+      delete docCache[id]; return true;
+    },
   };
   const downloads = {
     async save(o) {
@@ -486,6 +492,13 @@
       },
       async saveVersion() { throw new Error("nicht verfügbar"); },
       async exists(path) { return !!(await getMeta(toDrive(path))); },
+      // Datei samt Versionsstand lesen bzw. nur dann überschreiben, wenn sie seither nicht anderswo geändert wurde (Word-Dokumente in der App bearbeiten)
+      async readEx(path) { const m = await getMeta(toDrive(path)); if (!m) throw new Error("nicht gefunden"); return { blob: await download(m), etag: m.eTag }; },
+      async writeIf(path, blob, etag) {
+        const r = await putFile(toDrive(path), blob, etag || null);
+        if (!r.ok) { const e = new Error(r.status === 423 ? "Die Datei ist gerade geöffnet" : r.status === 412 ? "Die Datei wurde inzwischen geändert" : "Speichern in OneDrive: " + r.status); e.status = r.status; throw e; }
+        return (await r.json()).eTag;
+      },
       // Datei überschreiben (für «Als Original übernehmen»; die alte Fassung wird vorher von der App gesichert)
       async write(path, blob) { const r = await putFile(toDrive(path), blob); if (!r.ok) throw new Error("Speichern in OneDrive: " + r.status); return path; },
       // PowerPoint/Word von Microsoft in ein PDF umwandeln lassen (für einzelne Folien/Seiten in der Lektionsseite).
@@ -1599,6 +1612,42 @@ html.phone .lesson.mat-slim .ldocs { grid-column: 1 / -1; }
 .nfig figcaption { contain: inline-size; font-size: 0.8em; line-height: 1.3; color: var(--muted); font-style: italic; margin-top: 3px; overflow-wrap: anywhere; }
 .nfig.p-l { float: left; margin: 3px 16px 8px 0; } .nfig.p-r { float: right; margin: 3px 0 8px 16px; } .nfig.p-c { margin-left: auto; margin-right: auto; }
 .nfig.p-c figcaption { text-align: center; }
+/* Word-Dokument in den Notizen: verkleinerte Seite */
+.nfig.ndoc:not(.w25):not(.w33):not(.w50):not(.w75) { width: 100%; }
+.nfig.ndoc .ndoc-v { display: block; position: relative; overflow: hidden; background: #fff; border: 1px solid var(--line); border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); min-height: 40px; }
+.nfig.ndoc .ndoc-sc { transform-origin: 0 0; width: max-content; pointer-events: none; user-select: none; }
+.nfig.ndoc .ndoc-sc .wd-page { box-shadow: none; margin: 0; }
+.nfig.ndoc .ndoc-v.more::after { content: attr(data-more); position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 8px 5px; text-align: center; font-size: 11px; color: var(--muted); background: linear-gradient(rgba(255,255,255,0), #fff 60%); }
+.nfig.ndoc .ndoc-load { padding: 12px; color: var(--muted); font-size: 0.9em; }
+.nfig.ndoc:not(:has(.ndoc-v))::before { content: "📄 " attr(data-name); display: block; padding: 10px; border: 1px dashed var(--line); border-radius: 4px; color: var(--muted); }
+.notes-ed .nfig.ndoc { cursor: pointer; }
+.notes-ed .nfig.ndoc:hover .ndoc-v { border-color: var(--accent); }
+.ndoc-mh { display: block; padding: 4px 8px; font-size: 0.8em; }
+.nf-edit { width: 100%; margin: 2px 0 6px; }
+/* Word-Editor */
+#wdRoot .wd-ov { position: fixed; inset: 0; z-index: 9000; background: #e9ecef; display: flex; flex-direction: column; }
+#wdRoot .wd-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 14px; background: var(--surface); border-bottom: 1px solid var(--line); box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+#wdRoot .wd-name { font-size: 1rem; max-width: 34ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#wdRoot .wd-tools { display: inline-flex; align-items: center; gap: 2px; }
+#wdRoot .wd-bar .right { margin-left: auto; display: inline-flex; gap: 8px; }
+#wdRoot .wd-scroll { flex: 1; overflow: auto; padding: 18px 16px 60px; }
+.wd-page { position: relative; isolation: isolate; overflow: hidden; box-sizing: border-box; background: #fff; color: #000; margin: 0 auto; box-shadow: 0 2px 12px rgba(0,0,0,0.18); white-space: pre-wrap; overflow-wrap: break-word; text-align: left; line-height: 1.15; }
+.wd-page .wd-body { outline: none; min-height: 2em; }
+.wd-page p { margin: 0; min-height: 1em; }
+.wd-page .wd-header, .wd-page .wd-footer { position: absolute; opacity: 0.75; white-space: pre-wrap; }
+.wd-page .wd-tbl { border-collapse: collapse; }
+.wd-page .wd-tbl td { overflow-wrap: anywhere; }
+.wd-page .wd-a { color: inherit; text-decoration: none; }
+.wd-page .wd-raw { display: inline; }
+.wd-page .wd-tab { display: inline-block; white-space: pre; overflow: hidden; height: 1em; vertical-align: baseline; line-height: 1; }
+.wd-page .wd-tab.wd-l-line { border-bottom: 0.75pt solid currentColor; } .wd-page .wd-tab.wd-l-dot { border-bottom: 1.5pt dotted currentColor; } .wd-page .wd-tab.wd-l-dash { border-bottom: 0.75pt dashed currentColor; }
+.wd-page .wd-draw { display: inline-block; max-width: 100%; vertical-align: bottom; }
+.wd-page .wd-draw img { display: block; max-width: 100%; }
+.wd-page .wd-txbx { display: inline-block; vertical-align: top; }
+.wd-page .wd-shape { border: 1px dashed #bbb; }
+.wd-page .wd-pb { display: block; border-top: 1px dashed #9ab; color: #9ab; font: 10px system-ui, sans-serif; text-align: center; margin: 6px 0; }
+.wd-page p[data-num]::before { content: attr(data-num); display: inline-block; margin-left: var(--wd-numx, 0); min-width: var(--wd-numw, 1.4em); text-align: left; font-family: var(--wd-numf, inherit); text-indent: 0; }
+.wd-page .wd-lock { background: rgba(120,130,140,0.08); cursor: default; }
 .notes-ed .nfig { cursor: pointer; border-radius: 4px; }
 .notes-ed .nfig img { border: 1px solid var(--line); border-radius: 4px; vertical-align: top; }
 .notes-ed .nfig.sel { outline: 3px solid var(--accent); outline-offset: 2px; }
@@ -2758,6 +2807,12 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         if (n.nodeType !== 1) continue;
         const tag = n.tagName;
         if (tag === "BR") { out += "<br>"; continue; }
+        if (tag === "FIGURE" && n.classList.contains("ndoc")) {
+          // Word-Dokument: nur der Verweis wird gespeichert, die Vorschau entsteht beim Anzeigen
+          const id = n.getAttribute("data-doc") || "", c = n.className || "", w = /\bw(25|33|50|75|100)\b/.exec(c), ps = /\bp-([lrc])\b/.exec(c), fc = n.querySelector(":scope > figcaption"), cap = fc ? fc.textContent.replace(/[\u00a0\u200b]/g, " ").trim() : "";
+          if (/^[\w-]{1,80}$/.test(id)) out += '<figure class="nfig ndoc' + (w ? " w" + w[1] : "") + (ps ? " p-" + ps[1] : "") + '" data-doc="' + id + '" data-name="' + esc((n.getAttribute("data-name") || "").slice(0, 200)) + '">' + (cap ? "<figcaption>" + esc(cap) + "</figcaption>" : "") + "</figure>";
+          continue;
+        }
         if (tag === "FIGURE") { const im = n.querySelector("img"), src = (im && im.getAttribute("src")) || ""; if (/^\/_blob\/[0-9a-f]{8,64}$/.test(src)) { const c = n.className || "", w = /\bw(25|33|50|75|100)\b/.exec(c), ps = /\bp-([lrc])\b/.exec(c), fc = n.querySelector("figcaption"), cap = fc ? fc.textContent.replace(/[\u00a0\u200b]/g, " ").trim() : ""; out += '<figure class="nfig' + (w ? " w" + w[1] : "") + (ps ? " p-" + ps[1] : "") + '"><img src="' + src + '" alt="">' + (cap ? "<figcaption>" + esc(cap) + "</figcaption>" : "") + "</figure>"; } continue; }
         if (tag === "IMG") { const src = n.getAttribute("src") || ""; if (/^\/_blob\/[0-9a-f]{8,64}$/.test(src)) { const w = /\bw(25|33|50|75)\b/.exec(n.className || ""); out += '<img src="' + src + '"' + (w ? ' class="w' + w[1] + '"' : "") + ' alt="">'; } continue; }
         if (tag === "STYLE" || tag === "SCRIPT" || tag === "META" || tag === "TITLE") continue;
@@ -3968,7 +4023,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   }
 
   // ---------- Drucken: eine Datei, die sich im Browser öffnet und gleich das Druckfenster zeigt ----------
-  const PRINT_CSS = "@page{size:A4;margin:10mm 11mm}body{font-family:Arial,Helvetica,sans-serif;font-size:9.5pt;color:#111;line-height:1.3;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}h1{font-size:13pt;margin:0 0 4px}h2{font-size:11pt;margin:10px 0 4px;padding-bottom:2px;border-bottom:1.2px solid #333}h3{font-size:8.5pt;margin:6px 0 2px;text-transform:uppercase;letter-spacing:.04em;color:#444}.meta{color:#444;margin:0 0 10px}.box{border:1px solid #bbb;border-radius:4px;padding:6px 8px;margin:4px 0}table{width:100%;border-collapse:collapse;margin:4px 0;table-layout:fixed}th,td{border:1px solid #999;padding:4px 6px;vertical-align:top;text-align:left;overflow-wrap:break-word}th{background:#eee;font-size:9.5pt}.pre{white-space:pre-wrap}tr{break-inside:avoid}.notes img{max-width:100%;max-height:120mm}.notes img.w50{max-width:50%}.notes img.w33{max-width:33%}.notes img.w25{max-width:25%}.notes img.w75{max-width:75%}.notes{display:flow-root}.nfig{margin:4px 0;width:fit-content;max-width:100%;break-inside:avoid}.nfig img{display:block;max-width:100%;max-height:120mm}.nfig[class*=\" w\"] img{width:100%}.nfig.w25{width:25%}.nfig.w33{width:33%}.nfig.w50{width:50%}.nfig.w75{width:75%}.nfig.w100{width:100%}.nfig figcaption{contain:inline-size;font-size:8pt;font-style:italic;color:#555;margin-top:2px}.nfig.p-l{float:left;margin:2px 10px 6px 0}.nfig.p-r{float:right;margin:2px 0 6px 10px}.nfig.p-c{margin-left:auto;margin-right:auto}.nfig.p-c figcaption{text-align:center}.ls{font-family:'Ink Free','Segoe Print','Bradley Hand',Noteworthy,'Comic Sans MS',cursive;color:#c8402c}table caption{caption-side:bottom;text-align:left;font-size:8pt;font-style:italic;color:#555;padding-top:2px}table.tp-l{float:left;margin:2px 10px 6px 0}table.tp-r{float:right;margin:2px 0 6px 10px}table.tp-c{margin-left:auto;margin-right:auto}mark.hl-y{background:#fff1a6}mark.hl-g{background:#d3f2c4}mark.hl-b{background:#cfe4ff}mark{color:inherit}.fs-s{font-size:85%}.fs-l{font-size:125%}.fs-xl{font-size:150%}.one h1{border-bottom:1.2px solid #333;padding-bottom:2px}.al-c{text-align:center}.al-r{text-align:right}.al-j{text-align:justify}.notes ul,.notes ol{margin:2px 0;padding-left:20px}.ncols{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);margin:4px 0;break-inside:avoid}.ncol{padding:2px 8px}.ncol+.ncol{border-left:1px solid #999}.phase{font-weight:400;color:#555}ul{margin:2px 0;padding-left:18px}@media screen{body{max-width:190mm;margin:20px auto;padding:0 12px}}" + FF_CSS;
+  const PRINT_CSS = "@page{size:A4;margin:10mm 11mm}body{font-family:Arial,Helvetica,sans-serif;font-size:9.5pt;color:#111;line-height:1.3;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}h1{font-size:13pt;margin:0 0 4px}h2{font-size:11pt;margin:10px 0 4px;padding-bottom:2px;border-bottom:1.2px solid #333}h3{font-size:8.5pt;margin:6px 0 2px;text-transform:uppercase;letter-spacing:.04em;color:#444}.meta{color:#444;margin:0 0 10px}.box{border:1px solid #bbb;border-radius:4px;padding:6px 8px;margin:4px 0}table{width:100%;border-collapse:collapse;margin:4px 0;table-layout:fixed}th,td{border:1px solid #999;padding:4px 6px;vertical-align:top;text-align:left;overflow-wrap:break-word}th{background:#eee;font-size:9.5pt}.pre{white-space:pre-wrap}tr{break-inside:avoid}.notes img{max-width:100%;max-height:120mm}.notes img.w50{max-width:50%}.notes img.w33{max-width:33%}.notes img.w25{max-width:25%}.notes img.w75{max-width:75%}.notes{display:flow-root}.nfig{margin:4px 0;width:fit-content;max-width:100%;break-inside:avoid}.nfig img{display:block;max-width:100%;max-height:120mm}.nfig[class*=\" w\"] img{width:100%}.nfig.w25{width:25%}.nfig.w33{width:33%}.nfig.w50{width:50%}.nfig.w75{width:75%}.nfig.w100{width:100%}.nfig figcaption{contain:inline-size;font-size:8pt;font-style:italic;color:#555;margin-top:2px}.nfig.p-l{float:left;margin:2px 10px 6px 0}.nfig.p-r{float:right;margin:2px 0 6px 10px}.nfig.p-c{margin-left:auto;margin-right:auto}.nfig.p-c figcaption{text-align:center}.ls{font-family:'Ink Free','Segoe Print','Bradley Hand',Noteworthy,'Comic Sans MS',cursive;color:#c8402c}table caption{caption-side:bottom;text-align:left;font-size:8pt;font-style:italic;color:#555;padding-top:2px}table.tp-l{float:left;margin:2px 10px 6px 0}table.tp-r{float:right;margin:2px 0 6px 10px}table.tp-c{margin-left:auto;margin-right:auto}mark.hl-y{background:#fff1a6}mark.hl-g{background:#d3f2c4}mark.hl-b{background:#cfe4ff}mark{color:inherit}.fs-s{font-size:85%}.fs-l{font-size:125%}.fs-xl{font-size:150%}.one h1{border-bottom:1.2px solid #333;padding-bottom:2px}.al-c{text-align:center}.al-r{text-align:right}.al-j{text-align:justify}.notes ul,.notes ol{margin:2px 0;padding-left:20px}.ncols{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);margin:4px 0;break-inside:avoid}.ncol{padding:2px 8px}.ncol+.ncol{border-left:1px solid #999}.phase{font-weight:400;color:#555}ul{margin:2px 0;padding-left:18px}@media screen{body{max-width:190mm;margin:20px auto;padding:0 12px}}figure.ndoc::before{content:\"📄 \" attr(data-name);display:block;color:#555;font-style:italic}" + FF_CSS;
   const safeName = (t) => String(t || "Planung").replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, " ").trim().slice(0, 120);
   async function inlineImgs(body) {
     const ids = [...new Set([...body.matchAll(/src="\/_blob\/([0-9a-f]+)"/g)].map((m) => m[1]))];
@@ -4185,6 +4240,718 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       } finally { ok.disabled = false; }
     };
   }
+  // ---------- Word-Dokumente direkt in der App: anzeigen, bearbeiten und in dieselbe Datei zurückspeichern ----------
+  // Grundsatz: Die Word-Datei bleibt, wie sie ist. Geändert werden nur die Absätze, in denen geschrieben wurde;
+  // alles andere (Kopfzeile, Bilder, Tabellen-Rahmen, Formatvorlagen …) wird unverändert wieder gespeichert.
+  const WNS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+  const XMLNS = "http://www.w3.org/XML/1998/namespace";
+  const wKids = (el, n) => (el ? [...el.children].filter((c) => c.localName === n) : []);
+  const wKid = (el, n) => (el ? [...el.children].find((c) => c.localName === n) || null : null);
+  const wAttr = (el, a) => (el ? el.getAttributeNS(WNS, a) || el.getAttribute("w:" + a) || "" : "");
+  const wOn = (el) => { if (!el) return null; const v = wAttr(el, "val"); return !(v === "0" || v === "false" || v === "off"); };
+  const twPt = (v) => (+v || 0) / 20;
+  const wHex = (v) => (/^[0-9a-f]{6}$/i.test(v || "") ? "#" + v : "");
+  const WD_HL = { yellow: "#ffff00", green: "#00ff00", cyan: "#00ffff", magenta: "#ff00ff", blue: "#0000ff", red: "#ff0000", darkBlue: "#000080", darkCyan: "#008080", darkGreen: "#008000", darkMagenta: "#800080", darkRed: "#800000", darkYellow: "#808000", darkGray: "#808080", lightGray: "#c0c0c0", black: "#000000", white: "#ffffff" };
+  // Eigenschaften eines rPr (Schrift) bzw. pPr (Absatz) als einfaches Objekt
+  function wdRunProps(rPr, ctx) {
+    const o = {}; if (!rPr) return o;
+    const f = wKid(rPr, "rFonts");
+    if (f) { const a = wAttr(f, "ascii") || wAttr(f, "hAnsi"), t = wAttr(f, "asciiTheme") || wAttr(f, "hAnsiTheme"); if (a) o.font = a; else if (t) o.font = /^major/.test(t) ? ctx.fMajor : ctx.fMinor; }
+    [["b", "b"], ["i", "i"], ["strike", "strike"], ["caps", "caps"], ["smallCaps", "smallCaps"], ["vanish", "vanish"]].forEach(([n, k]) => { const e = wKid(rPr, n); if (e) o[k] = wOn(e); });
+    const sz = wKid(rPr, "sz"); if (sz && +wAttr(sz, "val")) o.sz = +wAttr(sz, "val");
+    const c = wKid(rPr, "color"); if (c) o.color = wHex(wAttr(c, "val"));
+    const u = wKid(rPr, "u"); if (u) o.u = wAttr(u, "val") !== "none";
+    const h = wKid(rPr, "highlight"); if (h) o.hl = WD_HL[wAttr(h, "val")] || "";
+    const sh = wKid(rPr, "shd"); if (sh) { const v = wHex(wAttr(sh, "fill")); if (v) o.shd = v; }
+    const va = wKid(rPr, "vertAlign"); if (va) o.va = wAttr(va, "val");
+    return o;
+  }
+  function wdParaProps(pPr) {
+    const o = {}; if (!pPr) return o;
+    const jc = wKid(pPr, "jc"); if (jc) o.jc = wAttr(jc, "val");
+    const sp = wKid(pPr, "spacing");
+    if (sp) { ["before", "after", "line"].forEach((k) => { const v = wAttr(sp, k); if (v !== "") o[k] = +v; }); const lr = wAttr(sp, "lineRule"); if (lr) o.lineRule = lr; if (wAttr(sp, "beforeAutospacing") === "1") o.before = 280; if (wAttr(sp, "afterAutospacing") === "1") o.after = 280; }
+    const ind = wKid(pPr, "ind");
+    if (ind) { const l = wAttr(ind, "left") || wAttr(ind, "start"), r = wAttr(ind, "right") || wAttr(ind, "end"), fl = wAttr(ind, "firstLine"), hg = wAttr(ind, "hanging"); if (l !== "") o.left = +l; if (r !== "") o.right = +r; if (fl !== "") { o.first = +fl; } if (hg !== "") o.first = -hg; }
+    const sh = wKid(pPr, "shd"); if (sh) o.shd = wHex(wAttr(sh, "fill"));
+    const bd = wKid(pPr, "pBdr"); if (bd) o.bdr = ["top", "left", "bottom", "right"].map((s) => wdBorder(wKid(bd, s)));
+    const cs = wKid(pPr, "contextualSpacing"); if (cs) o.ctx = wOn(cs);
+    const np = wKid(pPr, "numPr"); if (np) { const id = wAttr(wKid(np, "numId"), "val"), lv = wAttr(wKid(np, "ilvl"), "val"); if (id !== "") o.numId = id; if (lv !== "") o.ilvl = +lv; }
+    const tb = wKid(pPr, "tabs"); if (tb) o.tabs = wKids(tb, "tab").map((t) => ({ pos: twPt(wAttr(t, "pos")), val: wAttr(t, "val"), lead: wAttr(t, "leader") }));
+    return o;
+  }
+  function wdBorder(b) {
+    if (!b) return undefined;
+    const v = wAttr(b, "val"); if (!v || v === "nil" || v === "none") return "none";
+    const w = Math.max(0.5, (+wAttr(b, "sz") || 4) / 8), c = wAttr(b, "color");
+    return w + "pt " + (v === "double" ? "double" : /dash/.test(v) ? "dashed" : /dot/.test(v) ? "dotted" : "solid") + " " + (wHex(c) || "#000");
+  }
+  // Formatvorlagen samt «basiert auf» zusammensetzen
+  function wdStyleChain(ctx, id, kind) {
+    const out = [], seen = new Set();
+    for (let s = ctx.styles[id]; s && !seen.has(s.id); s = ctx.styles[s.basedOn]) { seen.add(s.id); out.unshift(s); }
+    return out;
+  }
+  function wdPStyle(ctx, pPr) {
+    const ps = pPr && wKid(pPr, "pStyle"); const id = ps ? wAttr(ps, "val") : ctx.defP;
+    return ctx.styles[id] ? id : ctx.defP;
+  }
+  function wdEffPara(ctx, pPr) {
+    const sid = wdPStyle(ctx, pPr), o = { ...ctx.dPPr };
+    let tabs = [];
+    const addTabs = (t) => { (t || []).forEach((x) => { tabs = tabs.filter((y) => Math.abs(y.pos - x.pos) > 0.5); if (x.val !== "clear") tabs.push(x); }); };
+    wdStyleChain(ctx, sid).forEach((s) => { Object.assign(o, s.pp); addTabs(s.pp.tabs); });
+    const own = wdParaProps(pPr); Object.assign(o, own); addTabs(own.tabs);
+    o.tabs = tabs.sort((a, b) => a.pos - b.pos);
+    o.style = sid;
+    return o;
+  }
+  function wdEffRun(ctx, pStyleId, rPr) {
+    const o = { ...ctx.dRPr };
+    wdStyleChain(ctx, pStyleId).forEach((s) => Object.assign(o, s.rp));
+    const rs = rPr && wKid(rPr, "rStyle"); if (rs) wdStyleChain(ctx, wAttr(rs, "val")).forEach((s) => Object.assign(o, s.rp));
+    Object.assign(o, wdRunProps(rPr, ctx));
+    return o;
+  }
+  function wdRunCss(o) {
+    let s = "";
+    if (o.font) s += "font-family:'" + String(o.font).replace(/['";<>]/g, "") + "'," + (/(times|georgia|garamond|cambria|serif|roman)/i.test(o.font) ? "serif" : "Arial,sans-serif") + ";";
+    if (o.sz) s += "font-size:" + o.sz / 2 + "pt;";
+    if (o.b) s += "font-weight:bold;"; else if (o.b === false) s += "font-weight:normal;";
+    if (o.i) s += "font-style:italic;"; else if (o.i === false) s += "font-style:normal;";
+    const dec = [o.u ? "underline" : "", o.strike ? "line-through" : ""].filter(Boolean).join(" "); if (dec) s += "text-decoration:" + dec + ";";
+    if (o.color) s += "color:" + o.color + ";";
+    if (o.hl || o.shd) s += "background:" + (o.hl || o.shd) + ";";
+    if (o.caps) s += "text-transform:uppercase;"; if (o.smallCaps) s += "font-variant:small-caps;";
+    if (o.va === "superscript") s += "vertical-align:super;font-size:" + (o.sz ? o.sz / 3 : 7.5) + "pt;";
+    if (o.va === "subscript") s += "vertical-align:sub;font-size:" + (o.sz ? o.sz / 3 : 7.5) + "pt;";
+    return s;
+  }
+  // Aufzählungen und Nummerierungen
+  const WD_ROMAN = (n, up) => { const t = [[1000, "m"], [900, "cm"], [500, "d"], [400, "cd"], [100, "c"], [90, "xc"], [50, "l"], [40, "xl"], [10, "x"], [9, "ix"], [5, "v"], [4, "iv"], [1, "i"]]; let s = ""; for (const [v, r] of t) while (n >= v) { s += r; n -= v; } return up ? s.toUpperCase() : s; };
+  function wdNumFmt(n, fmt) {
+    if (fmt === "lowerLetter") return String.fromCharCode(96 + ((n - 1) % 26) + 1);
+    if (fmt === "upperLetter") return String.fromCharCode(64 + ((n - 1) % 26) + 1);
+    if (fmt === "lowerRoman") return WD_ROMAN(n, false); if (fmt === "upperRoman") return WD_ROMAN(n, true);
+    if (fmt === "decimalZero") return (n < 10 ? "0" : "") + n;
+    return String(n);
+  }
+  function wdNumLabel(ctx, numId, ilvl, counters) {
+    const nd = ctx.num[numId]; if (!nd) return "";
+    const lv = nd.lvls[ilvl] || nd.lvls[0]; if (!lv) return "";
+    if (lv.fmt === "bullet") { const t = lv.text || "•"; return /[-]/.test(t) || !t.trim() ? "•" : t; }
+    if (lv.fmt === "none") return "";
+    return (lv.text || "%" + (ilvl + 1) + ".").replace(/%(\d)/g, (m, d) => { const k = +d - 1, l2 = nd.lvls[k] || {}; return wdNumFmt(counters[numId + ":" + k] || l2.start || 1, l2.fmt); });
+  }
+  // Nummern neu zählen (auch nach Enter im Editor)
+  function wdRenumber(ctx, root) {
+    const counters = {};
+    root.querySelectorAll("p[data-numid]").forEach((p) => {
+      const id = p.dataset.numid, lv = +p.dataset.ilvl || 0, nd = ctx.num[id]; if (!nd) return;
+      const key = id + ":" + lv, l = nd.lvls[lv] || {};
+      counters[key] = counters[key] ? counters[key] + 1 : l.start || 1;
+      for (let k = lv + 1; k < 9; k++) delete counters[id + ":" + k];
+      p.dataset.num = wdNumLabel(ctx, id, lv, counters);
+    });
+  }
+  // Tabulatoren: wie in Word bis zum nächsten Tabstopp, mit Füllzeichen (z. B. Linie für «Name: ____»)
+  const wdTabEl = () => { const t = document.createElement("span"); t.className = "wd-tab"; t.contentEditable = "false"; t.textContent = "\t"; return t; };
+  function wdTabs(root, defStop) {
+    const def = defStop || 35.4;
+    root.querySelectorAll("p").forEach((p) => {
+      const tabs = [...p.querySelectorAll(".wd-tab")].filter((t) => t.closest("p") === p); if (!tabs.length) return;
+      const stops = p.dataset.tabs ? JSON.parse(p.dataset.tabs) : [];
+      const host = p.parentElement, hr = host.getBoundingClientRect(), k = host.offsetWidth ? hr.width / host.offsetWidth : 1, cs = getComputedStyle(host);
+      const base = hr.left + ((parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.borderLeftWidth) || 0)) * k, px = (96 / 72) * k;
+      tabs.forEach((t) => { t.style.width = "0px"; t.className = "wd-tab"; });
+      tabs.forEach((t, i) => {
+        const x = (t.getBoundingClientRect().left - base) / px;
+        let st = stops.find((s) => s[0] > x + 0.5 && s[1] !== "bar");
+        if (!st) st = [Math.floor(x / def + 1) * def, "left", ""];
+        let w = st[0] - x;
+        if (st[1] === "right" || st[1] === "end" || st[1] === "center") {
+          const rg = document.createRange(); rg.setStartAfter(t); if (tabs[i + 1]) rg.setEndBefore(tabs[i + 1]); else rg.setEnd(p, p.childNodes.length);
+          const seg = rg.getBoundingClientRect().width / px; w -= st[1] === "center" ? seg / 2 : seg;
+        }
+        t.style.width = Math.max(1, w) + "pt";
+        if (st[2] && st[2] !== "none") t.classList.add("wd-l-" + (st[2] === "dot" ? "dot" : st[2] === "hyphen" ? "dash" : "line"));
+      });
+    });
+  }
+  async function wdLoad(bytes) {
+    await loadScript(JSZIP_URL);
+    const zip = await window.JSZip.loadAsync(bytes);
+    const txt = async (p) => { const f = zip.file(p); return f ? await f.async("string") : null; };
+    const xml = (s) => (s ? new DOMParser().parseFromString(s, "application/xml") : null);
+    const docS = await txt("word/document.xml"); if (!docS) throw new Error("Das ist kein Word-Dokument (.docx).");
+    const ctx = { zip, doc: xml(docS), styles: {}, defP: "", dRPr: {}, dPPr: {}, num: {}, rels: {}, urls: {}, fMinor: "Calibri", fMajor: "Calibri Light", P: [], R: [], RAW: [], H: [], PM: [], orig: [], hasLock: false };
+    if (ctx.doc.getElementsByTagName("parsererror").length) throw new Error("Das Word-Dokument ist beschädigt.");
+    const th = xml(await txt("word/theme/theme1.xml"));
+    ctx.clr = {};
+    if (th) { const cs = th.getElementsByTagNameNS("*", "clrScheme")[0]; if (cs) [...cs.children].forEach((k) => { const v = k.firstElementChild; if (v) ctx.clr[k.localName] = v.getAttribute("val") === "windowText" ? "000000" : v.getAttribute("lastClr") || v.getAttribute("val"); }); }
+    if (th) { const pick = (n) => { const e = th.getElementsByTagNameNS("*", n)[0], l = e && [...e.children].find((c) => c.localName === "latin"); return l && l.getAttribute("typeface"); }; ctx.fMinor = pick("minorFont") || ctx.fMinor; ctx.fMajor = pick("majorFont") || ctx.fMajor; }
+    const st = xml(await txt("word/styles.xml"));
+    if (st) {
+      const dd = st.getElementsByTagNameNS(WNS, "docDefaults")[0];
+      if (dd) { const rp = dd.getElementsByTagNameNS(WNS, "rPr")[0], pp = dd.getElementsByTagNameNS(WNS, "pPr")[0]; ctx.dRPr = wdRunProps(rp, ctx); ctx.dPPr = wdParaProps(pp); }
+      [...st.getElementsByTagNameNS(WNS, "style")].forEach((s) => {
+        const id = wAttr(s, "styleId"), type = wAttr(s, "type"), bo = wKid(s, "basedOn");
+        const tp = wKid(s, "tblPr");
+        ctx.styles[id] = { id, type, basedOn: bo ? wAttr(bo, "val") : "", rp: wdRunProps(wKid(s, "rPr"), ctx), pp: wdParaProps(wKid(s, "pPr")), tblPr: tp, tcPr: wKid(s, "tcPr") };
+        if (type === "paragraph" && wAttr(s, "default") === "1") ctx.defP = id;
+        if (type === "table" && wAttr(s, "default") === "1") ctx.defT = id;
+      });
+    }
+    const nu = xml(await txt("word/numbering.xml"));
+    if (nu) {
+      const abs = {};
+      [...nu.getElementsByTagNameNS(WNS, "abstractNum")].forEach((a) => {
+        const lvls = [];
+        wKids(a, "lvl").forEach((l) => { const k = +wAttr(l, "ilvl") || 0; lvls[k] = { fmt: wAttr(wKid(l, "numFmt"), "val") || "decimal", text: wAttr(wKid(l, "lvlText"), "val"), start: +wAttr(wKid(l, "start"), "val") || 1, pp: wdParaProps(wKid(l, "pPr")), rp: wdRunProps(wKid(l, "rPr"), ctx) }; });
+        abs[wAttr(a, "abstractNumId")] = lvls;
+      });
+      [...nu.getElementsByTagNameNS(WNS, "num")].forEach((n) => { const a = wAttr(wKid(n, "abstractNumId"), "val"); if (abs[a]) ctx.num[wAttr(n, "numId")] = { lvls: abs[a] }; });
+    }
+    ctx.relsOf = async (part) => {
+      const i = part.lastIndexOf("/"), rp = part.slice(0, i) + "/_rels/" + part.slice(i + 1) + ".rels", out = {};
+      const r = xml(await txt(rp)); if (!r) return out;
+      [...r.getElementsByTagName("Relationship")].forEach((x) => { out[x.getAttribute("Id")] = { t: x.getAttribute("Target"), type: x.getAttribute("Type") || "", ext: x.getAttribute("TargetMode") === "External" }; });
+      return out;
+    };
+    ctx.rels = await ctx.relsOf("word/document.xml");
+    ctx.media = async (rels, id) => {
+      const r = rels[id]; if (!r || r.ext) return "";
+      const p = r.t.startsWith("/") ? r.t.slice(1) : "word/" + r.t.replace(/^\.\//, "");
+      if (ctx.urls[p] != null) return ctx.urls[p];
+      const f = zip.file(p); if (!f) return (ctx.urls[p] = "");
+      const ext = (p.split(".").pop() || "").toLowerCase(), type = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", bmp: "image/bmp", svg: "image/svg+xml", webp: "image/webp" }[ext];
+      if (!type) return (ctx.urls[p] = "");
+      return (ctx.urls[p] = URL.createObjectURL(new Blob([await f.async("uint8array")], { type })));
+    };
+    // Kopf- und Fusszeile (nur anzeigen)
+    const body = wKid(ctx.doc.documentElement, "body"), sp = body && [...body.children].reverse().find((c) => c.localName === "sectPr");
+    ctx.body = body; ctx.sect = sp;
+    ctx.hf = {};
+    for (const kind of ["header", "footer"]) {
+      const ref = sp && (wKids(sp, kind + "Reference").find((r) => wAttr(r, "type") === "default") || wKids(sp, kind + "Reference")[0]);
+      const rid = ref && (ref.getAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships", "id") || ref.getAttribute("r:id"));
+      const rel = rid && ctx.rels[rid];
+      if (rel) { const part = "word/" + rel.t.replace(/^\.\//, ""), x = xml(await txt(part)); if (x) ctx.hf[kind] = { el: x.documentElement, rels: await ctx.relsOf(part) }; }
+    }
+    return ctx;
+  }
+  // Seite aufbauen; edit = Absätze bearbeitbar machen (registriert für das Zurückspeichern)
+  async function wdRender(ctx, edit) {
+    const sp = ctx.sect, pg = wKid(sp, "pgSz"), mar = wKid(sp, "pgMar");
+    const W = twPt(wAttr(pg, "w") || 11906), H = twPt(wAttr(pg, "h") || 16838);
+    const m = (k, d) => twPt(wAttr(mar, k) || d);
+    const page = document.createElement("div"); page.className = "wd-page";
+    page.style.cssText = "width:" + W + "pt;min-height:" + H + "pt;padding:" + m("top", 1417) + "pt " + m("right", 1417) + "pt " + m("bottom", 1134) + "pt " + m("left", 1417) + "pt;" + wdRunCss({ font: ctx.dRPr.font || ctx.fMinor, sz: ctx.dRPr.sz || 20 });
+    ctx.pageW = W; ctx.pageH = H; ctx.textW = W - m("right", 1417) - m("left", 1417);
+    ctx.mL = m("left", 1417); ctx.mR = m("right", 1417); ctx.mT = m("top", 1417); ctx.mB = m("bottom", 1134); ctx.org = { x: 0, y: 0 };
+    const tabs = twPt((ctx.zip.file("word/settings.xml") && /defaultTabStop w:val="(\d+)"/.exec(await ctx.zip.file("word/settings.xml").async("string")) || [, 708])[1]);
+    page.style.tabSize = tabs + "pt"; ctx.defTab = tabs;
+    for (const kind of ["header", "footer"]) {
+      if (!ctx.hf[kind]) continue;
+      const box = document.createElement("div"); box.className = "wd-" + kind; box.contentEditable = "false";
+      box.style.cssText = "left:" + m("left", 1417) + "pt;right:" + m("right", 1417) + "pt;" + (kind === "header" ? "top:" + m("header", 708) : "bottom:" + m("footer", 708)) + "pt;";
+      ctx.inHF = true; ctx.org = kind === "header" ? { x: ctx.mL, y: m("header", 708) } : { x: ctx.mL, y: H - m("footer", 708) };
+      await wdBlocks(ctx, ctx.hf[kind].el, box, false, ctx.hf[kind].rels);
+      ctx.inHF = false; ctx.org = { x: 0, y: 0 };
+      if (box.textContent.trim() || box.querySelector("img")) page.appendChild(box);
+    }
+    const bd = document.createElement("div"); bd.className = "wd-body";
+    await wdBlocks(ctx, ctx.body, bd, edit, ctx.rels);
+    if (!bd.firstChild) bd.innerHTML = "<p><br></p>";
+    page.appendChild(bd); ctx.bodyEl = bd;
+    wdRenumber(ctx, bd);
+    return page;
+  }
+  async function wdBlocks(ctx, parent, out, edit, rels, st) {
+    st = st || { prev: null };
+    for (const c of [...parent.children]) {
+      const n = c.localName;
+      if (n === "p") out.appendChild(await wdPara(ctx, c, edit, rels, st));
+      else if (n === "tbl") { out.appendChild(await wdTable(ctx, c, edit, rels)); st.prev = null; }
+      else if (n === "sdt") { const sc = wKid(c, "sdtContent"); if (sc) await wdBlocks(ctx, sc, out, edit, rels, st); }
+      else if (n === "customXml" || n === "ins") await wdBlocks(ctx, c, out, edit, rels, st);
+    }
+  }
+  const WD_SIMPLE_RUN = /^(rPr|t|tab|br|cr|softHyphen|noBreakHyphen|lastRenderedPageBreak)$/;
+  async function wdPara(ctx, p, edit, rels, st) {
+    const pPr = wKid(p, "pPr"), pp = wdEffPara(ctx, pPr), el = document.createElement("p");
+    let lock = !edit;
+    // Nummerierung: Einzug aus der Liste
+    let numLv = null;
+    if (pp.numId && pp.numId !== "0" && ctx.num[pp.numId]) {
+      numLv = ctx.num[pp.numId].lvls[pp.ilvl || 0] || null;
+      if (numLv) { const own = wdParaProps(pPr); ["left", "first"].forEach((k) => { if (own[k] == null && numLv.pp[k] != null) pp[k] = numLv.pp[k]; }); }
+      el.dataset.numid = pp.numId; el.dataset.ilvl = String(pp.ilvl || 0);
+    }
+    const mark = wdEffRun(ctx, pp.style, pPr && wKid(pPr, "rPr"));
+    // Abstand: «Keinen Abstand zwischen Absätzen gleicher Formatierung»
+    let before = pp.before || 0, after = pp.after || 0;
+    if (pp.ctx && st.prev && st.prev.style === pp.style) { before = 0; if (st.prevEl) st.prevEl.style.marginBottom = "0"; }
+    let css = "margin:" + twPt(before) + "pt " + twPt(pp.right || 0) + "pt " + twPt(after) + "pt " + twPt(pp.left || 0) + "pt;";
+    if (pp.line) css += "line-height:" + (pp.lineRule === "exact" || pp.lineRule === "atLeast" ? twPt(pp.line) + "pt" : ((pp.line / 240) * 1.15).toFixed(3)) + ";"; else css += "line-height:1.15;";
+    if (pp.first) css += "text-indent:" + twPt(pp.first) + "pt;";
+    const jc = pp.jc; if (jc === "center") css += "text-align:center;"; else if (jc === "right" || jc === "end") css += "text-align:right;"; else if (jc === "both" || jc === "distribute") css += "text-align:justify;";
+    if (pp.shd) css += "background:" + pp.shd + ";";
+    if (pp.bdr) ["top", "left", "bottom", "right"].forEach((s, k) => { if (pp.bdr[k] && pp.bdr[k] !== "none") css += "border-" + s + ":" + pp.bdr[k] + ";padding-" + s + ":2pt;"; });
+    css += wdRunCss({ font: mark.font, sz: mark.sz });
+    el.style.cssText = css;
+    if (numLv) {
+      const nr = { ...mark, ...numLv.rp }; el.style.setProperty("--wd-numf", wdRunCss({ font: nr.font }).replace(/^font-family:|;$/g, "") || "inherit");
+      // hängender Einzug: Nummer links davon, Text auf dem Einzug
+      if (pp.first < 0) { el.style.textIndent = "0"; el.style.setProperty("--wd-numx", twPt(pp.first) + "pt"); el.style.setProperty("--wd-numw", -twPt(pp.first) + "pt"); }
+    }
+    st.prev = pp; st.prevEl = el;
+    if (pp.tabs && pp.tabs.length) el.dataset.tabs = JSON.stringify(pp.tabs.map((t) => [t.pos, t.val, t.lead]));
+    // Inhalt
+    const runs = async (node, host, hIdx) => {
+      for (const c of [...node.children]) {
+        const n = c.localName;
+        if (n === "pPr" || n === "bookmarkStart" || n === "bookmarkEnd" || n === "proofErr" || n === "permStart" || n === "permEnd" || n === "commentRangeStart" || n === "commentRangeEnd") continue;
+        if (n === "r") { host.appendChild(await wdRun(ctx, c, pp.style, rels, edit, () => { lock = true; })); continue; }
+        if (n === "hyperlink") { const a = document.createElement("a"); a.className = "wd-a"; if (edit) a.dataset.h = String(ctx.H.push(c) - 1); await runs(c, a); host.appendChild(a); continue; }
+        if (n === "del" || n === "moveFrom") { lock = true; continue; }
+        if (n === "ins" || n === "moveTo" || n === "smartTag" || n === "customXml" || n === "fldSimple") { lock = true; await runs(c, host); continue; }
+        if (n === "sdt") { lock = true; const sc = wKid(c, "sdtContent"); if (sc) await runs(sc, host); continue; }
+        // Formeln und Unbekanntes: Text zeigen, Absatz nicht bearbeitbar
+        lock = true; const sp2 = document.createElement("span"); sp2.textContent = c.textContent; host.appendChild(sp2);
+      }
+    };
+    await runs(p, el);
+    if (!el.firstChild || !el.textContent && !el.querySelector("img,.wd-raw,br")) el.appendChild(document.createElement("br"));
+    if (lock) {
+      el.contentEditable = "false";
+      if (edit) { el.classList.add("wd-lock"); el.title = "Dieser Absatz enthält etwas Besonderes (z. B. ein Feld oder eine Formel) und bleibt so, wie er ist."; ctx.hasLock = true; }
+    } else {
+      const k = ctx.P.push(p) - 1; el.dataset.wp = String(k);
+      ctx.PM[k] = { rPr: pPr && wKid(pPr, "rPr"), b: !!mark.b, i: !!mark.i, u: !!mark.u, nb: / /.test(p.textContent) };
+      ctx.orig[k] = el.innerHTML;
+    }
+    return el;
+  }
+  async function wdRun(ctx, r, pStyle, rels, edit, onLock) {
+    const rPr = wKid(r, "rPr"), o = wdEffRun(ctx, pStyle, rPr);
+    const kids = [...r.children];
+    if (kids.some((c) => c.localName === "fldChar" || c.localName === "instrText" || c.localName === "delText")) { onLock(); const s = document.createElement("span"); s.style.cssText = wdRunCss(o); s.textContent = kids.filter((c) => c.localName === "t").map((c) => c.textContent).join(""); return s; }
+    const simple = !o.vanish && kids.every((c) => WD_SIMPLE_RUN.test(c.localName) && !(c.localName === "br" && /page|column/.test(wAttr(c, "type"))));
+    if (!simple) {
+      // Bild, Textfeld, Seitenumbruch, Fussnote …: als Ganzes behalten (im Editor nicht änderbar, nur löschbar)
+      const s = document.createElement("span"); s.className = "wd-raw"; s.contentEditable = "false";
+      if (edit) s.dataset.raw = String(ctx.RAW.push(r) - 1);
+      if (o.vanish) { s.hidden = true; return s; }
+      for (const c of kids) {
+        const n = c.localName;
+        if (n === "t") { const t = document.createElement("span"); t.style.cssText = wdRunCss(o); t.textContent = c.textContent; s.appendChild(t); }
+        else if (n === "br") { const b = document.createElement("span"); b.className = "wd-pb"; b.textContent = "Seitenumbruch"; s.appendChild(b); s.classList.add("wd-blockraw"); }
+        else if (n === "drawing" || n === "pict" || n === "object" || n === "AlternateContent") await wdDrawing(ctx, c, s, rels);
+        else if (n === "footnoteReference" || n === "endnoteReference") { const t = document.createElement("sup"); t.textContent = "*"; s.appendChild(t); }
+        else if (n === "sym") { const t = document.createElement("span"); const ch = parseInt(wAttr(c, "char"), 16); t.textContent = ch >= 0xf000 ? "•" : String.fromCharCode(ch || 32); t.style.cssText = wdRunCss(o); s.appendChild(t); }
+        else if (n === "tab") s.appendChild(wdTabEl());
+      }
+      return s;
+    }
+    const s = document.createElement("span"); s.style.cssText = wdRunCss(o);
+    if (edit) { const k = ctx.R.push({ el: r, rPr, b: !!o.b, i: !!o.i, u: !!o.u }) - 1; s.dataset.r = String(k); }
+    for (const c of kids) {
+      const n = c.localName;
+      if (n === "t") c.textContent.split("\t").forEach((part, i) => { if (i) s.appendChild(wdTabEl()); if (part) s.appendChild(document.createTextNode(part)); });
+      else if (n === "tab") s.appendChild(wdTabEl());
+      else if (n === "br" || n === "cr") s.appendChild(document.createElement("br"));
+      else if (n === "softHyphen") s.appendChild(document.createTextNode("­"));
+      else if (n === "noBreakHyphen") s.appendChild(document.createTextNode("‑"));
+    }
+    return s;
+  }
+  // Farben aus dem Design (z. B. «Hintergrund 2») samt Aufhellen/Abdunkeln
+  function wdColor(ctx, el) {
+    if (!el) return "";
+    const c = [...el.children].find((k) => /^(srgbClr|schemeClr|sysClr|prstClr)$/.test(k.localName)); if (!c) return "";
+    let hex = c.localName === "srgbClr" ? c.getAttribute("val") : c.localName === "sysClr" ? c.getAttribute("lastClr") : c.localName === "schemeClr" ? ctx.clr[{ bg1: "lt1", tx1: "dk1", bg2: "lt2", tx2: "dk2" }[c.getAttribute("val")] || c.getAttribute("val")] : { black: "000000", white: "FFFFFF" }[c.getAttribute("val")];
+    if (!/^[0-9a-f]{6}$/i.test(hex || "")) return "";
+    let r = parseInt(hex.slice(0, 2), 16) / 255, g = parseInt(hex.slice(2, 4), 16) / 255, b = parseInt(hex.slice(4, 6), 16) / 255;
+    const mod = (n) => { const k = [...c.children].find((x) => x.localName === n); return k ? +k.getAttribute("val") / 100000 : null; };
+    const lm = mod("lumMod"), lo = mod("lumOff"), sh = mod("shade"), ti = mod("tint");
+    if (lm != null || lo != null) {
+      const mx = Math.max(r, g, b), mn = Math.min(r, g, b); let h = 0, sa = 0, l = (mx + mn) / 2;
+      if (mx !== mn) { const d = mx - mn; sa = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn); h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h /= 6; }
+      l = Math.max(0, Math.min(1, l * (lm == null ? 1 : lm) + (lo || 0)));
+      const q = l < 0.5 ? l * (1 + sa) : l + sa - l * sa, pp = 2 * l - q, f = (t) => { t = (t + 1) % 1; return t < 1 / 6 ? pp + (q - pp) * 6 * t : t < 0.5 ? q : t < 2 / 3 ? pp + (q - pp) * (2 / 3 - t) * 6 : pp; };
+      if (sa) { r = f(h + 1 / 3); g = f(h); b = f(h - 1 / 3); } else r = g = b = l;
+    }
+    if (sh != null) { r *= sh; g *= sh; b *= sh; }
+    if (ti != null) { r += (1 - r) * (1 - ti); g += (1 - g) * (1 - ti); b += (1 - b) * (1 - ti); }
+    return "rgb(" + [r, g, b].map((v) => Math.round(Math.max(0, Math.min(1, v)) * 255)).join(",") + ")";
+  }
+  // Bilder, Textfelder und Formen (Zeichnungen) – nur anzeigen, beim Speichern unverändert
+  async function wdDrawing(ctx, c, host, rels) {
+    if (c.localName === "AlternateContent") { const ch = [...c.children].find((k) => k.localName === "Choice") || [...c.children].find((k) => k.localName === "Fallback"); if (ch) for (const k of [...ch.children]) await wdDrawing(ctx, k, host, rels); return; }
+    const E = 12700, any = (el, n) => el.getElementsByTagNameNS("*", n)[0];
+    const ext = any(c, "extent"), w = ext ? +ext.getAttribute("cx") / E : 0, h = ext ? +ext.getAttribute("cy") / E : 0;
+    const anchor = any(c, "anchor");
+    const box = document.createElement("span"); box.className = "wd-draw";
+    let css = (w ? "width:" + w + "pt;" : "") + (h ? "height:" + h + "pt;" : "");
+    if (anchor) {
+      const ph = any(anchor, "positionH"), pv = any(anchor, "positionV"), num = (el) => { const o = el && any(el, "posOffset"); return o ? +o.textContent / E : null; }, al = (el) => { const a = el && any(el, "align"); return a ? a.textContent : ""; };
+      const hRf = ph ? ph.getAttribute("relativeFrom") : "", vRf = pv ? pv.getAttribute("relativeFrom") : "";
+      const wrapNone = any(anchor, "wrapNone"), behind = anchor.getAttribute("behindDoc") === "1", wrapTB = any(anchor, "wrapTopAndBottom");
+      if (wrapNone || behind || ctx.inHF) {
+        // frei auf der Seite: wie in Word an die angegebene Stelle
+        const area = hRf === "page" ? [0, ctx.pageW] : hRf === "leftMargin" ? [0, ctx.mL] : hRf === "rightMargin" ? [ctx.pageW - ctx.mR, ctx.mR] : [ctx.mL, ctx.textW];
+        let x = num(ph); const ah = al(ph);
+        if (x == null) x = ah === "right" ? area[1] - w : ah === "center" ? (area[1] - w) / 2 : 0;
+        x += area[0];
+        css += "position:absolute;max-width:none;left:" + (x - ctx.org.x) + "pt;" + (behind ? "z-index:-1;" : "z-index:1;");
+        let y = num(pv); const av = al(pv);
+        if (vRf === "page" || vRf === "margin" || vRf === "topMargin" || vRf === "bottomMargin") {
+          const va = vRf === "page" ? [0, ctx.pageH] : vRf === "topMargin" ? [0, ctx.mT] : vRf === "bottomMargin" ? [ctx.pageH - ctx.mB, ctx.mB] : [ctx.mT, ctx.pageH - ctx.mT - ctx.mB];
+          if (y == null) y = av === "bottom" ? va[1] - h : av === "center" ? (va[1] - h) / 2 : 0;
+          css += "top:" + (y + va[0] - ctx.org.y) + "pt;";
+        } else if (y) css += "margin-top:" + y + "pt;";
+      } else if (wrapTB) { css += "display:block;" + (al(ph) === "center" ? "margin:4pt auto;" : al(ph) === "right" ? "margin:4pt 0 4pt auto;" : "margin:4pt 0;"); }
+      else css += "float:" + (al(ph) === "right" || (num(ph) || 0) > ctx.textW / 2 ? "right" : "left") + ";margin:2pt 8pt;";
+    }
+    // Form: Füllung, Rahmen, abgerundet
+    const spPr = any(c, "spPr");
+    if (spPr && !any(c, "pic")) {
+      const sf = [...spPr.children].find((k) => k.localName === "solidFill"); if (sf) css += "background:" + wdColor(ctx, sf) + ";";
+      const ln = [...spPr.children].find((k) => k.localName === "ln"), lf = ln && [...ln.children].find((k) => k.localName === "solidFill");
+      if (lf) css += "border:" + Math.max(0.5, (+ln.getAttribute("w") || 9525) / E) + "pt solid " + wdColor(ctx, lf) + ";";
+      const geo = any(spPr, "prstGeom"), gp = geo && geo.getAttribute("prst");
+      if (gp === "line" || /Connector/.test(gp || "")) { const lw = Math.max(0.5, ((ln && +ln.getAttribute("w")) || 9525) / E); css = css.replace(/border:[^;]*;/, "").replace(/background:[^;]*;/, "") + "height:0;border:0;border-top:" + lw + "pt solid " + (lf ? wdColor(ctx, lf) : "#000") + ";margin-top:" + -lw / 2 + "pt;"; }
+      else if (gp === "roundRect") css += "border-radius:" + Math.min(w, h) * 0.17 + "pt;"; else if (gp === "ellipse") css += "border-radius:50%;";
+    }
+    const blips = [...c.getElementsByTagNameNS("*", "blip"), ...c.getElementsByTagNameNS("*", "imagedata")];
+    const txbx = c.getElementsByTagNameNS(WNS, "txbxContent")[0];
+    if (txbx) {
+      const bp = any(c, "bodyPr"), ins = (k, d) => (bp && bp.getAttribute(k) != null ? +bp.getAttribute(k) / E : d);
+      css += "padding:" + ins("tIns", 3.6) + "pt " + ins("rIns", 7.2) + "pt " + ins("bIns", 3.6) + "pt " + ins("lIns", 7.2) + "pt;box-sizing:border-box;overflow:hidden;";
+      if (bp && bp.getAttribute("anchor") === "ctr") css += "display:flex;flex-direction:column;justify-content:center;"; else if (bp && bp.getAttribute("anchor") === "b") css += "display:flex;flex-direction:column;justify-content:flex-end;";
+      box.classList.add("wd-txbx");
+      const inner = document.createElement("span"); inner.style.display = "block";
+      const keep = ctx.inHF; ctx.inHF = false; const org = ctx.org; ctx.org = { x: 0, y: 0 };
+      await wdBlocks(ctx, txbx, inner, false, rels); ctx.inHF = keep; ctx.org = org; box.appendChild(inner);
+    } else if (blips.length) {
+      const b = blips[0], RN = "http://schemas.openxmlformats.org/officeDocument/2006/relationships", id = b.getAttributeNS(RN, "embed") || b.getAttribute("r:embed") || b.getAttributeNS(RN, "id") || b.getAttribute("r:id");
+      const url = await ctx.media(rels, id);
+      if (url) { const im = document.createElement("img"); im.src = url; im.alt = ""; im.style.cssText = "width:100%;height:100%;object-fit:fill;"; box.appendChild(im); if (!w) { box.style.width = "auto"; im.style.cssText = ""; } }
+    } else if (!spPr) box.classList.add("wd-shape");
+    box.style.cssText += css;
+    host.appendChild(box);
+  }
+  async function wdTable(ctx, tbl, edit, rels) {
+    const tPr = wKid(tbl, "tblPr"), sId = (tPr && wAttr(wKid(tPr, "tblStyle"), "val")) || ctx.defT || "";
+    const chain = wdStyleChain(ctx, sId);
+    const bordersOf = (pr) => { const b = pr && wKid(pr, "tblBorders"); if (!b) return null; const o = {}; ["top", "left", "bottom", "right", "insideH", "insideV"].forEach((s) => { const e = wKid(b, s) || wKid(b, s === "left" ? "start" : s === "right" ? "end" : s); if (e) o[s] = wdBorder(e); }); return o; };
+    const bd = {}; chain.forEach((s) => Object.assign(bd, bordersOf(s.tblPr) || {})); Object.assign(bd, bordersOf(tPr) || {});
+    const marOf = (pr) => { const mm = pr && wKid(pr, "tblCellMar"); if (!mm) return null; const o = {}; ["top", "left", "bottom", "right"].forEach((s) => { const e = wKid(mm, s) || wKid(mm, s === "left" ? "start" : s === "right" ? "end" : s); if (e) o[s] = twPt(wAttr(e, "w")); }); return o; };
+    const mar = { top: 0, left: 5.4, bottom: 0, right: 5.4 }; chain.forEach((s) => Object.assign(mar, marOf(s.tblPr) || {})); Object.assign(mar, marOf(tPr) || {});
+    const t = document.createElement("table"); t.className = "wd-tbl";
+    let grid = wKids(wKid(tbl, "tblGrid"), "gridCol").map((g) => twPt(wAttr(g, "w")));
+    const tw = tPr && wKid(tPr, "tblW"), twType = tw && wAttr(tw, "type");
+    // Spaltenbreiten fehlen oder sind unbrauchbar (manche Programme schreiben Platzhalter): Tabellenbreite gleichmässig verteilen
+    const gsum = grid.reduce((a, b) => a + b, 0);
+    if (grid.length && gsum < Math.min(60, ctx.textW * 0.25)) { const tot = twType === "dxa" && +wAttr(tw, "w") ? twPt(wAttr(tw, "w")) : twType === "pct" ? ctx.textW * (+wAttr(tw, "w") / 5000) : ctx.textW; grid = grid.map(() => tot / grid.length); }
+    if (grid.length) { const cg = document.createElement("colgroup"); grid.forEach((w) => { const col = document.createElement("col"); col.style.width = w + "pt"; cg.appendChild(col); }); t.appendChild(cg); t.style.width = grid.reduce((a, b) => a + b, 0) + "pt"; t.style.tableLayout = "fixed"; }
+    if (twType === "pct") { t.style.width = (+wAttr(tw, "w") / 50) + "%"; }
+    const jc = tPr && wAttr(wKid(tPr, "jc"), "val"); if (jc === "center") { t.style.marginLeft = "auto"; t.style.marginRight = "auto"; } else if (jc === "right" || jc === "end") t.style.marginLeft = "auto";
+    const ind = tPr && wKid(tPr, "tblInd"); if (ind && !jc) t.style.marginLeft = twPt(wAttr(ind, "w")) - mar.left + "pt";
+    const rows = wKids(tbl, "tr"), tb = document.createElement("tbody"); t.appendChild(tb);
+    const nCols = Math.max(grid.length, 1);
+    const above = []; // pro Spalte: Zelle mit vMerge-Anfang
+    for (let ri = 0; ri < rows.length; ri++) {
+      const tr = rows[ri], trEl = document.createElement("tr"), trPr = wKid(tr, "trPr");
+      const th = trPr && wKid(trPr, "trHeight"); if (th) trEl.style.height = twPt(wAttr(th, "val")) + "pt";
+      let gc = 0;
+      const before = trPr && wKid(trPr, "gridBefore"); if (before) gc += +wAttr(before, "val") || 0;
+      for (const tc of wKids(tr, "tc")) {
+        const tcPr = wKid(tc, "tcPr"), span = +wAttr(wKid(tcPr, "gridSpan"), "val") || 1, vm = wKid(tcPr, "vMerge"), vmv = vm ? wAttr(vm, "val") || "continue" : "";
+        if (vmv === "continue" && above[gc]) { above[gc].rowSpan++; gc += span; continue; }
+        const td = document.createElement("td"); if (span > 1) td.colSpan = span;
+        const cb = { top: ri === 0 ? bd.top : bd.insideH, bottom: ri === rows.length - 1 ? bd.bottom : bd.insideH, left: gc === 0 ? bd.left : bd.insideV, right: gc + span >= nCols ? bd.right : bd.insideV };
+        const tcb = tcPr && wKid(tcPr, "tcBorders"); if (tcb) ["top", "left", "bottom", "right"].forEach((s) => { const e = wKid(tcb, s) || wKid(tcb, s === "left" ? "start" : s === "right" ? "end" : s); if (e) cb[s] = wdBorder(e); });
+        let css = ["top", "left", "bottom", "right"].map((s) => "border-" + s + ":" + (cb[s] && cb[s] !== "none" ? cb[s] : "none") + ";").join("");
+        const cm = { ...mar }, tcm = tcPr && wKid(tcPr, "tcMar"); if (tcm) ["top", "left", "bottom", "right"].forEach((s) => { const e = wKid(tcm, s) || wKid(tcm, s === "left" ? "start" : s === "right" ? "end" : s); if (e) cm[s] = twPt(wAttr(e, "w")); });
+        css += "padding:" + cm.top + "pt " + cm.right + "pt " + cm.bottom + "pt " + cm.left + "pt;";
+        const sh = tcPr && wKid(tcPr, "shd"); if (sh) { const f = wHex(wAttr(sh, "fill")); if (f) css += "background:" + f + ";"; }
+        const va = tcPr && wAttr(wKid(tcPr, "vAlign"), "val"); css += "vertical-align:" + (va === "center" ? "middle" : va === "bottom" ? "bottom" : "top") + ";";
+        td.style.cssText = css;
+        await wdBlocks(ctx, tc, td, edit, rels);
+        if (!td.firstChild) td.innerHTML = "<p><br></p>";
+        if (vmv === "restart") for (let k = 0; k < span; k++) above[gc + k] = td; else for (let k = 0; k < span; k++) above[gc + k] = null;
+        trEl.appendChild(td); gc += span;
+      }
+      tb.appendChild(trEl);
+    }
+    return t;
+  }
+  // ----- Zurückspeichern -----
+  const RPR_ORDER = ["rStyle", "rFonts", "b", "bCs", "i", "iCs", "caps", "smallCaps", "strike", "dstrike", "outline", "shadow", "emboss", "imprint", "noProof", "snapToGrid", "vanish", "webHidden", "color", "spacing", "w", "kern", "position", "sz", "szCs", "highlight", "u", "effect", "bdr", "shd", "fitText", "vertAlign", "rtl", "cs", "em", "lang", "eastAsianLayout", "specVanish", "oMath"];
+  function wdSetProp(doc, rPr, name, on) {
+    wKids(rPr, name).forEach((e) => e.remove());
+    const e = doc.createElementNS(WNS, "w:" + name);
+    if (name === "u") e.setAttributeNS(WNS, "w:val", on ? "single" : "none"); else if (!on) e.setAttributeNS(WNS, "w:val", "0");
+    const at = RPR_ORDER.indexOf(name), next = [...rPr.children].find((c) => RPR_ORDER.indexOf(c.localName) > at);
+    rPr.insertBefore(e, next || null);
+  }
+  function wdBuildPara(ctx, k, domP, first) {
+    const doc = ctx.doc, orig = ctx.P[k], pm = ctx.PM[k];
+    const np = doc.createElementNS(WNS, "w:p");
+    if (first) [...orig.attributes].forEach((a) => { if (!/paraId|textId/.test(a.name)) np.setAttributeNode(a.cloneNode()); });
+    const pPr = wKid(orig, "pPr"); if (pPr) np.appendChild(pPr.cloneNode(true));
+    const items = [];
+    const under = (el) => { for (let e = el; e && e !== domP; e = e.parentElement) if (/underline/.test(getComputedStyle(e).textDecorationLine || "")) return true; return false; };
+    const walk = (node, r, h) => {
+      for (const c of [...node.childNodes]) {
+        if (c.nodeType === 3) {
+          let t = c.nodeValue.replace(/​/g, ""); if (!pm.nb) t = t.replace(/ /g, " ");
+          if (!t) continue;
+          const pe = c.parentElement, cs = getComputedStyle(pe);
+          items.push({ k: "t", t, r, h, b: (+cs.fontWeight || 400) >= 600, i: cs.fontStyle === "italic", u: under(pe) });
+          continue;
+        }
+        if (c.nodeType !== 1) continue;
+        if (c.tagName === "BR") { if (c === domP.lastChild && c.previousSibling == null) continue; if (c === domP.lastChild) continue; items.push({ k: "br", r, h, b: false, i: false, u: false }); continue; }
+        if (c.dataset && c.dataset.raw != null) { items.push({ k: "raw", node: ctx.RAW[+c.dataset.raw], h }); continue; }
+        walk(c, c.dataset && c.dataset.r != null ? +c.dataset.r : r, c.dataset && c.dataset.h != null ? +c.dataset.h : h);
+      }
+    };
+    walk(domP, null, null);
+    // gleiche Formatierung zusammenfassen
+    const merged = [];
+    items.forEach((it) => { const l = merged[merged.length - 1]; if (it.k === "t" && l && l.k === "t" && l.r === it.r && l.h === it.h && l.b === it.b && l.i === it.i && l.u === it.u) l.t += it.t; else merged.push({ ...it }); });
+    const mkRun = (it) => {
+      if (it.k === "raw") return it.node.cloneNode(true);
+      const base = it.r != null ? ctx.R[it.r] : { rPr: pm.rPr, b: pm.b, i: pm.i, u: pm.u };
+      const run = doc.createElementNS(WNS, "w:r");
+      if (it.r != null) [...ctx.R[it.r].el.attributes].forEach((a) => run.setAttributeNode(a.cloneNode()));
+      let rPr = base.rPr ? base.rPr.cloneNode(true) : null;
+      if (rPr && it.r == null) [...rPr.children].forEach((c) => { if (/^(ins|del|moveFrom|moveTo|rPrChange)$/.test(c.localName)) c.remove(); });
+      if (rPr && rPr.localName !== "rPr") rPr = null;
+      const need = (n) => { if (!rPr) rPr = doc.createElementNS(WNS, "w:rPr"); return rPr; };
+      if (it.k === "t") { if (it.b !== base.b) wdSetProp(doc, need(), "b", it.b); if (it.i !== base.i) wdSetProp(doc, need(), "i", it.i); if (it.u !== base.u) wdSetProp(doc, need(), "u", it.u); }
+      if (rPr) run.appendChild(rPr);
+      if (it.k === "br") { run.appendChild(doc.createElementNS(WNS, "w:br")); return run; }
+      it.t.split(/(\t|­|‑)/).forEach((part) => {
+        if (!part) return;
+        if (part === "\t") run.appendChild(doc.createElementNS(WNS, "w:tab"));
+        else if (part === "­") run.appendChild(doc.createElementNS(WNS, "w:softHyphen"));
+        else if (part === "‑") run.appendChild(doc.createElementNS(WNS, "w:noBreakHyphen"));
+        else { const t = doc.createElementNS(WNS, "w:t"); t.setAttributeNS(XMLNS, "xml:space", "preserve"); t.textContent = part; run.appendChild(t); }
+      });
+      return run;
+    };
+    let hl = null, hlIdx = null;
+    merged.forEach((it) => {
+      const run = mkRun(it);
+      if (it.h != null) {
+        if (hlIdx !== it.h) { hl = ctx.H[it.h].cloneNode(false); hlIdx = it.h; np.appendChild(hl); }
+        hl.appendChild(run);
+      } else { hl = null; hlIdx = null; np.appendChild(run); }
+    });
+    return np;
+  }
+  // Absätze ohne Kennung (neu entstanden) gehören zum vorhergehenden Absatz derselben Zelle
+  function wdGroups(ctx, root) {
+    const g = {};
+    const scan = (box) => {
+      let last = null; const loose = [];
+      box.querySelectorAll(":scope > p, :scope > div").forEach((p) => {
+        if (p.classList.contains("wd-lock")) return;
+        if (p.dataset.wp != null) { last = +p.dataset.wp; (g[last] = g[last] || []).push(p); loose.splice(0).forEach((q) => g[last].splice(g[last].length - 1, 0, q)); }
+        else if (last != null) g[last].push(p); else loose.push(p);
+      });
+    };
+    scan(root); root.querySelectorAll("td").forEach(scan);
+    return g;
+  }
+  async function wdSave(ctx) {
+    const doc = ctx.doc, root = ctx.bodyEl;
+    // lose Textstücke ausserhalb von Absätzen in Absätze packen
+    [root, ...root.querySelectorAll("td")].forEach((box) => {
+      [...box.childNodes].forEach((n) => {
+        if (n.nodeType === 1 && /^(P|DIV|TABLE|COLGROUP|TBODY)$/.test(n.tagName)) return;
+        if (n.nodeType === 3 && !n.nodeValue.trim()) return;
+        const p = document.createElement("p"); const prev = n.previousElementSibling; if (prev && prev.dataset && prev.dataset.wp) p.dataset.wp = prev.dataset.wp; n.before(p); p.appendChild(n);
+      });
+    });
+    const groups = wdGroups(ctx, root);
+    let changed = 0;
+    ctx.P.forEach((orig, k) => {
+      const dom = groups[k] || [];
+      if (dom.length === 1 && dom[0].innerHTML === ctx.orig[k]) return;
+      changed++;
+      const parent = orig.parentNode;
+      dom.forEach((dp, j) => parent.insertBefore(wdBuildPara(ctx, k, dp, j === 0), orig));
+      parent.removeChild(orig);
+    });
+    // Word verlangt: jede Zelle endet mit einem Absatz, ebenso der Text vor den Seiteneinstellungen
+    [...doc.getElementsByTagNameNS(WNS, "tc")].forEach((tc) => { const l = tc.lastElementChild; if (!l || l.localName !== "p") tc.appendChild(doc.createElementNS(WNS, "w:p")); });
+    const bodyKids = [...ctx.body.children].filter((c) => c.localName !== "sectPr"), lastB = bodyKids[bodyKids.length - 1];
+    if (!lastB || lastB.localName === "tbl") ctx.body.insertBefore(doc.createElementNS(WNS, "w:p"), ctx.sect || null);
+    const out = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n' + new XMLSerializer().serializeToString(doc.documentElement);
+    ctx.zip.file("word/document.xml", out);
+    const blob = await ctx.zip.generateAsync({ type: "blob", compression: "DEFLATE", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+    return { blob, changed };
+  }
+  // ----- Datei holen und speichern (dieselbe Datei: im Ordner bzw. in der App) -----
+  const WD_CACHE = {};
+  async function wdRead(f) {
+    if (window.ZLOCAL && window.ZLOCAL.readEx && f.path) {
+      try { const r = await window.ZLOCAL.readEx(f.path); return { bytes: new Uint8Array(await r.blob.arrayBuffer()), etag: r.etag, where: "path" }; } catch (e) { console.warn("Datei im Ordner nicht gefunden, nehme App-Kopie", e); }
+    }
+    return { bytes: await fileBytes(f), etag: null, where: "app" };
+  }
+  async function wdWrite(f, blob, etag, where) {
+    if (where === "path") return { etag: await window.ZLOCAL.writeIf(f.path, blob, etag), text: "im Ordner gespeichert" };
+    // noch keine Datei im Ordner: wenn die Reihe einen Ordner hat, dort ablegen (dann ist es ab jetzt diese Datei)
+    const folder = typeof zlFolder === "function" ? zlFolder() : "";
+    if (window.ZLOCAL && window.ZLOCAL.place && folder) {
+      const j = await window.ZLOCAL.place(folder, f.name, blob, false);
+      if (j.existed) await window.ZLOCAL.writeIf(j.path, blob, null);
+      f.path = j.path; try { linkFilePath(f.id, j.path); } catch (e) {}
+      const m = window.ZLOCAL.readEx ? await window.ZLOCAL.readEx(j.path) : null;
+      return { etag: m ? m.etag : null, where: "path", text: "im Ordner der Reihe gespeichert" };
+    }
+    if (!state.assets || !state.assets.replace) throw new Error("Speichern geht hier nicht (nur mit OneDrive).");
+    await state.assets.replace(f.id, f.enc === "b64" ? new Blob([await blobToB64(blob)], { type: "text/plain" }) : blob);
+    return { etag: null, text: "in Semper gespeichert" };
+  }
+  // Vorschau in den Notizen (verkleinerte Seite, wie ein Bild)
+  function wdFindFile(id, extra) {
+    for (const f of extra || []) if (f && f.id === id) return f;
+    let hit = null;
+    const scan = (v, d) => { if (hit || !v || typeof v !== "object" || d > 7) return; if (Array.isArray(v)) { v.forEach((x) => scan(x, d + 1)); return; } if (v.id === id && typeof v.name === "string") { hit = v; return; } for (const k in v) if (k !== "lessons" && k !== "notesHtml") scan(v[k], d + 1); };
+    scan(U.reihen, 0);
+    return hit;
+  }
+  async function ndocFill(box, files, force) {
+    if (!box) return;
+    for (const fig of box.querySelectorAll("figure.ndoc")) {
+      const id = fig.dataset.doc; let v = fig.querySelector(".ndoc-v");
+      if (v && !force) continue;
+      if (force && force !== id && v) continue;
+      if (!v) { v = document.createElement("div"); v.className = "ndoc-v"; fig.insertBefore(v, fig.firstChild); }
+      v.innerHTML = '<div class="ndoc-load">📄 ' + esc(fig.dataset.name || "Word-Dokument") + " · lädt …</div>";
+      const f = wdFindFile(id, files);
+      if (!f) { v.innerHTML = '<div class="ndoc-load">📄 ' + esc(fig.dataset.name || "Word-Dokument") + " – nicht gefunden</div>"; continue; }
+      try {
+        if (!WD_CACHE[id] || force === id) WD_CACHE[id] = await wdRead(f);
+        const ctx = await wdLoad(WD_CACHE[id].bytes.slice(0)), page = await wdRender(ctx, false);
+        const sc = document.createElement("div"); sc.className = "ndoc-sc"; sc.appendChild(page);
+        v.innerHTML = ""; v.appendChild(sc);
+        wdTabs(page, ctx.defTab);
+        // nur die erste Seite zeigen (bis zur Seitenhöhe bzw. zum ersten Seitenumbruch)
+        const pages = +((/<Pages>(\d+)<\/Pages>/.exec((ctx.zip.file("docProps/app.xml") && await ctx.zip.file("docProps/app.xml").async("string")) || "") || [])[1]) || 0;
+        const fit = () => {
+          const w = v.clientWidth; if (!w) return; const pw = page.offsetWidth || 1, k = w / pw; sc.style.transform = "scale(" + k + ")";
+          let hp = (ctx.pageH * 96) / 72; const pb = page.querySelector(".wd-body .wd-pb");
+          if (pb) hp = Math.min(hp, pb.offsetTop + (ctx.mB * 96) / 72);
+          const more = page.offsetHeight > hp + 4;
+          v.style.height = Math.ceil(Math.min(page.offsetHeight, hp) * k) + "px"; v.classList.toggle("more", more);
+          v.dataset.more = more ? (pages > 1 ? "Seite 1 von " + pages : "weitere Seiten") + " · Doppelklick = ganzes Dokument" : "";
+        };
+        fit(); if (window.ResizeObserver) { const ro = new ResizeObserver(fit); ro.observe(v); }
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { wdTabs(page, ctx.defTab); fit(); });
+      } catch (e) { console.error(e); v.innerHTML = '<div class="ndoc-load">📄 ' + esc(fig.dataset.name || "Word-Dokument") + " – Vorschau geht nicht (" + esc(e.message || e) + ")</div>"; }
+    }
+  }
+  // Der Editor: ganze Seite wie in Word, Schreiben direkt im Dokument
+  async function wdEdit(f, opt) {
+    opt = opt || {};
+    let root = document.getElementById("wdRoot"); if (!root) { root = document.createElement("div"); root.id = "wdRoot"; document.body.appendChild(root); }
+    root.innerHTML = '<div class="wd-ov" role="dialog" aria-modal="true" aria-label="' + esc(f.name) + '"><div class="wd-bar">' +
+      '<b class="wd-name">' + esc(f.name) + "</b>" +
+      '<span class="wd-tools"><button type="button" class="nb" data-wc="undo" title="Rückgängig (Strg+Z)">↶</button><button type="button" class="nb" data-wc="redo" title="Wiederholen (Strg+Y)">↷</button><span class="nsep"></span>' +
+      '<button type="button" class="nb" data-wc="bold" title="Fett (Strg+B)"><b>F</b></button><button type="button" class="nb" data-wc="italic" title="Kursiv (Strg+I)"><i>K</i></button><button type="button" class="nb" data-wc="underline" title="Unterstrichen (Strg+U)"><u>U</u></button>' +
+      '<span class="nsep"></span><button type="button" class="nb" data-wc="zo" title="Kleiner anzeigen">−</button><button type="button" class="nb" data-wc="zi" title="Grösser anzeigen">+</button></span>' +
+      '<span class="msg" id="wd-msg">Lädt …</span><span class="right"><button type="button" class="btn primary" id="wd-save" disabled title="In dieselbe Datei speichern (Strg+S)">Speichern</button><button type="button" class="btn" id="wd-close">Schliessen</button></span></div>' +
+      '<div class="vw-bar" id="wd-ask" hidden><span>Es gibt ungespeicherte Änderungen.</span><button class="btn primary" type="button" id="wd-ask-save">Speichern und schliessen</button><button class="btn ghost danger" type="button" id="wd-ask-drop">Verwerfen</button><button class="btn ghost" type="button" id="wd-ask-back">Weiter bearbeiten</button></div>' +
+      '<div class="wd-scroll" id="wd-scroll"></div></div>';
+    const $w = (s) => root.querySelector(s), msg = $w("#wd-msg"), bSave = $w("#wd-save"), scroll = $w("#wd-scroll");
+    let ctx = null, cur = null, dirty = false, zoom = 1, busy = false;
+    const setMsg = (t, warn) => { msg.textContent = t; msg.className = "msg" + (warn ? " warn" : ""); };
+    const close = () => { root.innerHTML = ""; document.removeEventListener("keydown", keys, true); if (opt.onClose) opt.onClose(); };
+    const tryClose = () => { if (dirty) { $w("#wd-ask").hidden = false; return; } close(); };
+    const keys = (e) => {
+      if (!root.firstChild) return;
+      if (e.key === "Escape") { e.preventDefault(); e.stopImmediatePropagation(); tryClose(); return; }
+      if ((e.ctrlKey || e.metaKey) && (e.key || "").toLowerCase() === "s") { e.preventDefault(); e.stopImmediatePropagation(); save(); }
+    };
+    document.addEventListener("keydown", keys, true);
+    $w("#wd-close").onclick = tryClose;
+    $w("#wd-ask-back").onclick = () => { $w("#wd-ask").hidden = true; };
+    $w("#wd-ask-drop").onclick = close;
+    $w("#wd-ask-save").onclick = async () => { if (await save()) close(); };
+    const applyZoom = () => { if (!cur) return; cur.style.zoom = String(zoom); };
+    const fitZoom = () => { if (!cur) return; const w = scroll.clientWidth - 32, pw = cur.offsetWidth / (zoom || 1); zoom = Math.min(1.25, Math.max(0.4, w / pw)); if (zoom > 0.97 && zoom < 1.03) zoom = 1; applyZoom(); };
+    root.querySelector(".wd-tools").addEventListener("mousedown", (e) => e.preventDefault());
+    root.querySelector(".wd-tools").addEventListener("click", (e) => {
+      const b = e.target.closest("[data-wc]"); if (!b) return;
+      const c = b.dataset.wc;
+      if (c === "zi" || c === "zo") { zoom = Math.max(0.4, Math.min(2, zoom + (c === "zi" ? 0.1 : -0.1))); applyZoom(); return; }
+      try { document.execCommand("styleWithCSS", false, true); } catch (er) {}
+      document.execCommand(c);
+    });
+    async function load() {
+      setMsg("Lädt …");
+      const r = await wdRead(f); WD_CACHE[f.id] = r;
+      ctx = await wdLoad(r.bytes.slice(0)); ctx.etag = r.etag; ctx.where = r.where;
+      const page = await wdRender(ctx, true);
+      scroll.innerHTML = ""; scroll.appendChild(page); cur = page;
+      const body = ctx.bodyEl; body.contentEditable = "true"; body.spellcheck = true;
+      let tt = 0;
+      body.addEventListener("input", () => { if (!dirty) { dirty = true; bSave.disabled = false; } setMsg("Ungespeicherte Änderungen"); wdRenumber(ctx, body); clearTimeout(tt); tt = setTimeout(() => wdTabs(page, ctx.defTab), 120); });
+      body.addEventListener("keydown", (e) => {
+        if (e.key === "Tab" && !e.ctrlKey && !e.altKey) { e.preventDefault(); document.execCommand("insertHTML", false, '<span class="wd-tab" contenteditable="false">\t</span>'); }
+        if (e.key === "Enter" && e.shiftKey) { e.preventDefault(); document.execCommand("insertLineBreak"); }
+      });
+      body.addEventListener("paste", (e) => {
+        e.preventDefault();
+        const lines = ((e.clipboardData && e.clipboardData.getData("text/plain")) || "").replace(/\r/g, "").split("\n");
+        lines.forEach((l, i) => { if (i) document.execCommand("insertParagraph"); if (l) document.execCommand("insertText", false, l); });
+      });
+      body.addEventListener("drop", (e) => e.preventDefault());
+      try { document.execCommand("defaultParagraphSeparator", false, "p"); document.execCommand("styleWithCSS", false, true); } catch (er) {}
+      dirty = false; bSave.disabled = true;
+      setMsg(ctx.hasLock ? "Hellgrau hinterlegte Absätze (z. B. mit Feldern) bleiben unverändert." : "Direkt in die Seite klicken und schreiben.");
+      fitZoom(); wdTabs(page, ctx.defTab);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (cur === page) wdTabs(page, ctx.defTab); });
+    }
+    async function save() {
+      if (!ctx || busy) return false; if (!dirty) { setMsg("Nichts geändert."); return true; }
+      busy = true; bSave.disabled = true; setMsg("Speichert …");
+      try {
+        const { blob } = await wdSave(ctx);
+        let w;
+        try { w = await wdWrite(f, blob, ctx.etag, ctx.where); }
+        catch (e) {
+          if (e && e.status === 412) {
+            if (!confirm("Die Datei wurde inzwischen anderswo geändert (z. B. in Word). Trotzdem mit Ihrer Fassung überschreiben?\n\n«Abbrechen» = nichts speichern; Sie können die Änderungen dann kopieren und das Dokument neu öffnen.")) { setMsg("Nicht gespeichert – die Datei wurde anderswo geändert.", true); busy = false; bSave.disabled = false; return false; }
+            w = await wdWrite(f, blob, null, ctx.where);
+          } else throw e;
+        }
+        const bytes = new Uint8Array(await blob.arrayBuffer());
+        WD_CACHE[f.id] = { bytes, etag: w.etag, where: w.where || ctx.where };
+        dirty = false; busy = false;
+        const t = new Date(); setMsg("✓ " + w.text + " (" + String(t.getHours()).padStart(2, "0") + ":" + String(t.getMinutes()).padStart(2, "0") + ")");
+        // neu einlesen, damit weitere Änderungen auf der gespeicherten Fassung aufbauen
+        const y = scroll.scrollTop; ctx = null; await load(); scroll.scrollTop = y; setMsg("✓ " + w.text + " (" + String(t.getHours()).padStart(2, "0") + ":" + String(t.getMinutes()).padStart(2, "0") + ")");
+        if (opt.onSaved) opt.onSaved(f);
+        return true;
+      } catch (e) {
+        console.error(e); busy = false; bSave.disabled = false;
+        setMsg(e && e.status === 423 ? "Die Datei ist gerade in Word geöffnet. Bitte Word schliessen und nochmals speichern." : "Speichern hat nicht geklappt: " + (e.message || e), true);
+        return false;
+      }
+    }
+    bSave.onclick = save;
+    try { await load(); }
+    catch (e) { console.error(e); scroll.innerHTML = '<div class="empty">Das Dokument konnte nicht geöffnet werden: ' + esc(e.message || e) + "</div>"; setMsg(""); }
+  }
   async function openViewer(f, edit) {
     let root = document.getElementById("viewerRoot");
     if (!root) { root = document.createElement("div"); root.id = "viewerRoot"; document.body.appendChild(root); }
@@ -4258,6 +5025,11 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         body.innerHTML = '<div class="vw-doc">' + out.value + "</div>";
         body.querySelectorAll("script,iframe,object,embed").forEach((n) => n.remove());
         if (edit && edit.onSaveAs && state.assets && !window.ZLOCAL) setupDocEdit(f, edit, body.firstChild, msg);
+        else if (window.ZLOCAL && window.ZLOCAL.readEx) {
+          // mit OneDrive: direkt in Semper bearbeiten und in dieselbe Datei speichern
+          const bE = $("#vw-edit"); bE.hidden = false; bE.textContent = "✎ Bearbeiten"; bE.title = "Hier in Semper bearbeiten und in dieselbe Datei speichern (ohne Kopie)";
+          bE.onclick = () => { closeViewer(true); wdEdit(f, { onSaved: () => { if (edit && edit.onSaved) edit.onSaved(f); } }); };
+        }
       } else if (ext === "xlsx" || ext === "xls" || ext === "csv") {
         await loadScript(LIBS.xlsx);
         const wb = window.XLSX.read(bytes, { type: "array" });
@@ -4311,7 +5083,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       '<label class="nlh" title="Spalten einfügen, z. B. Fragen links, Antworten rechts">Spalten <select id="d-ncols"><option value="">–</option><option value="2">2 Spalten</option><option value="3">3 Spalten</option><option value="0">Spalten aufheben</option></select></label>' + '<span class="nsep"></span>' +
       '<span class="ntab-w"><button type="button" class="nb nimg" id="d-ntabb" aria-expanded="false" title="Tabelle einfügen: Grösse im Raster wählen oder Spalten und Zeilen eingeben">▦ Tabelle</button><div class="ntab-pop" id="d-ntabp" hidden><div class="ntab-grid">' + Array.from({ length: 64 }, (_, k) => '<button type="button" class="ntab-c" data-r="' + (Math.floor(k / 8) + 1) + '" data-c="' + (k % 8 + 1) + '"></button>').join("") + '</div><div class="ntab-lbl">Grösse im Raster wählen</div><div class="ntab-num"><label>Spalten <input type="number" id="d-ntc" min="1" max="20" value="3"></label><label>Zeilen <input type="number" id="d-ntr" min="1" max="60" value="3"></label><button type="button" class="btn primary" id="d-ntok">Einfügen</button></div></div></span>' + '<span class="nsep"></span>' +
       '<label class="nlh" title="Zeilenabstand">Zeilenabstand <select id="d-nlh">' + [[1.15, "eng"], [1.5, "normal"], [1.8, "weit"], [2.2, "sehr weit"]].map(([v, l]) => '<option value="' + v + '"' + ((x.notesLh || 1.5) === v ? " selected" : "") + ">" + l + "</option>").join("") + "</select></label>" + '<span class="nsep"></span>' +
-      '<label class="nb nimg" title="Bild oder Screenshot einfügen (auch mit Strg+V)">🖼 Bild<input type="file" id="d-nimg" accept="image/*" multiple hidden></label><span class="msg" id="d-nmsg"></span></div>' +
+      '<label class="nb nimg" title="Bild oder Screenshot einfügen (auch mit Strg+V)">🖼 Bild<input type="file" id="d-nimg" accept="image/*" multiple hidden></label>' +
+      '<button type="button" class="nb nimg" id="d-nword" aria-haspopup="menu" title="Word-Dokument (Arbeitsblatt) in die Notizen einfügen – grösser/kleiner wie ein Bild, Doppelklick = direkt bearbeiten und in dieselbe Datei speichern">📄 Word</button><input type="file" id="d-nwordf" accept=".docx" hidden><span class="msg" id="d-nmsg"></span></div>' +
       '<div class="notes-ed" style="line-height:' + (x.notesLh || 1.5) + '" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Notizen" id="d-notes" data-ph="Fragen, Hinweise, Tafelbild, Lösungen … Screenshots mit Strg+V einfügen.">' + sanitizeNotes(x.notesHtml || "") + '</div><div class="links" id="d-links">' + linkify(x.notesHtml ? notesLinkText(x.notesHtml) : x.details || "") + "</div></div>";
     const notesF = opt.plan ? notesRich : '<div class="field"><label for="d-details">' + (opt.plan ? "Notizen, Querverweise, Links" : "Details, Querverweise, Links") + '</label><textarea id="d-details" placeholder="' + (opt.plan ? "Fragen, Hinweise, Tafelbild, Querverweise … Links (https://…) werden unten anklickbar." : "Alles, was nicht in die Liste muss. Links (https://…) werden unten anklickbar.") + '">' + esc(x.details) + '</textarea><div class="links" id="d-links">' + linkify(x.details || "") + "</div></div>";
     const rfl = (opt.reiheFiles || []);
@@ -4356,7 +5129,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
             const z = root.querySelector("#p-ziele"); if (z) z.innerHTML = sanitize(opt.plan.ziele || "");
             const t1 = root.querySelector("#d-text"); if (t1) t1.innerHTML = tdpDeco(richOf(x, 1));
             const nd = root.querySelector("#d-notes");
-            if (nd) { nd.innerHTML = sanitizeNotes(x.notesHtml || ""); nd.querySelectorAll("figure.nfig").forEach((f) => { f.contentEditable = "false"; }); nd.style.lineHeight = String(x.notesLh || 1.5); const lh = root.querySelector("#d-nlh"); if (lh) lh.value = String(x.notesLh || 1.5); const dl = root.querySelector("#d-links"); if (dl) dl.innerHTML = linkify(notesLinkText(x.notesHtml || "")); }
+            if (nd) { nd.innerHTML = sanitizeNotes(x.notesHtml || ""); nd.querySelectorAll("figure.nfig").forEach((f) => { f.contentEditable = "false"; }); ndocFill(nd, [...(x.files || []), ...(opt.reiheFiles || [])]); nd.style.lineHeight = String(x.notesLh || 1.5); const lh = root.querySelector("#d-nlh"); if (lh) lh.value = String(x.notesLh || 1.5); const dl = root.querySelector("#d-links"); if (dl) dl.innerHTML = linkify(notesLinkText(x.notesHtml || "")); }
             ttHide(); oc(); H.busy = false; H.t = 0; btns();
           };
           const step = (dir) => {
@@ -4395,7 +5168,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         root.querySelectorAll(".rtfield").forEach((f) => f.addEventListener("keydown", (ev) => { if (ev.key === "Enter") { ev.preventDefault(); lineBreak(); } }));
         if (tDet) tDet.addEventListener("input", () => { x.details = tDet.value; $("#d-links").innerHTML = linkify(x.details); changed(); });
         const ned = $("#d-notes");
-        if (ned) bindNotes(root, ned, x, changed);
+        if (ned) bindNotes(root, ned, x, changed, { reiheFiles: opt.reiheFiles || [], addFiles: (fl) => addFiles(fl), drawFiles: () => drawFiles() });
         root.querySelectorAll("[data-dtog]").forEach((b) => b.addEventListener("click", () => {
           const k = b.dataset.dtog, open = b.getAttribute("aria-expanded") !== "true";
           b.setAttribute("aria-expanded", String(open)); root.querySelector('[data-dsec="' + k + '"]').hidden = !open;
@@ -4432,8 +5205,9 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
           $("#d-up").hidden = true;
           msg.textContent = state.local ? "Dokumente können nur in der Claude-Ansicht gespeichert werden." : "Dokumente hochladen ist in dieser Ansicht nicht möglich.";
         }
-        $("#d-file").addEventListener("change", async (e) => {
-          const files = [...e.target.files]; e.target.value = "";
+        $("#d-file").addEventListener("change", async (e) => { const files = [...e.target.files]; e.target.value = ""; await addFiles(files); });
+        async function addFiles(files) {
+          const added = [];
           for (const file of files) {
             const ext = (file.name.split(".").pop() || "").toLowerCase();
             const type = TEXT_TYPES[ext] || file.type;
@@ -4449,7 +5223,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
               let r;
               if (packed) r = await state.assets.upload(new Blob([await blobToB64(file)], { type: "text/plain" }), { type: "text/plain" });
               else r = await state.assets.upload(file, { type });
-              x.files = [...x.files, packed ? { id: r.id, name: file.name, size: file.size, type: file.type || ext, enc: "b64" } : { id: r.id, name: file.name, size: r.sizeBytes, type: r.contentType }];
+              const nf = packed ? { id: r.id, name: file.name, size: file.size, type: file.type || ext, enc: "b64" } : { id: r.id, name: file.name, size: r.sizeBytes, type: r.contentType };
+              x.files = [...x.files, nf]; added.push(nf);
               drawFiles(); changed();
               msg.textContent = "„" + file.name + "“ ist gespeichert. Ein Klick auf den Namen zeigt es an.";
             } catch (err) {
@@ -4458,7 +5233,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
               msg.textContent = err && err.code === "too_large" ? "„" + file.name + "“ ist zu gross (höchstens 20 MB)." : "„" + file.name + "“ konnte nicht hochgeladen werden. Bitte nochmals versuchen.";
             }
           }
-        });
+          return added;
+        }
 
         if ($("#d-clear")) $("#d-clear").onclick = () => {
           x.text = ""; x.html = ""; x.color = ""; x.details = ""; tText.innerHTML = "";
@@ -4478,7 +5254,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         if (tDet) tDet.focus();
       });
   }
-  function bindNotes(root, ned, x, changed) {
+  function bindNotes(root, ned, x, changed, nopt) {
+    nopt = nopt || {};
     const save = () => { x.notesHtml = sanitizeNotes(ned.innerHTML); x.details = notesPlain(x.notesHtml); $("#d-links").innerHTML = linkify(notesLinkText(x.notesHtml)); changed(); };
     let t = null; ned.addEventListener("input", () => { clearTimeout(t); t = setTimeout(save, 250); });
     ned.addEventListener("blur", () => { clearTimeout(t); save(); });
@@ -4544,9 +5321,61 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         if (!fig.nextSibling) { const dv = document.createElement("div"); dv.innerHTML = "<br>"; fig.after(dv); }
         figLock(); dropFill(null); save(); return;
       }
-      const f = [...(e.dataTransfer.files || [])]; if (f.length) { e.preventDefault(); insertImgs(f); }
+      const f = [...(e.dataTransfer.files || [])]; if (f.length) { e.preventDefault(); const dx = f.filter(isDocx); if (dx.length) addDocx(dx); insertImgs(f.filter((y) => !isDocx(y))); }
     });
     $("#d-nimg").addEventListener("change", (e) => { const f = [...e.target.files]; e.target.value = ""; insertImgs(f); });
+    // Word-Dokumente in den Notizen: Vorschau wie ein Bild (Grösse, Lage), Doppelklick = bearbeiten und in dieselbe Datei speichern
+    const docFiles = () => [...(x.files || []), ...(nopt.reiheFiles || [])];
+    const isDocx = (f) => /\.docx$/i.test(f.name || "");
+    let docRange = null;
+    const keepDocRange = () => { const sl = getSelection(); docRange = sl.rangeCount && ned.contains(sl.anchorNode) ? sl.getRangeAt(0).cloneRange() : null; };
+    const insertDoc = (f) => {
+      ned.focus({ preventScroll: true });
+      const sl = getSelection();
+      if (docRange && ned.contains(docRange.startContainer)) { sl.removeAllRanges(); sl.addRange(docRange); }
+      if (!(sl.rangeCount && ned.contains(sl.anchorNode))) { const rg = document.createRange(); rg.selectNodeContents(ned); rg.collapse(false); sl.removeAllRanges(); sl.addRange(rg); }
+      // als eigener Block nach dem Absatz mit der Schreibmarke
+      const fig = document.createElement("figure"); fig.className = "nfig ndoc w50 p-c"; fig.contentEditable = "false"; fig.dataset.doc = f.id; fig.dataset.name = f.name;
+      let top = sl.anchorNode; while (top && top !== ned && top.parentNode !== ned) top = top.parentNode;
+      if (!top || top === ned) ned.appendChild(fig); else if (top.nodeType === 1 && top.tagName === "DIV" && !top.textContent.trim() && !top.querySelector("img,figure,table")) top.replaceWith(fig); else top.after(fig);
+      if (!fig.nextElementSibling) { const d = document.createElement("div"); d.innerHTML = "<br>"; fig.after(d); }
+      ndocFill(ned, docFiles()); save();
+      $("#d-nmsg").textContent = "Word-Dokument eingefügt. Ein Klick darauf: Grösse und Lage; Doppelklick: bearbeiten.";
+    };
+    const openDoc = (fig) => {
+      const f = wdFindFile(fig.dataset.doc, docFiles());
+      if (!f) { $("#d-nmsg").textContent = "Das Dokument wurde nicht gefunden (vielleicht aus den Dokumenten entfernt)."; return; }
+      wdEdit(f, { onSaved: () => { ndocFill(ned, docFiles(), f.id); if (nopt.drawFiles) nopt.drawFiles(); changed(); } });
+    };
+    const addDocx = async (files) => {
+      if (!nopt.addFiles) return;
+      $("#d-nmsg").textContent = "Lädt hoch …";
+      const added = await nopt.addFiles(files.filter(isDocx));
+      added.forEach(insertDoc);
+      if (!added.length) $("#d-nmsg").textContent = "Das hat nicht geklappt.";
+    };
+    $("#d-nword").addEventListener("click", (e) => {
+      keepDocRange();
+      const btn = e.currentTarget, old = document.getElementById("ndocmenu"); if (old) { old.remove(); return; }
+      const list = docFiles().filter(isDocx), seen = new Set();
+      const m = document.createElement("div"); m.className = "cmenu ffmenu"; m.id = "ndocmenu"; m.setAttribute("role", "menu");
+      m.innerHTML = (list.length ? '<span class="help ndoc-mh">Dokumente dieser Lektion und Reihe</span>' + list.filter((f) => !seen.has(f.id) && seen.add(f.id)).map((f) => '<button type="button" role="menuitem" data-ndoc="' + esc(f.id) + '">📄 ' + esc(f.name) + "</button>").join("") + "<hr>" : '<span class="help ndoc-mh">Diese Lektion hat noch kein Word-Dokument.</span>') +
+        '<button type="button" role="menuitem" data-ndocnew>＋ Word-Datei vom Computer …</button>';
+      document.body.appendChild(m);
+      const r = btn.getBoundingClientRect(); m.style.left = Math.max(8, Math.min(r.left, innerWidth - m.offsetWidth - 8)) + "px"; m.style.top = (r.bottom + 4 + m.offsetHeight > innerHeight ? Math.max(8, r.top - m.offsetHeight - 4) : r.bottom + 4) + "px";
+      const close = () => { m.remove(); document.removeEventListener("pointerdown", out, true); };
+      const out = (ev) => { if (!m.contains(ev.target) && ev.target !== btn) close(); };
+      document.addEventListener("pointerdown", out, true);
+      m.addEventListener("mousedown", (ev) => ev.preventDefault());
+      m.addEventListener("click", (ev) => {
+        const b = ev.target.closest("button"); if (!b) return; close();
+        if (b.dataset.ndocnew != null) { $("#d-nwordf").click(); return; }
+        const f = docFiles().find((y) => y.id === b.dataset.ndoc); if (f) insertDoc(f);
+      });
+    });
+    $("#d-nwordf").addEventListener("change", (e) => { const f = [...e.target.files]; e.target.value = ""; addDocx(f); });
+    ned.addEventListener("dblclick", (e) => { const fig = e.target.closest && e.target.closest("figure.ndoc"); if (fig && ned.contains(fig)) { e.preventDefault(); fpClose(); openDoc(fig); } });
+    ndocFill(ned, docFiles());
     // Bilder: im Text nicht bearbeitbar (ganzer Block), ein Klick öffnet Grösse, Lage, Bildunterschrift/Quelle
     // nach einer Tabelle ganz am Ende eine leere Zeile, damit man darunter weiterschreiben kann
     function tabTail() { const l = ned.lastElementChild; if (l && l.tagName === "TABLE") { const d = document.createElement("div"); d.innerHTML = "<br>"; ned.appendChild(d); } }
@@ -4567,7 +5396,9 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const W = (v, l, t) => '<button type="button" class="lk-tb" data-nw="' + v + '" title="' + t + '">' + l + "</button>";
       const P = (v, l, t) => '<button type="button" class="lk-tb" data-np="' + v + '" title="' + t + '">' + l + "</button>";
       const cap = fig.querySelector("figcaption");
-      el.innerHTML = '<div class="lk-fph"><b>Bild</b><button type="button" class="lk-fold" data-nx title="Schliessen">✕</button></div>' +
+      const isDoc = fig.classList.contains("ndoc");
+      el.innerHTML = '<div class="lk-fph"><b>' + (isDoc ? "Word-Dokument" : "Bild") + '</b><button type="button" class="lk-fold" data-nx title="Schliessen">✕</button></div>' +
+        (isDoc ? '<button type="button" class="btn primary nf-edit" data-nedit title="Das Dokument hier bearbeiten und in dieselbe Datei speichern (auch: Doppelklick auf die Vorschau)">✎ Bearbeiten</button>' : "") +
         '<label class="lk-fpl" for="nf-cap">Bildunterschrift / Quelle</label><input class="nf-cap" id="nf-cap" type="text" placeholder="z. B. Quelle: Lehrmittel, S. 12" value="' + esc(cap ? cap.textContent : "") + '">' +
         '<span class="lk-fpl">Grösse</span><div class="lk-fpg four">' + W("25", "¼", "Ein Viertel der Breite") + W("33", "⅓", "Ein Drittel der Breite") + W("50", "½", "Halbe Breite") + W("75", "¾", "Drei Viertel der Breite") + W("", "Ganz", "Ganze Breite bzw. Originalgrösse") + "</div>" +
         '<span class="lk-fpl">Mit Text daneben</span><div class="lk-fpg two">' + P("l", "▤ Bild links", "Bild links, Text fliesst rechts daneben") + P("r", "Bild rechts ▤", "Bild rechts, Text fliesst links daneben") + "</div>" +
@@ -4588,6 +5419,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       el.addEventListener("click", (e) => {
         const b = e.target.closest("button"); if (!b) return;
         if (b.dataset.nx != null) { fpClose(); save(); return; }
+        if (b.dataset.nedit != null) { fpClose(); save(); openDoc(fig); return; }
         if (b.dataset.nw != null) { fig.className = fig.className.replace(/\s*\bw(25|33|50|75|100)\b/g, "") + (b.dataset.nw ? " w" + b.dataset.nw : ""); mark(); place(); save(); return; }
         if (b.dataset.np != null) { fig.className = fig.className.replace(/\s*\bp-[lrc]\b/g, "") + (b.dataset.np ? " p-" + b.dataset.np : ""); mark(); place(); save(); return; }
         if (b.dataset.nmv) {
@@ -4702,6 +5534,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     });
     ned.addEventListener("click", (e) => {
       if (e.detail === 1 && e.target === ned) { dropFill(null); if (belowEnd(e, false)) return; }
+      const dfig = e.target.closest("figure.ndoc"); if (dfig) { e.preventDefault(); if (e.detail === 1) figPop(dfig); return; }
       const img = e.target.closest("img"); if (!img) { besideFig(e); return; }
       e.preventDefault();
       const fig = img.closest("figure.nfig") || toFig(img);
@@ -8787,6 +9620,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const b = document.createElement("button"); b.type = "button"; b.className = "lk-ptake"; b.dataset.taketab = "1"; b.textContent = "⇥ In die Seite"; b.title = "Diese Tabelle in die Unterrichtsseite übernehmen – dort, wo der Cursor zuletzt stand";
       host.appendChild(b);
     });
+    ndocFill(box);
+    box.addEventListener("dblclick", (e) => { const fig = e.target.closest("figure.ndoc"); if (!fig) return; const f = wdFindFile(fig.dataset.doc); if (f) wdEdit(f, { onSaved: () => ndocFill(box, null, f.id) }); });
     box.addEventListener("pointerdown", () => { const pg = $("#lk-page"), sl = getSelection(); if (pg && sl.rangeCount && pg.contains(sl.anchorNode)) lkKeepRange(); });
     box.addEventListener("click", (e) => {
       const bt = e.target.closest("[data-taketab]");
