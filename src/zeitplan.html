@@ -9730,12 +9730,16 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         });
       }
     }
-    // Abendfrage: eine einzige Aufgabe «Sind die To-dos gemacht?», die sich in To Do täglich wiederholt (Erinnerung am Abend).
-    // Abhaken = für heute beantwortet; To Do legt dann von selbst die Frage für morgen an.
+    // Abendfrage «Sind die To-dos gemacht?»: für heute und morgen je eine Aufgabe mit Erinnerung am Abend, nur an Tagen mit offenen To-dos.
+    // Um 21 Uhr (bzw. eine Stunde nach der Frage) gilt sie als erledigt: Semper entfernt sie beim nächsten Abgleich, abhaken ist nicht nötig.
     if (c.abend) {
-      const ev = tdAt(tk, c.abend), key = Date.now() < ev.getTime() ? tk : keyOf(new Date(t0.getFullYear(), t0.getMonth(), t0.getDate() + 1));
-      out.abendfrage = { key, slot: "abend", part: 0, todo: false, ask: true, done: false, title: "Sind die To-dos gemacht?", rem: tdAt(key, c.abend), due: { dateTime: key + "T00:00:00", timeZone: "UTC" },
-        body: "Tägliche Frage aus Semper. Was nicht erledigt ist, in Semper mit «⇢ To-dos weiterschieben» auf den nächsten Tag schieben: " + location.origin + location.pathname + "#weiterschieben" };
+      const openDay = {}; Object.values(out).forEach((w) => { if (w.todo && !w.done) openDay[w.key] = 1; });
+      for (let i = 0; i < 2; i++) {
+        const key = keyOf(new Date(t0.getFullYear(), t0.getMonth(), t0.getDate() + i)), rem = tdAt(key, c.abend), end = tdAskEnd(key, c);
+        if (!openDay[key] || Date.now() >= end.getTime()) continue;
+        out[key + "|frage"] = { key, slot: "abend", part: 0, todo: false, ask: true, done: false, title: TD_ASK, rem, due: { dateTime: key + "T00:00:00", timeZone: "UTC" },
+          body: "Frage aus Semper – verschwindet um " + pad(end.getHours()) + ":" + pad(end.getMinutes()) + " von selbst, abhaken ist nicht nötig. Was nicht erledigt ist, in Semper mit «⇢ To-dos weiterschieben» auf den nächsten Tag schieben: " + location.origin + location.pathname + "#weiterschieben" };
+      }
     }
     return out;
   }
@@ -9802,8 +9806,10 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   // Link aus der Abendfrage in To Do: …#weiterschieben öffnet das Fenster direkt
   const tnHash = () => { if (location.hash === "#weiterschieben") { history.replaceState(null, "", location.pathname + location.search); let i = 0; const go = () => (state.daysIn || state.local || i++ > 40 ? openTnDlg() : setTimeout(go, 500)); go(); } };
   addEventListener("hashchange", tnHash); tnHash();
+  const TD_ASK = "Sind die To-dos gemacht?";
+  const tdAskEnd = (key, c) => { const e = tdAt(key, "21:00"), r = tdAt(key, c.abend); return e > r ? e : new Date(r.getTime() + 3600000); };
   const tdHash = (w) => [w.title, w.due.dateTime, w.rem.getTime(), w.body].join("¦");
-  const tdTask = (w, done) => { const on = !done && w.rem.getTime() > Date.now(), o = { title: w.title, body: { content: w.body, contentType: "text" }, dueDateTime: w.due, isReminderOn: on, reminderDateTime: tdUtc(w.rem), status: done ? "completed" : "notStarted" }; if (w.ask) o.recurrence = { pattern: { type: "daily", interval: 1 }, range: { type: "noEnd", startDate: w.key } }; return o; };
+  const tdTask = (w, done) => { const on = !done && w.rem.getTime() > Date.now(), o = { title: w.title, body: { content: w.body, contentType: "text" }, dueDateTime: w.due, isReminderOn: on, reminderDateTime: tdUtc(w.rem), status: done ? "completed" : "notStarted" }; return o; };
   // Fehler mit Schritt und Text von Microsoft, damit man sieht, woran es liegt
   async function tdJson(r) {
     if (r.ok) return r.status === 204 ? null : r.json();
@@ -9854,7 +9860,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       // Verrutschte Zuordnungen (Punkte neu nummeriert, in Semper verschoben) über den Titel wieder zusammenführen
       const loose = [];
       for (const [k, m] of Object.entries(c.map)) {
-        const t = tasks[m.id]; if (!t || k === "abendfrage") continue;
+        const t = tasks[m.id]; if (!t || k.endsWith("|frage") || t.title === TD_ASK) continue;
         if (want[k] && want[k].title === t.title) continue;
         if (!Object.keys(want).some((x) => x !== k && want[x].title === t.title)) continue; // umbenannt: Zuordnung bleibt
         loose.push([k, m, t]); delete c.map[k];
@@ -9864,25 +9870,19 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         const k2 = ks.find((x) => want[x].key === k.split("|")[0]) || ks.find((x) => !want[x].done) || ks[0];
         if (k2) c.map[k2] = m; else if (want[k] && !c.map[k]) c.map[k] = m;
       }
-      for (const [k, w0k] of Object.entries(want)) {
-        let w = w0k, m = c.map[k];
-        if (w.ask && m && (!tasks[m.id] || tasks[m.id].status === "completed")) { // abgehakt: der nächsten (von To Do angelegten) Frage folgen
-          const nx = Object.values(tasks).find((x) => x.title === w.title && x.status !== "completed" && !used.has(x.id));
-          m = nx ? (c.map[k] = { id: nx.id, h: "", done: false }) : null; if (nx) used.add(nx.id); else delete c.map[k];
-        }
-        const t = m && tasks[m.id];
-        if (w.ask && t && tdDueKey(t) > w.key) { const dk = tdDueKey(t); w = { ...w, key: dk, rem: tdAt(dk, c.abend), due: { dateTime: dk + "T00:00:00", timeZone: "UTC" } }; } // nicht früher als To Do selbst
-        const h = tdHash(w);
+      for (const [k, w] of Object.entries(want)) {
+        let m = c.map[k];
+        const t = m && tasks[m.id], h = tdHash(w);
         if (m && !t) { if (m.gone && m.h === h) continue; if (!m.gone && m.h === h) { m.gone = 1; continue; } m = null; } // in To Do gelöscht: erst bei einer Änderung neu
         if (!m) {
           if (w.done) continue; // Erledigtes und Vergangenes nicht neu anlegen
-          const twin = Object.values(tasks).find((x) => !used.has(x.id) && x.title === w.title && tdDueKey(x) === w.key);
+          const twin = Object.values(tasks).find((x) => !used.has(x.id) && !x.recurrence && x.title === w.title && tdDueKey(x) === w.key);
           TD.step = "Aufgabe eintragen";
           const r = twin ? await tdWrite(base + "/" + twin.id, "PATCH", w, false) : await tdWrite(base, "POST", w, false);
           c.map[k] = { id: r.id, h, done: false }; used.add(r.id); continue;
         }
         let done = w.done, push = m.h !== h;
-        if (w.ask) done = false;
+        if (w.ask) done = t.status === "completed"; // selbst abgehakt: bleibt so
         else if (w.done !== !!m.done) push = true; // in Semper geändert
         else if (w.todo && (t.status === "completed") !== !!m.done) { done = t.status === "completed"; pulled.add(k); const x = slotOf(w.key, w.slot), sf = sfx(w.part); if (w.pt != null) { x["html" + sf] = tdpSet(richOf(x, w.part), w.pt, done); x["text" + sf] = htmlToPlain(x["html" + sf]); } else { x["done" + sf] = done; if (!done) delete x["done" + sf]; } scheduleSave(w.key, 0); }
         else if (!w.todo && (t.status === "completed") !== done) push = true;
@@ -9895,7 +9895,10 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         if (k.split("|")[0] >= from && tasks[m.id]) { const r = await A.api(base + "/" + m.id, { method: "DELETE" }); if (!r.ok && r.status !== 404) await tdJson(r); }
         delete c.map[k];
       }
-      TD.err = ""; TD.at = Date.now(); TD.n = Object.entries(c.map).filter(([k, m]) => !m.done && !m.gone && k !== "abendfrage").length;
+      // Übrige Abendfragen (auch die frühere, sich täglich wiederholende) entfernen
+      const keep = new Set(Object.values(c.map).map((m) => m.id));
+      for (const t of Object.values(tasks)) if (t.title === TD_ASK && !keep.has(t.id)) { const r = await A.api(base + "/" + t.id, { method: "DELETE" }); if (!r.ok && r.status !== 404) await tdJson(r); }
+      TD.err = ""; TD.at = Date.now(); TD.n = Object.entries(c.map).filter(([k, m]) => !m.done && !m.gone && !k.endsWith("|frage")).length;
       if (JSON.stringify({ l: c.listId, m: c.map }) !== before) { const cur = tdCfg(); await tdSaveCfg({ ...cur, listId: c.listId, map: c.map }); }
       if (pulled.size && !$("#ov")) render();
     } catch (e) {
@@ -9941,7 +9944,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       '<label class="dp-chk td-main"><input type="checkbox" id="td-on"' + (c.on ? " checked" : "") + "> Erinnerungen über Microsoft To Do</label>" +
       '<div class="td-opts"><div class="field"><label for="td-at">To-dos ohne Uhrzeit: erinnern um</label><div class="td-row"><input type="time" id="td-at" value="' + esc(c.at) + '"><label class="dp-chk"><input type="checkbox" id="td-vt"' + (c.vortag ? " checked" : "") + "> schon am Vortag</label></div></div>" +
       '<div class="field"><label for="td-lead">Mit Uhrzeit: erinnern</label><select id="td-lead">' + sel() + "</select></div>" +
-      '<div class="field"><label for="td-ev">Jeden Abend fragen: «Sind die To-dos gemacht?»</label><div class="td-row"><label class="dp-chk"><input type="checkbox" id="td-evon"' + (c.abend ? " checked" : "") + '> um</label><input type="time" id="td-ev" value="' + esc(c.abend || "20:00") + '"></div><small class="td-hint">Einmal pro Tag. Frage in To Do abhaken, dann kommt sie am nächsten Abend wieder. Offenes in Semper mit «⇢ To-dos weiterschieben» auf den nächsten Tag schieben.</small></div>' +
+      '<div class="field"><label for="td-ev">Jeden Abend fragen: «Sind die To-dos gemacht?»</label><div class="td-row"><label class="dp-chk"><input type="checkbox" id="td-evon"' + (c.abend ? " checked" : "") + '> um</label><input type="time" id="td-ev" value="' + esc(c.abend || "20:00") + '"></div><small class="td-hint">Nur an Tagen mit offenen To-dos. Die Frage gilt um 21 Uhr als erledigt und verschwindet von selbst. Offenes in Semper mit «⇢ To-dos weiterschieben» auf den nächsten Tag schieben.</small></div>' +
       '<label class="dp-chk"><input type="checkbox" id="td-tm"' + (c.termine ? " checked" : "") + "> Auch an Termine mit Uhrzeit erinnern (nicht nur an To-dos)</label></div>" +
       '<p class="td-stat" id="td-stat" role="status"></p><p id="td-consent" hidden><button class="btn primary" type="button" id="td-ok">Mit Microsoft verbinden</button></p>' +
       '<details class="hint"><summary>ⓘ Was ist auf dem Handy zu tun?</summary><p>Einmal die App <b>Microsoft To Do</b> installieren, mit demselben Microsoft-Konto anmelden und Mitteilungen erlauben. Die Erinnerungen stehen in der Liste «Semper». Beim Ausschalten entfernt Semper die offenen Einträge wieder aus dieser Liste.</p></details>' +
