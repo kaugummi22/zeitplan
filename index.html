@@ -11206,7 +11206,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   const tdAt = (key, hm, minus) => { const [y, m, d] = key.split("-").map(Number), [h, mi] = String(hm || "07:00").split(":").map(Number); return new Date(y, m - 1, d, h || 0, (mi || 0) - (minus || 0)); };
   // Alle Einträge, die in To Do stehen sollen (7 Tage zurück bis gut ein Jahr voraus)
   function tdWanted(c) {
-    const out = {}, t0 = today(), from = keyOf(new Date(t0.getFullYear(), t0.getMonth(), t0.getDate() - 7)), to = keyOf(new Date(t0.getFullYear() + 1, t0.getMonth(), t0.getDate() + 30)), tk = keyOf(t0);
+    // Nur heute (Katharina, 5.11.2026: in To Do nur, was an diesem Tag zu erledigen ist)
+    const out = {}, t0 = today(), tk = keyOf(t0), from = tk, to = tk;
     for (const [key, d] of Object.entries(state.days)) {
       if (key < from || key > to || !d) continue;
       for (const [s, lab] of SLOTS) {
@@ -11215,11 +11216,11 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
           const title = htmlToPlain(p.html || "").replace(/\s+/g, " ").trim().slice(0, 240);
           const termin = !p.todo && c.termine && p.from && title;
           if (!p.todo && !termin && !tdpHas(p.html)) return;
-          const rem = p.from ? tdAt(key, p.from, +c.lead || 0) : tdAt(key, c.at, c.vortag ? 24 * 60 : 0);
+          const rem = p.from ? tdAt(key, p.from, +c.lead || 0) : tdAt(key, c.at);
           const due = { dateTime: key + "T00:00:00", timeZone: "UTC" };
           const body = "Aus Semper · " + TAGE[tdAt(key).getDay()] + ", " + fmt(tdAt(key)) + " · " + lab + (p.from ? " · " + p.from + (p.to ? "–" + p.to : "") : "");
-          if ((p.todo && !tdpHas(p.html)) || termin) out[key + "|" + s + "|" + (i + 1)] = { key, slot: s, part: i + 1, todo: !!p.todo, done: p.todo ? !!p.done : key < tk, title: title || "To-do", rem, due, body };
-          tdpItems(p.html).forEach((it, n) => { out[key + "|" + s + "|" + (i + 1) + "|" + n] = { key, slot: s, part: i + 1, pt: n, todo: true, done: it.done, title: it.text || "To-do", rem, due, body }; });
+          if ((p.todo && !tdpHas(p.html)) || termin) out[key + "|" + s + "|" + (i + 1)] = { key, slot: s, part: i + 1, todo: !!p.todo, done: p.todo ? !!p.done : key < tk, title: title || "To-do", rem, due, body, remOn: !!(termin || c.einzeln) };
+          tdpItems(p.html).forEach((it, n) => { out[key + "|" + s + "|" + (i + 1) + "|" + n] = { key, slot: s, part: i + 1, pt: n, todo: true, done: it.done, title: it.text || "To-do", rem, due, body, remOn: !!c.einzeln }; });
         });
       }
     }
@@ -11227,10 +11228,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     // Um 21 Uhr (bzw. eine Stunde nach der Frage) gilt sie als erledigt: Semper entfernt sie beim nächsten Abgleich, abhaken ist nicht nötig.
     if (c.abend) {
       const openDay = {}; Object.values(out).forEach((w) => { if (w.todo && !w.done) openDay[w.key] = 1; });
-      for (let i = 0; i < 2; i++) {
-        const key = keyOf(new Date(t0.getFullYear(), t0.getMonth(), t0.getDate() + i)), rem = tdAt(key, c.abend), end = tdAskEnd(key, c);
-        if (!openDay[key] || Date.now() >= end.getTime()) continue;
-        out[key + "|frage"] = { key, slot: "abend", part: 0, todo: false, ask: true, done: false, title: TD_ASK, rem, due: { dateTime: key + "T00:00:00", timeZone: "UTC" },
+      { const key = tk, rem = tdAt(key, c.abend), end = tdAskEnd(key, c);
+        if (openDay[key] && Date.now() < end.getTime()) out[key + "|frage"] = { key, slot: "abend", part: 0, todo: false, ask: true, done: false, title: TD_ASK, rem, remOn: true, due: { dateTime: key + "T00:00:00", timeZone: "UTC" },
           body: "Frage aus Semper – verschwindet um " + pad(end.getHours()) + ":" + pad(end.getMinutes()) + " von selbst, abhaken ist nicht nötig. Was nicht erledigt ist, in Semper mit «⇢ To-dos weiterschieben» auf den nächsten Tag schieben: " + location.origin + location.pathname + "#weiterschieben" };
       }
     }
@@ -11301,8 +11300,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   addEventListener("hashchange", tnHash); tnHash();
   const TD_ASK = "Sind die To-dos gemacht?";
   const tdAskEnd = (key, c) => { const e = tdAt(key, "21:00"), r = tdAt(key, c.abend); return e > r ? e : new Date(r.getTime() + 3600000); };
-  const tdHash = (w) => [w.title, w.due.dateTime, w.rem.getTime(), w.body].join("¦");
-  const tdTask = (w, done) => { const on = !done && w.rem.getTime() > Date.now(), o = { title: w.title, body: { content: w.body, contentType: "text" }, dueDateTime: w.due, isReminderOn: on, reminderDateTime: tdUtc(w.rem), status: done ? "completed" : "notStarted" }; return o; };
+  const tdHash = (w) => [w.title, w.due.dateTime, w.rem.getTime(), w.body, w.remOn !== false ? 1 : 0].join("¦");
+  const tdTask = (w, done) => { const on = !done && w.remOn !== false && w.rem.getTime() > Date.now(), o = { title: w.title, body: { content: w.body, contentType: "text" }, dueDateTime: w.due, isReminderOn: on, reminderDateTime: tdUtc(w.rem), status: done ? "completed" : "notStarted" }; return o; };
   // Fehler mit Schritt und Text von Microsoft, damit man sieht, woran es liegt
   async function tdJson(r) {
     if (r.ok) return r.status === 204 ? null : r.json();
@@ -11355,13 +11354,15 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       for (const [k, m] of Object.entries(c.map)) {
         const t = tasks[m.id]; if (!t || k.endsWith("|frage") || t.title === TD_ASK) continue;
         if (want[k] && want[k].title === t.title) continue;
-        if (!Object.keys(want).some((x) => x !== k && want[x].title === t.title)) continue; // umbenannt: Zuordnung bleibt
+        if (!(want[k] && want[k].pt != null) && !Object.keys(want).some((x) => x !== k && want[x].title === t.title)) continue; // umbenannt: Zuordnung bleibt (bei To-do-Punkten eher verrutscht)
         loose.push([k, m, t]); delete c.map[k];
       }
       for (const [k, m, t] of loose) {
         const ks = Object.keys(want).filter((x) => !c.map[x] && want[x].title === t.title);
         const k2 = ks.find((x) => want[x].key === k.split("|")[0]) || ks.find((x) => !want[x].done) || ks[0];
-        if (k2) c.map[k2] = m; else if (want[k] && !c.map[k]) c.map[k] = m;
+        if (k2) c.map[k2] = m;
+        else if (want[k] && !c.map[k] && want[k].pt == null) c.map[k] = m;
+        else { const r = await A.api(base + "/" + m.id, { method: "DELETE" }); if (!r.ok && r.status !== 404) await tdJson(r); } // Punkt ist weg (z. B. auf morgen geschoben)
       }
       for (const [k, w] of Object.entries(want)) {
         let m = c.map[k];
@@ -11433,10 +11434,12 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   function openTodoDlg() {
     const c = tdCfg(), sel = (v) => [0, 5, 10, 15, 30, 60, 120].map((n) => '<option value="' + n + '"' + (+c.lead === n ? " selected" : "") + ">" + (n ? (n < 60 ? n + " Minuten" : n / 60 + (n === 60 ? " Stunde" : " Stunden")) + " vorher" : "zur Startzeit") + "</option>").join("");
     openModal('<h3>Erinnerungen aufs Handy</h3>' +
-      '<p class="td-intro">Semper trägt Ihre To-dos aus «Termine» in die Liste <b>«Semper»</b> in Microsoft To Do ein. Die App To Do auf dem Handy meldet sich dann zur eingestellten Zeit – auch wenn Semper geschlossen ist. Abhaken geht auf beiden Seiten.</p>' +
+      '<p class="td-intro">Semper trägt die To-dos von heute aus «Termine» in die Liste <b>«Semper»</b> in Microsoft To Do ein. Am Abend fragt To Do auf dem Handy einmal nach – auch wenn Semper geschlossen ist. Abhaken geht auf beiden Seiten.</p>' +
       '<label class="dp-chk td-main"><input type="checkbox" id="td-on"' + (c.on ? " checked" : "") + "> Erinnerungen über Microsoft To Do</label>" +
-      '<div class="td-opts"><div class="field"><label for="td-at">To-dos ohne Uhrzeit: erinnern um</label><div class="td-row"><input type="time" id="td-at" value="' + esc(c.at) + '"><label class="dp-chk"><input type="checkbox" id="td-vt"' + (c.vortag ? " checked" : "") + "> schon am Vortag</label></div></div>" +
-      '<div class="field"><label for="td-lead">Mit Uhrzeit: erinnern</label><select id="td-lead">' + sel() + "</select></div>" +
+      '<div class="td-opts">' +
+      '<label class="dp-chk"><input type="checkbox" id="td-ein"' + (c.einzeln ? " checked" : "") + "> Zusätzlich an jedes To-do einzeln erinnern</label>" +
+      '<div class="td-einf"' + (c.einzeln ? "" : " hidden") + '><div class="field"><label for="td-at">To-dos ohne Uhrzeit: erinnern um</label><div class="td-row"><input type="time" id="td-at" value="' + esc(c.at) + '"><input type="checkbox" id="td-vt" hidden' + (c.vortag ? " checked" : "") + "></div></div>" +
+      '<div class="field"><label for="td-lead">Mit Uhrzeit: erinnern</label><select id="td-lead">' + sel() + "</select></div></div>" +
       '<div class="field"><label for="td-ev">Jeden Abend fragen: «Sind die To-dos gemacht?»</label><div class="td-row"><label class="dp-chk"><input type="checkbox" id="td-evon"' + (c.abend ? " checked" : "") + '> um</label><input type="time" id="td-ev" value="' + esc(c.abend || "20:00") + '"></div><small class="td-hint">Nur an Tagen mit offenen To-dos. Die Frage gilt um 21 Uhr als erledigt und verschwindet von selbst. Offenes in Semper mit «⇢ To-dos weiterschieben» auf den nächsten Tag schieben.</small></div>' +
       '<label class="dp-chk"><input type="checkbox" id="td-tm"' + (c.termine ? " checked" : "") + "> Auch an Termine mit Uhrzeit erinnern (nicht nur an To-dos)</label></div>" +
       '<p class="td-stat" id="td-stat" role="status"></p><p id="td-consent" hidden><button class="btn primary" type="button" id="td-ok">Mit Microsoft verbinden</button></p>' +
@@ -11448,7 +11451,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         show(); tdPaint();
         const apply = async () => {
           const cur = tdCfg(), on = q("#td-on").checked;
-          const n = { ...cur, on, at: q("#td-at").value || "07:00", vortag: q("#td-vt").checked, lead: +q("#td-lead").value || 0, termine: q("#td-tm").checked, abend: q("#td-evon").checked ? q("#td-ev").value || "20:00" : "" };
+          const n = { ...cur, on, at: q("#td-at").value || "07:00", vortag: q("#td-vt").checked, lead: +q("#td-lead").value || 0, termine: q("#td-tm").checked, einzeln: q("#td-ein").checked, abend: q("#td-evon").checked ? q("#td-ev").value || "20:00" : "" };
           await tdSaveCfg(n); tdBadge();
           if (cur.on && !on) {
             clearTimeout(TD.timer); while (TD.busy) await new Promise((r) => setTimeout(r, 200));
@@ -11460,7 +11463,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
           if (on) { if (!(await window.ZTODO.ready().catch(() => true))) { TD.err = "consent"; tdPaint(); window.ZTODO.connect(); return; } tdKick(300); }
         };
         q("#td-on").onchange = () => { show(); apply(); };
-        ["#td-at", "#td-vt", "#td-lead", "#td-tm", "#td-evon", "#td-ev"].forEach((s) => (q(s).onchange = apply));
+        q("#td-ein").onchange = () => { q(".td-einf").hidden = !q("#td-ein").checked; apply(); };
+        ["#td-at", "#td-lead", "#td-tm", "#td-evon", "#td-ev"].forEach((s) => (q(s).onchange = apply));
         q("#td-now").onclick = () => { tdKick(0); setTimeout(tdPaint, 50); };
         q("#td-ok").onclick = () => window.ZTODO.connect();
         q("#td-x").onclick = closeModal;
