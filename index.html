@@ -4810,26 +4810,42 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   }
   // ----- Datei holen und speichern (dieselbe Datei: im Ordner bzw. in der App) -----
   const WD_CACHE = {};
-  async function wdRead(f) {
-    if (window.ZLOCAL && window.ZLOCAL.readEx && f.path) {
-      try { const r = await window.ZLOCAL.readEx(f.path); return { bytes: new Uint8Array(await r.blob.arrayBuffer()), etag: r.etag, where: "path" }; } catch (e) { console.warn("Datei im Ordner nicht gefunden, nehme App-Kopie", e); }
-    }
-    return { bytes: await fileBytes(f), etag: null, where: "app" };
+  // Welche Datei wird bearbeitet? Normalerweise die verknüpfte Datei im Ordner; in einer Unterreihe der Masterreihe deren eigene Kopie (wie «In Word öffnen»)
+  function wdTarget(f) {
+    const cx = window.__vctx && window.__vctx.orig && window.__vctx.orig.id === f.id ? window.__vctx : null;
+    const base = typeof zlFolder === "function" ? zlFolder() : "";
+    if (cx) return { path: (cx.view && cx.view.path) || "", folder: base ? base.replace(/\\+$/, "") + "\\" + cx.sub : "", name: cx.prefix + f.name, link: (p) => { cx.view.path = p; cx.onCopied(p); } };
+    return { path: f.path || "", folder: base, name: f.name, link: (p) => { f.path = p; try { linkFilePath(f.id, p); } catch (e) {} } };
   }
-  async function wdWrite(f, blob, etag, where) {
-    if (where === "path") return { etag: await window.ZLOCAL.writeIf(f.path, blob, etag), text: "im Ordner gespeichert" };
+  const wdShort = (p) => { const r = (window.ZLOCAL && window.ZLOCAL.root) || ""; return (p.startsWith(r) ? p.slice(r.length + 1) : p).split("\\").filter(Boolean).slice(-4).join(" › "); };
+  async function wdRead(f, tgt) {
+    const path = tgt ? tgt.path : f.path;
+    if (window.ZLOCAL && window.ZLOCAL.readEx && path) {
+      try { const r = await window.ZLOCAL.readEx(path); return { bytes: new Uint8Array(await r.blob.arrayBuffer()), etag: r.etag, where: "path" }; }
+      catch (e) {
+        // beim Bearbeiten nie still auf eine andere Fassung ausweichen
+        if (tgt && !/nicht gefunden/.test(e.message || "")) throw e;
+        console.warn("Datei im Ordner nicht gefunden, nehme App-Kopie", e);
+        if (tgt) { let b; try { b = await fileBytes({ ...f, path: undefined }); } catch (_) { throw new Error("Die Word-Datei im Ordner wurde nicht gefunden (" + wdShort(path) + "). Wurde sie verschoben oder umbenannt?"); } return { bytes: b, etag: null, where: "missing" }; }
+      }
+    }
+    return { bytes: await fileBytes(tgt ? { ...f, path: undefined } : f), etag: null, where: "app" };
+  }
+  async function wdWrite(f, blob, etag, where, tgt) {
+    tgt = tgt || wdTarget(f);
+    if (where === "path") return { etag: await window.ZLOCAL.writeIf(tgt.path, blob, etag), text: "gespeichert in " + wdShort(tgt.path) };
+    if (where === "missing") throw new Error("Die Word-Datei im Ordner wurde nicht gefunden (" + wdShort(tgt.path) + "). Wurde sie verschoben oder umbenannt? Dann bitte in Semper die Datei neu verknüpfen.");
     // noch keine Datei im Ordner: wenn die Reihe einen Ordner hat, dort ablegen (dann ist es ab jetzt diese Datei)
-    const folder = typeof zlFolder === "function" ? zlFolder() : "";
-    if (window.ZLOCAL && window.ZLOCAL.place && folder) {
-      const j = await window.ZLOCAL.place(folder, f.name, blob, false);
+    if (window.ZLOCAL && window.ZLOCAL.place && tgt.folder) {
+      const j = await window.ZLOCAL.place(tgt.folder, tgt.name, blob, false);
       if (j.existed) await window.ZLOCAL.writeIf(j.path, blob, null);
-      f.path = j.path; try { linkFilePath(f.id, j.path); } catch (e) {}
+      tgt.path = j.path; tgt.link(j.path);
       const m = window.ZLOCAL.readEx ? await window.ZLOCAL.readEx(j.path) : null;
-      return { etag: m ? m.etag : null, where: "path", text: "im Ordner der Reihe gespeichert" };
+      return { etag: m ? m.etag : null, where: "path", text: "neu im Ordner abgelegt: " + wdShort(j.path) };
     }
     if (!state.assets || !state.assets.replace) throw new Error("Speichern geht hier nicht (nur mit OneDrive).");
     await state.assets.replace(f.id, f.enc === "b64" ? new Blob([await blobToB64(blob)], { type: "text/plain" }) : blob);
-    return { etag: null, text: "in Semper gespeichert" };
+    return { etag: null, text: "nur in Semper gespeichert (die Reihe hat keinen Ordner, deshalb gibt es keine Word-Datei im Ordner)" };
   }
   // Vorschau in den Notizen (verkleinerte Seite, wie ein Bild)
   function wdFindFile(id, extra) {
@@ -4902,7 +4918,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       '<div class="vw-bar" id="wd-ask" hidden><span>Es gibt ungespeicherte Änderungen.</span><button class="btn primary" type="button" id="wd-ask-save">Speichern und schliessen</button><button class="btn ghost danger" type="button" id="wd-ask-drop">Verwerfen</button><button class="btn ghost" type="button" id="wd-ask-back">Weiter bearbeiten</button></div>' +
       '<div class="wd-scroll" id="wd-scroll"></div></div>';
     const $w = (s) => root.querySelector(s), msg = $w("#wd-msg"), bSave = $w("#wd-save"), scroll = $w("#wd-scroll");
-    let ctx = null, cur = null, dirty = false, zoom = 1, busy = false;
+    let ctx = null, cur = null, dirty = false, zoom = 1, busy = false, src = null;
+    const tgt = wdTarget(f);
     const setMsg = (t, warn) => { msg.textContent = t; msg.className = "msg" + (warn ? " warn" : ""); };
     const close = () => { root.innerHTML = ""; document.removeEventListener("keydown", keys, true); if (opt.onClose) opt.onClose(); };
     const tryClose = () => { if (dirty) { $w("#wd-ask").hidden = false; return; } close(); };
@@ -4928,13 +4945,13 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     });
     async function load() {
       setMsg("Lädt …");
-      const r = await wdRead(f); WD_CACHE[f.id] = r;
+      const r = await wdRead(f, tgt); WD_CACHE[f.id] = r; src = r.bytes;
       ctx = await wdLoad(r.bytes.slice(0)); ctx.etag = r.etag; ctx.where = r.where;
       const page = await wdRender(ctx, true);
       scroll.innerHTML = ""; scroll.appendChild(page); cur = page;
       const body = ctx.bodyEl; body.contentEditable = "true"; body.spellcheck = true;
       let tt = 0;
-      body.addEventListener("input", () => { if (!dirty) { dirty = true; bSave.disabled = false; } setMsg("Ungespeicherte Änderungen"); wdRenumber(ctx, body); clearTimeout(tt); tt = setTimeout(() => wdTabs(page, ctx.defTab), 120); });
+      body.addEventListener("input", () => { if (!dirty) { dirty = true; bSave.disabled = false; } setMsg("Ungespeicherte Änderungen"); wdRenumber(ctx, body); clearTimeout(tt); tt = setTimeout(() => { if (ctx && cur === page) wdTabs(page, ctx.defTab); }, 120); });
       body.addEventListener("keydown", (e) => {
         if (e.key === "Tab" && !e.ctrlKey && !e.altKey) { e.preventDefault(); document.execCommand("insertHTML", false, '<span class="wd-tab" contenteditable="false">\t</span>'); }
         if (e.key === "Enter" && e.shiftKey) { e.preventDefault(); document.execCommand("insertLineBreak"); }
@@ -4947,7 +4964,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       body.addEventListener("drop", (e) => e.preventDefault());
       try { document.execCommand("defaultParagraphSeparator", false, "p"); document.execCommand("styleWithCSS", false, true); } catch (er) {}
       dirty = false; bSave.disabled = true;
-      setMsg(ctx.hasLock ? "Hellgrau hinterlegte Absätze (z. B. mit Feldern) bleiben unverändert." : "Direkt in die Seite klicken und schreiben.");
+      const wh = ctx.where === "path" ? "Datei: " + wdShort(tgt.path) : ctx.where === "missing" ? "⚠ Die Word-Datei im Ordner wurde nicht gefunden (" + wdShort(tgt.path) + ") – Speichern geht erst, wenn sie wieder da ist." : tgt.folder ? "Noch keine Datei im Ordner – beim Speichern wird sie im Ordner der Reihe abgelegt." : "⚠ Die Reihe hat keinen Ordner: gespeichert wird nur in Semper, nicht in einer Word-Datei.";
+      setMsg(wh + (ctx.hasLock ? " · Hellgrau hinterlegte Absätze bleiben unverändert." : ""), ctx.where !== "path" && !tgt.folder || ctx.where === "missing");
       fitZoom(); wdTabs(page, ctx.defTab);
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (cur === page) wdTabs(page, ctx.defTab); });
     }
@@ -4957,11 +4975,15 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       try {
         const { blob } = await wdSave(ctx);
         let w;
-        try { w = await wdWrite(f, blob, ctx.etag, ctx.where); }
+        try { w = await wdWrite(f, blob, ctx.etag, ctx.where, tgt); }
         catch (e) {
-          if (e && e.status === 412) {
+          // OneDrive meldet «geändert» manchmal auch ohne echte Änderung: Inhalt vergleichen, nur bei echter Änderung nachfragen
+          let same = false;
+          if (e && e.status === 412 && src) { try { const now = new Uint8Array(await (await window.ZLOCAL.readEx(tgt.path)).blob.arrayBuffer()); same = now.length === src.length && now.every((b, i) => b === src[i]); } catch (_) {} }
+          if (same) w = await wdWrite(f, blob, null, ctx.where, tgt);
+          else if (e && e.status === 412) {
             if (!confirm("Die Datei wurde inzwischen anderswo geändert (z. B. in Word). Trotzdem mit Ihrer Fassung überschreiben?\n\n«Abbrechen» = nichts speichern; Sie können die Änderungen dann kopieren und das Dokument neu öffnen.")) { setMsg("Nicht gespeichert – die Datei wurde anderswo geändert.", true); busy = false; bSave.disabled = false; return false; }
-            w = await wdWrite(f, blob, null, ctx.where);
+            w = await wdWrite(f, blob, null, ctx.where, tgt);
           } else throw e;
         }
         const bytes = new Uint8Array(await blob.arrayBuffer());
@@ -4969,7 +4991,10 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         dirty = false; busy = false;
         const t = new Date(); setMsg("✓ " + w.text + " (" + String(t.getHours()).padStart(2, "0") + ":" + String(t.getMinutes()).padStart(2, "0") + ")");
         // neu einlesen, damit weitere Änderungen auf der gespeicherten Fassung aufbauen
-        const y = scroll.scrollTop; ctx = null; await load(); scroll.scrollTop = y; setMsg("✓ " + w.text + " (" + String(t.getHours()).padStart(2, "0") + ":" + String(t.getMinutes()).padStart(2, "0") + ")");
+        const y = scroll.scrollTop; ctx = null; await load(); scroll.scrollTop = y;
+        // nachprüfen: ist die gespeicherte Fassung jetzt wirklich in der Datei?
+        const ok = !(ctx && ctx.where === "path") || (src && src.length === bytes.length && src.every((b, i) => b === bytes[i]));
+        setMsg(ok ? "✓ " + w.text + " (" + String(t.getHours()).padStart(2, "0") + ":" + String(t.getMinutes()).padStart(2, "0") + ")" + (ctx && ctx.where === "path" ? " · Ist die Datei in Word offen: dort schliessen und neu öffnen." : "") : "⚠ Gespeichert, aber beim Nachlesen kam noch die alte Fassung zurück. Bitte in ein paar Sekunden das Dokument neu öffnen und prüfen.", !ok || !(ctx && ctx.where === "path"));
         if (opt.onSaved) opt.onSaved(f);
         return true;
       } catch (e) {
