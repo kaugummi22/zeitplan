@@ -1081,6 +1081,8 @@ html.phone .lesson.mat-slim .ldocs { grid-column: 1 / -1; }
 /* Word-Dokument in den Notizen: verkleinerte Seite */
 .nfig.ndoc:not(.w25):not(.w33):not(.w50):not(.w75) { width: 100%; }
 .nfig.ndoc .ndoc-v { display: block; position: relative; overflow: hidden; background: #fff; border: 1px solid var(--line); border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); min-height: 40px; }
+.nfig.ndoc .ndoc-sp { position: relative; overflow: hidden; }
+.nfig.ndoc .ndoc-v.scr { overflow-y: scroll; overscroll-behavior: contain; }
 .nfig.ndoc .ndoc-sc { transform-origin: 0 0; width: max-content; pointer-events: none; user-select: none; }
 .nfig.ndoc .ndoc-sc .wd-page { box-shadow: none; margin: 0; }
 .nfig.ndoc .ndoc-v.more::after { content: attr(data-more); position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 8px 5px; text-align: center; font-size: 11px; color: var(--muted); background: linear-gradient(rgba(255,255,255,0), #fff 60%); }
@@ -4317,7 +4319,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         if (!WD_CACHE[id] || force === id) WD_CACHE[id] = await wdRead(f);
         const ctx = await wdLoad(WD_CACHE[id].bytes.slice(0)), page = await wdRender(ctx, false);
         const sc = document.createElement("div"); sc.className = "ndoc-sc"; sc.appendChild(page);
-        v.innerHTML = ""; v.appendChild(sc);
+        const sp = document.createElement("div"); sp.className = "ndoc-sp"; sp.appendChild(sc);
+        v.innerHTML = ""; v.appendChild(sp);
         wdTabs(page, ctx.defTab);
         // nur die erste Seite zeigen (bis zur Seitenhöhe bzw. zum ersten Seitenumbruch)
         const pages = +((/<Pages>(\d+)<\/Pages>/.exec((ctx.zip.file("docProps/app.xml") && await ctx.zip.file("docProps/app.xml").async("string")) || "") || [])[1]) || 0;
@@ -4327,15 +4330,26 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
           const ch = +fig.dataset.ch || 0;
           if (ch > 0) {
             const ph = page.offsetHeight, top = Math.max(0, Math.min((+fig.dataset.ct || 0) * pw / 1000, ph - 20)), h = Math.max(20, Math.min(ch * pw / 1000, ph - top));
-            sc.style.transform = "translateY(" + (-top * k) + "px) scale(" + k + ")";
-            v.style.height = Math.ceil(h * k) + "px"; v.classList.remove("more"); v.dataset.more = ""; return;
+            v.style.height = Math.ceil(h * k) + "px"; v.classList.remove("more"); v.dataset.more = "";
+            if (fig.classList.contains("cropping")) { v.classList.remove("scr"); v.scrollTop = 0; sp.style.height = Math.ceil(h * k) + "px"; sc.style.transform = "translateY(" + (-top * k) + "px) scale(" + k + ")"; return; }
+            // fertig zugeschnitten: Scrollleiste rechts, verschieben ohne neu zuzuschneiden
+            v.classList.add("scr"); sp.style.height = Math.ceil(ph * k) + "px";
+            if (Math.abs(v.scrollTop - top * k) > 1) { fitScroll = true; v.scrollTop = Math.round(top * k); }
+            return;
           }
+          v.classList.remove("scr"); sp.style.height = "";
           let hp = (ctx.pageH * 96) / 72; const pb = page.querySelector(".wd-body .wd-pb");
           if (pb) hp = Math.min(hp, pb.offsetTop + (ctx.mB * 96) / 72);
           const more = page.offsetHeight > hp + 4;
           v.style.height = Math.ceil(Math.min(page.offsetHeight, hp) * k) + "px"; v.classList.toggle("more", more);
           v.dataset.more = more ? (pages > 1 ? "Seite 1 von " + pages : "weitere Seiten") + " · Doppelklick = ganzes Dokument" : "";
         };
+        let fitScroll = false;
+        v.addEventListener("scroll", () => {
+          if (fitScroll) { fitScroll = false; return; }
+          if (!v.classList.contains("scr")) return; const k = v.clientWidth / (page.offsetWidth || 1); if (!k) return;
+          fig.dataset.ct = String(Math.round((v.scrollTop / k) * 1000 / (page.offsetWidth || 1)));
+        });
         fit(); fig._wd = { page, v, fit }; if (window.ResizeObserver) { const ro = new ResizeObserver(fit); ro.observe(v); }
         if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { wdTabs(page, ctx.defTab); fit(); });
       } catch (e) { console.error(e); v.innerHTML = '<div class="ndoc-load">📄 ' + esc(fig.dataset.name || "Word-Dokument") + " – Vorschau geht nicht (" + esc(e.message || e) + ")</div>"; }
@@ -4856,7 +4870,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       });
     });
     $("#d-nwordf").addEventListener("change", (e) => { const f = [...e.target.files]; e.target.value = ""; addDocx(f); });
-    ned.addEventListener("dblclick", (e) => { const fig = e.target.closest && e.target.closest("figure.ndoc"); if (fig && ned.contains(fig) && !fig.classList.contains("cropping")) { e.preventDefault(); fpClose(); openDoc(fig); } });
+    ned.addEventListener("dblclick", (e) => { const fig = e.target.closest && e.target.closest("figure.ndoc"); if (fig && ned.contains(fig) && !fig.classList.contains("cropping") && !onSbar(e)) { e.preventDefault(); fpClose(); openDoc(fig); } });
     ndocFill(ned, docFiles());
     // Bilder: im Text nicht bearbeitbar (ganzer Block), ein Klick öffnet Grösse, Lage, Bildunterschrift/Quelle
     // nach einer Tabelle ganz am Ende eine leere Zeile, damit man darunter weiterschreiben kann
@@ -4872,15 +4886,17 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       img.replaceWith(f); img.removeAttribute("class"); f.appendChild(img); return f;
     };
     // Ausschnitt eines Word-Dokuments wählen: oberen/unteren Rand ziehen, in der Mitte ziehen (oder Mausrad) = verschieben
-    let crop = null;
-    const cropEnd = () => { if (!crop) return; const c = crop; crop = null; c.ui.remove(); c.bar.remove(); c.fig.classList.remove("cropping"); document.removeEventListener("pointerdown", c.out, true); document.removeEventListener("keydown", c.key, true); save(); };
+    let crop = null, ndocT = 0;
+    const onSbar = (e) => e.target.classList && e.target.classList.contains("scr") && e.offsetX >= e.target.clientWidth;
+    ned.addEventListener("scroll", (e) => { if (e.target.classList && e.target.classList.contains("ndoc-v") && e.target.classList.contains("scr")) { clearTimeout(ndocT); ndocT = setTimeout(save, 800); } }, true);
+    const cropEnd = () => { if (!crop) return; const c = crop; crop = null; c.ui.remove(); c.bar.remove(); c.fig.classList.remove("cropping"); if (c.fig._wd) c.fig._wd.fit(); document.removeEventListener("pointerdown", c.out, true); document.removeEventListener("keydown", c.key, true); save(); };
     const cropStart = (fig) => {
       const W = fig._wd; if (!W) return; cropEnd();
       const pw = () => W.page.offsetWidth || 1, ph = () => W.page.offsetHeight || 1, k = () => (W.v.clientWidth || 1) / pw();
       let top = 0, h = 0;
       if (+fig.dataset.ch > 0) { top = (+fig.dataset.ct || 0) * pw() / 1000; h = +fig.dataset.ch * pw() / 1000; } else h = W.v.clientHeight / k();
       const set = () => { top = Math.max(0, Math.min(top, ph() - 30)); h = Math.max(30, Math.min(h, ph() - top)); fig.dataset.ct = String(Math.round(top * 1000 / pw())); fig.dataset.ch = String(Math.max(1, Math.round(h * 1000 / pw()))); W.fit(); };
-      fig.classList.add("cropping");
+      fig.classList.add("cropping"); W.fit();
       const ui = document.createElement("div"); ui.className = "ndoc-crop";
       ui.innerHTML = '<div class="nc-m" data-cd="m" title="Ziehen = Ausschnitt verschieben (auch mit dem Mausrad)"></div><div class="nc-h nc-t" data-cd="t" title="Oberen Rand ziehen"><i></i></div><div class="nc-h nc-b" data-cd="b" title="Unteren Rand ziehen"><i></i></div>';
       const bar = document.createElement("div"); bar.className = "ndoc-cbar";
@@ -5055,7 +5071,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     });
     ned.addEventListener("click", (e) => {
       if (e.detail === 1 && e.target === ned) { dropFill(null); if (belowEnd(e, false)) return; }
-      const dfig = e.target.closest("figure.ndoc"); if (dfig) { e.preventDefault(); if (e.detail === 1 && !dfig.classList.contains("cropping")) figPop(dfig); return; }
+      const dfig = e.target.closest("figure.ndoc"); if (dfig) { e.preventDefault(); if (e.detail === 1 && !dfig.classList.contains("cropping") && !onSbar(e)) figPop(dfig); return; }
       const img = e.target.closest("img"); if (!img) { besideFig(e); return; }
       e.preventDefault();
       const fig = img.closest("figure.nfig") || toFig(img);
@@ -9142,7 +9158,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       host.appendChild(b);
     });
     ndocFill(box);
-    box.addEventListener("dblclick", (e) => { const fig = e.target.closest("figure.ndoc"); if (!fig) return; const f = wdFindFile(fig.dataset.doc); if (f) wdEdit(f, { onSaved: () => ndocFill(box, null, f.id) }); });
+    box.addEventListener("dblclick", (e) => { const fig = e.target.closest("figure.ndoc"); if (!fig || (e.target.classList.contains("scr") && e.offsetX >= e.target.clientWidth)) return; const f = wdFindFile(fig.dataset.doc); if (f) wdEdit(f, { onSaved: () => ndocFill(box, null, f.id) }); });
     box.addEventListener("pointerdown", () => { const pg = $("#lk-page"), sl = getSelection(); if (pg && sl.rangeCount && pg.contains(sl.anchorNode)) lkKeepRange(); });
     box.addEventListener("click", (e) => {
       const bt = e.target.closest("[data-taketab]");
