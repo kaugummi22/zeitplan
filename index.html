@@ -5007,16 +5007,21 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     try { await load(); }
     catch (e) { console.error(e); scroll.innerHTML = '<div class="empty">Das Dokument konnte nicht geöffnet werden: ' + esc(e.message || e) + "</div>"; setMsg(""); }
   }
-  async function openViewer(f, edit) {
+  async function openViewer(f, edit, rm) {
     let root = document.getElementById("viewerRoot");
     if (!root) { root = document.createElement("div"); root.id = "viewerRoot"; document.body.appendChild(root); }
     root.innerHTML = '<div class="overlay vw-ov" id="vw-ov"><div class="panel viewer" role="dialog" aria-modal="true" aria-label="' + esc(f.name) + '">' +
-      '<div class="vw-head"><h3>' + esc(f.name) + '</h3><div class="right"><span class="msg" id="vw-msg"></span><button class="btn" type="button" id="vw-edit" hidden>Bearbeiten</button><button class="btn" type="button" id="vw-saveas" hidden>Speichern unter …</button>' + (window.ZLOCAL && /^(docx?|xlsx?|pptx?|pptm|pdf|odt)$/i.test(extOf(f)) ? '<button class="btn primary" type="button" id="vw-word" title="Das Dokument im Ordner der Reihe direkt bearbeiten">' + ({ doc: "In Word bearbeiten", docx: "In Word bearbeiten", xls: "In Excel bearbeiten", xlsx: "In Excel bearbeiten", ppt: "In PowerPoint bearbeiten", pptx: "In PowerPoint bearbeiten", pptm: "In PowerPoint bearbeiten" }[extOf(f).toLowerCase()] || "Im Programm öffnen") + "</button>" : "") + (U.reihen[U.sel] && U.reihen[U.sel].klasse && U.reihen[U.sel].kfolder && U.reihen[U.reihen[U.sel].src] && window.ZLOCAL && window.ZLOCAL.write ? '<button class="btn" type="button" id="vw-promote" title="Diese Fassung aus der Klasse wird zum Original im Unterricht">Als Original übernehmen</button>' : "") + '<button class="btn" type="button" id="vw-dl">Herunterladen</button><button class="btn primary" type="button" id="vw-close">Schliessen</button></div></div>' +
+      '<div class="vw-head"><h3>' + esc(f.name) + '</h3><div class="right"><span class="msg" id="vw-msg"></span><button class="btn" type="button" id="vw-edit" hidden>Bearbeiten</button><button class="btn" type="button" id="vw-saveas" hidden>Speichern unter …</button>' + (window.ZLOCAL && /^(docx?|xlsx?|pptx?|pptm|pdf|odt)$/i.test(extOf(f)) ? '<button class="btn primary" type="button" id="vw-word" title="Das Dokument im Ordner der Reihe direkt bearbeiten">' + ({ doc: "In Word bearbeiten", docx: "In Word bearbeiten", xls: "In Excel bearbeiten", xlsx: "In Excel bearbeiten", ppt: "In PowerPoint bearbeiten", pptx: "In PowerPoint bearbeiten", pptm: "In PowerPoint bearbeiten" }[extOf(f).toLowerCase()] || "Im Programm öffnen") + "</button>" : "") + (U.reihen[U.sel] && U.reihen[U.sel].klasse && U.reihen[U.sel].kfolder && U.reihen[U.reihen[U.sel].src] && window.ZLOCAL && window.ZLOCAL.write ? '<button class="btn" type="button" id="vw-promote" title="Diese Fassung aus der Klasse wird zum Original im Unterricht">Als Original übernehmen</button>' : "") + '<button class="btn" type="button" id="vw-dl">Herunterladen</button>' + (rm ? '<button class="btn ghost danger" type="button" id="vw-rm" title="Das Dokument aus dieser Liste in Semper entfernen (die Datei im Ordner bleibt erhalten)">🗑 Entfernen</button>' : "") + '<button class="btn primary" type="button" id="vw-close">Schliessen</button></div></div>' +
       '<div class="vw-bar" id="vw-ask" hidden><span>Sie haben das Dokument bearbeitet. Als neues Dokument speichern? Das Original bleibt unverändert.</span><button class="btn primary" type="button" id="vw-ask-save">Speichern unter …</button><button class="btn ghost danger" type="button" id="vw-ask-drop">Änderungen verwerfen</button><button class="btn ghost" type="button" id="vw-ask-back">Weiter bearbeiten</button></div>' +
       '<div class="vw-bar" id="vw-name" hidden><label for="vw-fname">Name der bearbeiteten Fassung</label><input type="text" id="vw-fname"><button class="btn primary" type="button" id="vw-name-ok">Speichern</button><button class="btn ghost" type="button" id="vw-name-cancel">Abbrechen</button></div>' +
       '<div class="vw-body" id="vw-body"><div class="empty">Lädt …</div></div></div></div>';
     viewerDirty = false;
     $("#vw-close").onclick = () => closeViewer();
+    if (rm) $("#vw-rm").onclick = (e) => {
+      const b = e.currentTarget;
+      if (!b.dataset.armed) { b.dataset.armed = "1"; b.textContent = "Wirklich entfernen?"; b.classList.add("armed"); return; }
+      closeViewer(true); rm(f);
+    };
     $("#vw-ov").addEventListener("mousedown", (e) => { if (e.target.id === "vw-ov") closeViewer(); });
     const body = $("#vw-body"), msg = $("#vw-msg"), ext = extOf(f);
     let bytes = null;
@@ -5245,7 +5250,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
           const o = e.target.closest("[data-open-file]");
           if (o) {
             const f = x.files.find((ff) => ff.id === o.dataset.openFile);
-            if (f) openViewer(f, opt.editDocs ? { onSaveAs: (nf) => { x.files = [...x.files, nf]; drawFiles(); changed(); } } : null);
+            if (f) openViewer(f, opt.editDocs ? { onSaveAs: (nf) => { x.files = [...x.files, nf]; drawFiles(); changed(); } } : null, (ff) => { x.files = x.files.filter((y) => y.id !== ff.id); drawFiles(); changed(); });
             return;
           }
           const b = e.target.closest("[data-rm]"); if (!b) return;
@@ -7917,7 +7922,13 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     if (b.dataset.openFile && r0) {
       const f = [...Object.values(r0.meta || {}).flatMap((m) => m.files || []), ...(r0.mainFiles || []), ...(r0.files || []), ...(r0.lnItems || []).flatMap((m) => m.files || [])].find((ff) => ff.id === b.dataset.openFile);
       if (f && f.folder) { if (window.ZLOCAL) window.ZLOCAL.open(f.path).catch(() => uStatus("Ordner nicht gefunden", true)); else uStatus("Ordner: " + f.path); return; }
-      if (f) openViewer(f); return;
+      if (f) openViewer(f, null, (ff) => {
+        // nur aus der Liste nehmen, die Datei im Ordner bzw. in OneDrive bleibt (Kopien in Klassen brauchen sie evtl. noch)
+        const rid = U.sel, r = U.reihen[rid]; if (!r) return; const out = (a) => (Array.isArray(a) ? a.filter((y) => !(y && y.id === ff.id)) : a);
+        r.mainFiles = out(r.mainFiles); r.files = out(r.files); Object.values(r.meta || {}).forEach((m) => { if (m && m.files) m.files = out(m.files); }); (r.lnItems || []).forEach((m) => { if (m && m.files) m.files = out(m.files); });
+        saveReihe(rid, 0); renderU(); uStatus("«" + ff.name + "» entfernt");
+      });
+      return;
     }
     if (b.id === "rf-addfolder" && r0) { folderPicker(r0); return; }
     if (b.id === "rf-gadd" && r0) {
