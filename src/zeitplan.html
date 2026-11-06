@@ -1189,14 +1189,15 @@ table:is(.ntab, .lk-tab) caption { caption-side: bottom; text-align: left; font-
 .tt-mv, .tt-mn { position: fixed; pointer-events: auto; height: 24px; border: 1px solid var(--accent); border-radius: 5px; background: var(--surface); color: var(--accent); font: inherit; font-size: 0.78rem; font-weight: 700; padding: 0 7px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.15); touch-action: none; }
 .tt-mv { width: 24px; padding: 0; cursor: grab; font-size: 0.95rem; } .tt-mn[aria-expanded="true"], .tt-mv:hover, .tt-mn:hover { background: var(--accent); color: var(--surface); }
 .tt-bar[hidden] { display: none; }
-.tt.tt-min > :not(.tt-dot):not(.tt-cols) { display: none !important; }
+.tt.tt-min > :not(.tt-dot):not(.tt-cols):not(.tt-rows) { display: none !important; }
 .tt-dot { position: fixed; pointer-events: auto; width: 16px; height: 16px; padding: 0; border-radius: 50%; border: 2px solid var(--surface); background: var(--accent); box-shadow: 0 1px 4px rgba(0,0,0,0.3); cursor: pointer; }
 .tt-dot:hover, .tt-dot[aria-expanded="true"] { transform: scale(1.25); }
 .tt-bar { position: fixed; display: flex; flex-wrap: wrap; align-items: center; gap: 2px; max-width: min(330px, calc(100vw - 8px)); padding: 3px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.18); pointer-events: auto; font-size: 0.8rem; }
 .tt-bar button { font: inherit; font-weight: 600; border: 1px solid transparent; border-radius: 5px; background: none; color: var(--ink); padding: 3px 7px; cursor: pointer; touch-action: none; }
 .tt-bar button:hover { border-color: var(--line); background: var(--bg); }
 .tt-sep { width: 1px; height: 18px; background: var(--line); margin: 0 2px; }
-.tt-w, .tt-h, .tt-c { position: fixed; pointer-events: auto; touch-action: none; }
+.tt-w, .tt-h, .tt-c, .tt-r { position: fixed; pointer-events: auto; touch-action: none; }
+.tt-r { height: 8px; margin-top: -4px; cursor: row-resize; } .tt-r:hover { background: color-mix(in srgb, var(--accent) 35%, transparent); }
 .tt-w { width: 8px; height: 32px; margin-left: -2px; border-radius: 4px; background: var(--accent); cursor: ew-resize; }
 .tt-h { width: 32px; height: 8px; margin-top: -2px; border-radius: 4px; background: var(--accent); cursor: ns-resize; }
 .tt-c { width: 8px; cursor: col-resize; } .tt-c:hover { background: color-mix(in srgb, var(--accent) 35%, transparent); }
@@ -2432,9 +2433,12 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const sty = (w ? "width:" + w + "%;" : "") + (h ? "height:" + h + "em;" : "");
     const cap = n.querySelector(":scope > caption"), ct = cap ? cap.textContent.replace(/[ ​]/g, " ").replace(/\s+/g, " ").trim() : "";
     let out = '<table class="' + base + (pos ? " " + pos : "") + '"' + (sty ? ' style="' + sty + '"' : "") + ">" + (ct ? "<caption>" + esc(ct) + "</caption>" : "") + (cw.length ? "<colgroup>" + cw.map((x) => '<col style="width:' + x + '%">').join("") + "</colgroup>" : "") + "<tbody>";
-    g.rows.forEach((l) => {
-      out += "<tr>";
+    g.rows.forEach((l, ri) => {
+      const trh = rows[ri] && rows[ri].style ? parseFloat(rows[ri].style.height) : 0, trs = rows[ri] && /em$/.test(rows[ri].style.height || "") && trh > 0 && trh <= 60 ? ' style="height:' + Math.round(trh * 10) / 10 + 'em"' : "";
+      out += "<tr" + trs + ">";
       l.forEach((x) => { const c = x.cell, t = c.tagName.toLowerCase(), at = (x.span > 1 ? ' colspan="' + x.span + '"' : "") + (x.rs > 1 ? ' rowspan="' + x.rs + '"' : ""); let y = inner(c); if (!y.replace(/<[^>]*>|\s/g, "") && !/<img|<figure/.test(y)) y = "<br>"; out += "<" + t + at + ">" + y + "</" + t + ">"; });
+      // zu kurze Zeile (z. B. aus Word) mit leeren Zellen auffüllen, damit das Raster stimmt
+      const used = (g.occ[ri] || []).filter(Boolean).length; for (let k = used; k < N; k++) out += "<td><br></td>";
       out += "</tr>";
     });
     return out + "</tbody></table>";
@@ -2472,10 +2476,10 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     el.innerHTML = '<button type="button" class="tt-dot" data-tt="dot" title="Tabelle bearbeiten: Grösse, Lage, Verschieben, Zeilen und Spalten" aria-label="Tabelle bearbeiten" aria-expanded="false"></button><div class="tt-frame"></div><button type="button" class="tt-mv" data-tt="move" title="Gedrückt halten und ziehen: Tabelle an eine andere Stelle verschieben, z. B. neben ein Bild" aria-label="Tabelle verschieben">✥</button><button type="button" class="tt-mn" data-tt="menu" title="Lage, Zeilen und Spalten, Grösse zurücksetzen" aria-expanded="false">▦ Tabelle ▾</button><div class="tt-bar" hidden>' +
       B("tp-l", "◧", "Links, Text rechts daneben") + B("tp-c", "▣", "In der Mitte") + B("tp-r", "◨", "Rechts, Text links daneben") + B("tp-", "▭", "Normal (allein auf der Zeile)") + '<span class="tt-sep"></span>' +
       B("up", "↑", "Einen Absatz nach oben") + B("down", "↓", "Einen Absatz nach unten") + '<span class="tt-sep"></span>' +
-      B("trow", "+ Zeile", "Neue Zeile unter der Zeile mit dem Cursor") + B("tcol", "+ Spalte", "Neue Spalte rechts der Spalte mit dem Cursor") + B("tdelrow", "− Zeile", "Zeile mit dem Cursor löschen") + B("tdelcol", "− Spalte", "Spalte mit dem Cursor löschen") + B("thead", "Kopfzeile", "Erste Zeile hervorheben ein/aus") + '<span class="tt-sep"></span>' +
+      B("trow", "+ Zeile", "Neue Zeile unter der Zeile mit dem Cursor") + B("tcol", "+ Spalte", "Neue Spalte rechts der Spalte mit dem Cursor") + B("tdelrow", "− Zeile", "Zeile mit dem Cursor löschen") + B("tdelcol", "− Spalte", "Spalte mit dem Cursor löschen") + B("tmerge", "⊞ →", "Zelle mit der Zelle rechts verbinden") + B("tmergedown", "⊞ ↓", "Zelle mit der Zelle darunter verbinden") + B("tsplit", "⊟ Teilen", "Zelle teilen (verbundene Zelle wieder auftrennen bzw. in zwei Zellen nebeneinander)") + B("thead", "Kopfzeile", "Erste Zeile hervorheben ein/aus") + '<span class="tt-sep"></span>' +
       B("tleft", "◀ Spalte", "Spalte mit dem Cursor nach links verschieben") + B("tright", "Spalte ▶", "Spalte mit dem Cursor nach rechts verschieben") + B("tup", "▲ Zeile", "Zeile mit dem Cursor nach oben verschieben") + B("tdown", "▼ Zeile", "Zeile mit dem Cursor nach unten verschieben") + '<span class="tt-sep"></span>' +
       B("lscol", "✎ Spalte", "Spalte mit dem Cursor in Lehrerschrift setzen bzw. wieder normal (Kopfzeile bleibt)") + B("cap", "Quelle", "Quellenangabe bzw. Beschriftung unter der Tabelle (wie bei Bildern)") + B("reset", "↺ Grösse", "Breite, Höhe und Spaltenbreiten zurücksetzen") + B("tdel", "🗑", "Ganze Tabelle löschen") + "</div>" +
-      '<div class="tt-w" data-ttd="w" title="Ziehen: Breite der Tabelle"></div><div class="tt-h" data-ttd="h" title="Ziehen: Höhe der Tabelle"></div><div class="tt-cols"></div>';
+      '<div class="tt-w" data-ttd="w" title="Ziehen: Breite der Tabelle"></div><div class="tt-h" data-ttd="h" title="Ziehen: Höhe der Tabelle"></div><div class="tt-cols"></div><div class="tt-rows"></div>';
     document.body.appendChild(el);
     el.addEventListener("mousedown", (e) => e.preventDefault());
     el.addEventListener("click", ttClick);
@@ -2484,8 +2488,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const loop = () => {
       if (!TT.el || !TT.tb) return;
       if (!TT.tb.isConnected || !TT.host.isConnected) { ttHide(); return; }
-      const r = TT.tb.getBoundingClientRect(), bs = tBounds(TT.tb).b, key = [r.left, r.top, r.width, r.height, ...bs].map(Math.round).join(",");
-      if (key !== last) { last = key; ttPlace(r); }
+      const r = TT.tb.getBoundingClientRect(), bs = tBounds(TT.tb).b, key = [r.left, r.top, r.width, r.height, ...bs, ...[...TT.tb.rows].map((x) => x.getBoundingClientRect().bottom)].map(Math.round).join(",");
+      if (key !== last && !TT.drag) { last = key; ttPlace(r); } // beim Ziehen die Griffe nicht neu bauen (sonst reisst das Ziehen ab)
       TT.raf = requestAnimationFrame(loop);
     };
     loop();
@@ -2500,6 +2504,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     Object.assign(el.querySelector(".tt-w").style, { left: r.right - 2 + "px", top: r.top + r.height / 2 - 16 + "px" });
     Object.assign(el.querySelector(".tt-h").style, { left: r.left + r.width / 2 - 16 + "px", top: r.bottom - 2 + "px" });
     Object.assign(bar.style, { left: Math.max(4, Math.min(innerWidth - bar.offsetWidth - 4, r.right - bar.offsetWidth)) + "px", top: Math.min(innerHeight - bar.offsetHeight - 4, top + 26) + "px" });
+    el.querySelector(".tt-rows").innerHTML = [...TT.tb.rows].map((row, i) => { const rr = row.getBoundingClientRect(); return '<div class="tt-r" data-ttd="r" data-ri="' + i + '" title="Ziehen: Höhe dieser Zeile" style="left:' + r.left + "px;width:" + r.width + "px;top:" + rr.bottom + 'px"></div>'; }).join("");
     const bs = tBounds(TT.tb).b;
     el.querySelector(".tt-cols").innerHTML = bs.slice(1, -1).map((x, i) => '<div class="tt-c" data-ttd="c" data-ci="' + i + '" title="Ziehen: nur diese Spaltenlinie verschieben" style="left:' + (x - 4) + "px;top:" + r.top + "px;height:" + r.height + 'px"></div>').join("");
   }
@@ -2547,6 +2552,11 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     let move, ind = null, drop = null;
     if (kind === "w") move = (ev) => { tb.style.width = Math.max(15, Math.min(100, Math.round((r0.width + ev.clientX - x0) / boxW * 100))) + "%"; };
     else if (kind === "h") { const minH = [...tb.rows].reduce((s, row) => s + row.getBoundingClientRect().height, 0); move = (ev) => { const px = Math.max(r0.height + ev.clientY - y0, tb.rows.length * fs * 1.6); tb.style.height = Math.round(px / fs * 10) / 10 + "em"; }; void minH; }
+    else if (kind === "r") {
+      // nur diese Zeile höher oder niedriger (kleiner als der Inhalt geht nicht)
+      const row = tb.rows[+d.dataset.ri], h0 = row.getBoundingClientRect().height;
+      move = (ev) => { const px = Math.max(fs * 1.2, h0 + ev.clientY - y0); row.style.height = Math.round(px / fs * 10) / 10 + "em"; };
+    }
     else if (kind === "c") {
       // nur die gezogene Linie wandert: die Spalte links wird breiter, die rechts schmaler (alle anderen bleiben)
       const ws = tColW(tb), i = +d.dataset.ci; tSetCols(tb, ws);
@@ -2613,7 +2623,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     m.style.left = Math.max(8, Math.min(x, innerWidth - r.width - 8)) + "px"; m.style.top = Math.max(8, Math.min(y, innerHeight - r.height - 8)) + "px";
     setTimeout(() => document.addEventListener("pointerdown", out, true), 0);
   }
-  const TAB_MENU = [["lscell", "✎ Zelle in Lehrerschrift / normal"], ["lscol", "✎ Spalte in Lehrerschrift / normal"], "-", ["tleft", "◀ Spalte nach links"], ["tright", "Spalte nach rechts ▶"], ["tup", "▲ Zeile nach oben"], ["tdown", "▼ Zeile nach unten"], "-", ["trow", "+ Zeile darunter"], ["tcol", "+ Spalte rechts"], ["tdelrow", "− Zeile löschen", 1], ["tdelcol", "− Spalte löschen", 1]];
+  const TAB_MENU = [["lscell", "✎ Zelle in Lehrerschrift / normal"], ["lscol", "✎ Spalte in Lehrerschrift / normal"], "-", ["tleft", "◀ Spalte nach links"], ["tright", "Spalte nach rechts ▶"], ["tup", "▲ Zeile nach oben"], ["tdown", "▼ Zeile nach unten"], "-", ["trow", "+ Zeile darunter"], ["tcol", "+ Spalte rechts"], ["tdelrow", "− Zeile löschen", 1], ["tdelcol", "− Spalte löschen", 1], "-", ["tmerge", "⊞ Mit Zelle rechts verbinden"], ["tmergedown", "⊞ Mit Zelle darunter verbinden"], ["tsplit", "⊟ Zelle teilen"]];
   document.addEventListener("contextmenu", (e) => {
     const c = e.target.closest && e.target.closest("table.ntab td, table.ntab th, table.lk-tab td, table.lk-tab th"), host = c && ttHostOf(c);
     if (!c || !host || !host.isContentEditable) return;
@@ -10263,6 +10273,32 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       g.occ.forEach((occ) => { const x = occ[a], y = occ[k]; if (d < 0) y.before(x); else y.after(x); });
       if (ws) { [ws[a], ws[k]] = [ws[k], ws[a]]; tSetCols(tb, ws); }
       focus = cell;
+    }
+    else if (cmd === "tmerge") {
+      // mit der Zelle rechts verbinden (Inhalt kommt dazu)
+      const nb = (g.occ[ri] || [])[me.start + me.span];
+      if (!nb || nb === cell || nb.parentElement !== tr || (nb.rowSpan || 1) !== (cell.rowSpan || 1)) return cell;
+      if (nb.textContent.trim() || nb.querySelector("img")) { const has = cell.textContent.trim(); if (has) cell.insertAdjacentHTML("beforeend", "<br>"); while (nb.firstChild) cell.appendChild(nb.firstChild); }
+      cell.colSpan = me.span + (nb.colSpan || 1); nb.remove(); focus = cell;
+    }
+    else if (cmd === "tmergedown") {
+      const rs = cell.rowSpan || 1, below = (g.occ[ri + rs] || [])[me.start];
+      if (!below || (below.colSpan || 1) !== me.span || below === cell) return cell;
+      if (below.textContent.trim() || below.querySelector("img")) { cell.insertAdjacentHTML("beforeend", "<br>"); while (below.firstChild) cell.appendChild(below.firstChild); }
+      cell.rowSpan = rs + (below.rowSpan || 1); below.remove(); focus = cell;
+    }
+    else if (cmd === "tsplit") {
+      // Zelle teilen: verbundene Zelle wieder auftrennen, sonst in zwei Zellen nebeneinander (die Spalte wird dafür geteilt)
+      const n = mk(cell.tagName === "TH" ? "th" : "td");
+      if (me.span > 1) { cell.colSpan = me.span - 1; cell.after(n); }
+      else if ((cell.rowSpan || 1) > 1) { const rs = cell.rowSpan; cell.rowSpan = 1; for (let k = 1; k < rs; k++) { const r2 = rows[ri + k]; if (!r2) break; const c2 = mk(cell.tagName === "TH" ? "th" : "td"), prev = (g.rows[ri + k] || []).filter((y) => y.start < me.start).pop(); if (prev) prev.cell.after(c2); else r2.prepend(c2); } focus = cell; return focus; }
+      else {
+        const seen = new Set([cell]);
+        g.occ.forEach((occ) => { const x = occ && occ[me.start]; if (x && !seen.has(x)) { seen.add(x); x.colSpan = (x.colSpan || 1) + 1; } });
+        cell.after(n);
+        if (ws) { const half = ws[me.start] / 2; ws.splice(me.start, 1, half, half); tSetCols(tb, ws); }
+      }
+      focus = n;
     }
     else if (cmd === "tup" || cmd === "tdown") { const sib = cmd === "tup" ? tr.previousElementSibling : tr.nextElementSibling; if (!sib) return cell; if (cmd === "tup") sib.before(tr); else sib.after(tr); focus = cell; }
     return focus;
