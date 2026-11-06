@@ -5925,7 +5925,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const block = el && el.closest(".ncols");
       if (v === "0") {
         const fl0 = el && el.closest(".nflow");
-        if (fl0 && ned.contains(fl0) && !block) { HIST.brk = true; const frag = document.createDocumentFragment(); while (fl0.firstChild) frag.appendChild(fl0.firstChild); fl0.replaceWith(frag); save(); return; }
+        if (fl0 && ned.contains(fl0) && (!block || block.contains(fl0))) { HIST.brk = true; const frag = document.createDocumentFragment(); while (fl0.firstChild) frag.appendChild(fl0.firstChild); fl0.replaceWith(frag); save(); return; }
         if (!block) { $("#d-nmsg").textContent = "Setzen Sie den Cursor zuerst in die Spalten, die aufgehoben werden sollen."; return; }
         const frag = document.createDocumentFragment();
         block.querySelectorAll(":scope > .ncol").forEach((c) => { const d = document.createElement("div"); d.innerHTML = c.innerHTML; frag.appendChild(d); });
@@ -5955,15 +5955,19 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const flow = el && el.closest(".nflow");
       if (flow && ned.contains(flow)) { HIST.brk = true; flow.dataset.n = String(n); save(); return; }
       const rg0 = sl.rangeCount ? sl.getRangeAt(0) : null;
-      if (!block && rg0 && !rg0.collapsed && ned.contains(rg0.commonAncestorContainer) && !(rg0.commonAncestorContainer.nodeType === 1 ? rg0.commonAncestorContainer : rg0.commonAncestorContainer.parentElement).closest(".ncol, td, th")) {
+      const cae = rg0 ? (rg0.commonAncestorContainer.nodeType === 1 ? rg0.commonAncestorContainer : rg0.commonAncestorContainer.parentElement) : null;
+      // auch innerhalb einer Spalte (z. B. rechts bei «Aufgabe | Notizen»): dort, im selben Feld, aufteilen
+      const box = cae && ned.contains(cae) ? (cae.closest(".ncol") && ned.contains(cae.closest(".ncol")) ? cae.closest(".ncol") : ned) : null;
+      if (box && !rg0.collapsed && !cae.closest("td, th")) {
         HIST.brk = true;
-        const pick = (c, o, end) => (c === ned ? ned.childNodes[end ? Math.max(0, o - 1) : o] || ned.lastChild : c);
-        const a = topOf(pick(rg0.startContainer, rg0.startOffset, false)), z = topOf(pick(rg0.endContainer, rg0.endOffset, true));
+        const upTo = (n) => { while (n && n.parentNode !== box) n = n.parentNode; return n; };
+        const pick = (c, o, end) => (c === box ? box.childNodes[end ? Math.max(0, o - 1) : o] || box.lastChild : c);
+        const a = upTo(pick(rg0.startContainer, rg0.startOffset, false)), z = upTo(pick(rg0.endContainer, rg0.endOffset, true));
         if (a && z) {
           const fl = document.createElement("div"); fl.className = "nflow"; fl.dataset.n = String(n);
           const move = []; for (let x = a; x; x = x.nextSibling) { if (x.nodeType === 1 && x.classList.contains("nsec")) break; move.push(x); if (x === z) break; }
           a.before(fl); move.forEach((x) => { if (x.nodeType === 3) { if (!x.nodeValue.trim()) { x.remove(); return; } const w = document.createElement("div"); w.appendChild(x); fl.appendChild(w); } else fl.appendChild(x); });
-          if (!fl.nextElementSibling) { const d2 = document.createElement("div"); d2.innerHTML = "<br>"; fl.after(d2); }
+          if (!fl.nextElementSibling && box === ned) { const d2 = document.createElement("div"); d2.innerHTML = "<br>"; fl.after(d2); }
           $("#d-nmsg").textContent = "Auf " + n + " Spalten verteilt. Aufheben: hineinklicken, Spalten › «Spalten aufheben»."; save(); return;
         }
       }
