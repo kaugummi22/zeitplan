@@ -1152,7 +1152,7 @@ table:is(.ntab, .lk-tab) caption { caption-side: bottom; text-align: left; font-
 .tt-mv, .tt-mn { position: fixed; pointer-events: auto; height: 24px; border: 1px solid var(--accent); border-radius: 5px; background: var(--surface); color: var(--accent); font: inherit; font-size: 0.78rem; font-weight: 700; padding: 0 7px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.15); touch-action: none; }
 .tt-mv { width: 24px; padding: 0; cursor: grab; font-size: 0.95rem; } .tt-mn[aria-expanded="true"], .tt-mv:hover, .tt-mn:hover { background: var(--accent); color: var(--surface); }
 .tt-bar[hidden] { display: none; }
-.tt.tt-min > :not(.tt-dot) { display: none !important; }
+.tt.tt-min > :not(.tt-dot):not(.tt-cols) { display: none !important; }
 .tt-dot { position: fixed; pointer-events: auto; width: 16px; height: 16px; padding: 0; border-radius: 50%; border: 2px solid var(--surface); background: var(--accent); box-shadow: 0 1px 4px rgba(0,0,0,0.3); cursor: pointer; }
 .tt-dot:hover, .tt-dot[aria-expanded="true"] { transform: scale(1.25); }
 .tt-bar { position: fixed; display: flex; flex-wrap: wrap; align-items: center; gap: 2px; max-width: min(330px, calc(100vw - 8px)); padding: 3px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.18); pointer-events: auto; font-size: 0.8rem; }
@@ -2329,22 +2329,78 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   // ---------- Tabellen (Notizen und Unterrichtsseite): Breite, Höhe, Spaltenbreiten, Lage, Verschieben ----------
   // gespeichert: Lage als Klasse tp-l/tp-r/tp-c, Breite in %, Höhe in em, Spaltenbreiten in % in der ersten Zeile
   const TAB_POS = ["tp-l", "tp-r", "tp-c"];
+  // Raster einer Tabelle (verbundene Zellen berücksichtigt): pro Zeile die Zellen mit Startspalte und Breite; occ[Zeile][Spalte] = Zelle
+  function tGrid(rows) {
+    const occ = [], out = [];
+    rows.forEach((r, ri) => {
+      occ[ri] = occ[ri] || []; let c = 0; const list = [];
+      [...r.children].forEach((cell) => {
+        if (!/^T[DH]$/.test(cell.tagName)) return;
+        while (occ[ri][c]) c++;
+        const cs = Math.max(1, Math.min(50, parseInt(cell.getAttribute("colspan"), 10) || 1)), rs = Math.max(1, Math.min(rows.length - ri, parseInt(cell.getAttribute("rowspan"), 10) || 1));
+        for (let y = 0; y < rs; y++) { occ[ri + y] = occ[ri + y] || []; for (let x = 0; x < cs; x++) occ[ri + y][c + x] = cell; }
+        list.push({ cell, start: c, span: cs, rs }); c += cs;
+      });
+      out.push(list);
+    });
+    return { rows: out, occ, n: Math.max(0, ...occ.map((r) => (r || []).length)) };
+  }
+  const tRows = (n) => [...n.querySelectorAll(":scope > tr, :scope > tbody > tr, :scope > thead > tr, :scope > tfoot > tr")].filter((tr) => [...tr.children].some((c) => /^T[DH]$/.test(c.tagName)));
+  // Breite (Zell- oder Spaltenangabe aus Word/LibreOffice) in Punkten
+  function tAbsW(el) {
+    const v = (el.style && el.style.width) || "", m = /^([\d.]+)(pt|px|cm|mm|in)$/.exec(v.trim());
+    if (m) return +m[1] * { pt: 1, px: 0.75, cm: 28.35, mm: 2.835, in: 72 }[m[2]];
+    const a = el.getAttribute && el.getAttribute("width"); return a && /^\d+(\.\d+)?$/.test(a) ? +a * 0.75 : 0;
+  }
   function tabHtml(n, base, inner) {
-    const rows = [...n.querySelectorAll(":scope > tr, :scope > tbody > tr, :scope > thead > tr, :scope > tfoot > tr")].filter((tr) => [...tr.children].some((c) => /^T[DH]$/.test(c.tagName)));
+    const rows = tRows(n);
     if (!rows.length) return null;
     const st = n.style || {}, pct = (v, lo, hi) => { const f = parseFloat(v); return /%$/.test(v || "") && f >= lo && f <= hi ? Math.round(f * 10) / 10 : 0; };
     const pos = TAB_POS.find((c) => n.classList.contains(c)) || "", w = pct(st.width, 10, 100), hf = parseFloat(st.height), h = /em$/.test(st.height || "") && hf > 0 && hf <= 300 ? Math.round(hf * 10) / 10 : 0;
-    const cw = [...rows[0].children].filter((c) => /^T[DH]$/.test(c.tagName)).map((c) => pct(c.style && c.style.width, 1, 100)), fixed = cw.some((x) => x);
-    const sty = (w ? "width:" + w + "%;" : "") + (h ? "height:" + h + "em;" : "") + (fixed ? "table-layout:fixed;" : "");
-    const cap = n.querySelector(":scope > caption"), ct = cap ? cap.textContent.replace(/[\u00a0\u200b]/g, " ").replace(/\s+/g, " ").trim() : "";
-    let out = '<table class="' + base + (pos ? " " + pos : "") + '"' + (sty ? ' style="' + sty + '"' : "") + ">" + (ct ? "<caption>" + esc(ct) + "</caption>" : "") + "<tbody>";
-    rows.forEach((tr, ri) => {
-      out += "<tr>"; let ci = 0;
-      [...tr.children].forEach((c) => { if (!/^T[DH]$/.test(c.tagName)) return; const t = c.tagName.toLowerCase(), cs = ri === 0 && cw[ci] ? ' style="width:' + cw[ci] + '%"' : ""; ci++; let x = inner(c); if (!x.replace(/<[^>]*>|\s/g, "") && !/<img|<figure/.test(x)) x = "<br>"; out += "<" + t + cs + ">" + x + "</" + t + ">"; });
+    const g = tGrid(rows), N = g.n;
+    // Spaltenbreiten: eigene (colgroup), ältere Form (erste Zeile), oder aus Word übernommen (absolute Masse → Prozent)
+    let cw = [];
+    const cols = [...n.querySelectorAll(":scope > colgroup > col")].flatMap((c) => Array(Math.max(1, Math.min(50, parseInt(c.getAttribute("span"), 10) || 1))).fill(c));
+    if (cols.length === N) cw = cols.map((c) => pct(c.style && c.style.width, 0.5, 100));
+    if (!cw.some((x) => x) && g.rows[0].every((x) => x.span === 1) && g.rows[0].length === N) cw = g.rows[0].map((x) => pct(x.cell.style && x.cell.style.width, 1, 100));
+    if (!cw.some((x) => x) && N > 1) {
+      const a = Array(N).fill(0);
+      if (cols.length === N) cols.forEach((c, i) => { a[i] = tAbsW(c); });
+      g.rows.forEach((l) => l.forEach((x) => { if (x.span === 1 && !a[x.start]) a[x.start] = tAbsW(x.cell); }));
+      const sum = a.reduce((p, q) => p + q, 0);
+      if (a.every((x) => x > 0)) cw = a.map((x) => Math.round(x / sum * 1000) / 10);
+    }
+    if (!cw.every((x) => x)) cw = [];
+    const sty = (w ? "width:" + w + "%;" : "") + (h ? "height:" + h + "em;" : "");
+    const cap = n.querySelector(":scope > caption"), ct = cap ? cap.textContent.replace(/[ ​]/g, " ").replace(/\s+/g, " ").trim() : "";
+    let out = '<table class="' + base + (pos ? " " + pos : "") + '"' + (sty ? ' style="' + sty + '"' : "") + ">" + (ct ? "<caption>" + esc(ct) + "</caption>" : "") + (cw.length ? "<colgroup>" + cw.map((x) => '<col style="width:' + x + '%">').join("") + "</colgroup>" : "") + "<tbody>";
+    g.rows.forEach((l) => {
+      out += "<tr>";
+      l.forEach((x) => { const c = x.cell, t = c.tagName.toLowerCase(), at = (x.span > 1 ? ' colspan="' + x.span + '"' : "") + (x.rs > 1 ? ' rowspan="' + x.rs + '"' : ""); let y = inner(c); if (!y.replace(/<[^>]*>|\s/g, "") && !/<img|<figure/.test(y)) y = "<br>"; out += "<" + t + at + ">" + y + "</" + t + ">"; });
       out += "</tr>";
     });
     return out + "</tbody></table>";
   }
+  // Spaltengrenzen auf dem Bildschirm (x-Werte 0..n), auch bei verbundenen Zellen
+  function tBounds(tb) {
+    const g = tGrid([...tb.rows]), r = tb.getBoundingClientRect(), b = Array(g.n + 1).fill(null);
+    if (!g.n) return { g, b: [] };
+    g.rows.forEach((l) => l.forEach((x) => { const cr = x.cell.getBoundingClientRect(); if (b[x.start] == null) b[x.start] = cr.left; if (b[x.start + x.span] == null) b[x.start + x.span] = cr.right; }));
+    if (b[0] == null) b[0] = r.left; if (b[g.n] == null) b[g.n] = r.right;
+    for (let k = 1; k < g.n; k++) if (b[k] == null) { let j = k + 1; while (b[j] == null) j++; b[k] = b[k - 1] + (b[j] - b[k - 1]) / (j - k + 1); }
+    return { g, b };
+  }
+  // Spaltenbreiten (in %) setzen; ältere Breiten in der ersten Zeile werden entfernt
+  function tSetCols(tb, ws) {
+    let cg = tb.querySelector(":scope > colgroup");
+    if (!cg) { cg = document.createElement("colgroup"); const cap = tb.querySelector(":scope > caption"); if (cap) cap.after(cg); else tb.prepend(cg); }
+    while (cg.children.length < ws.length) cg.appendChild(document.createElement("col"));
+    while (cg.children.length > ws.length) cg.lastChild.remove();
+    const sum = ws.reduce((p, q) => p + q, 0) || 1;
+    [...cg.children].forEach((c, i) => { c.removeAttribute("span"); c.removeAttribute("width"); c.style.width = Math.round(ws[i] / sum * 1000) / 10 + "%"; });
+    if (tb.rows[0]) [...tb.rows[0].cells].forEach((c) => c.style.removeProperty("width"));
+  }
+  const tColW = (tb) => { const { b } = tBounds(tb); return b.slice(1).map((x, i) => Math.max(1, x - b[i])); };
   // Rahmen um die Tabelle mit dem Cursor: rechts ziehen = Breite, unten = Höhe, Linien zwischen den Spalten = Spaltenbreite, ✥ = verschieben
   const TT = { el: null, tb: null, host: null, drag: false, raf: 0 };
   const ttHostOf = (n) => n && n.closest && n.closest("#lk-page, #d-notes");
@@ -2370,13 +2426,13 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const loop = () => {
       if (!TT.el || !TT.tb) return;
       if (!TT.tb.isConnected || !TT.host.isConnected) { ttHide(); return; }
-      const r = TT.tb.getBoundingClientRect(), cells = TT.tb.rows[0] ? [...TT.tb.rows[0].cells] : [], key = [r.left, r.top, r.width, r.height, ...cells.map((c) => c.getBoundingClientRect().right)].map(Math.round).join(",");
-      if (key !== last) { last = key; ttPlace(r, cells); }
+      const r = TT.tb.getBoundingClientRect(), bs = tBounds(TT.tb).b, key = [r.left, r.top, r.width, r.height, ...bs].map(Math.round).join(",");
+      if (key !== last) { last = key; ttPlace(r); }
       TT.raf = requestAnimationFrame(loop);
     };
     loop();
   }
-  function ttPlace(r, cells) {
+  function ttPlace(r) {
     const el = TT.el, f = el.querySelector(".tt-frame"), bar = el.querySelector(".tt-bar"), mv = el.querySelector(".tt-mv"), mn = el.querySelector(".tt-mn");
     const top = r.top >= 30 ? r.top - 27 : r.top + 3;
     Object.assign(el.querySelector(".tt-dot").style, { left: Math.max(2, r.left - 9) + "px", top: Math.max(2, r.top - 9) + "px" });
@@ -2386,7 +2442,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     Object.assign(el.querySelector(".tt-w").style, { left: r.right - 2 + "px", top: r.top + r.height / 2 - 16 + "px" });
     Object.assign(el.querySelector(".tt-h").style, { left: r.left + r.width / 2 - 16 + "px", top: r.bottom - 2 + "px" });
     Object.assign(bar.style, { left: Math.max(4, Math.min(innerWidth - bar.offsetWidth - 4, r.right - bar.offsetWidth)) + "px", top: Math.min(innerHeight - bar.offsetHeight - 4, top + 26) + "px" });
-    el.querySelector(".tt-cols").innerHTML = cells.slice(0, -1).map((c, i) => { const cr = c.getBoundingClientRect(); return '<div class="tt-c" data-ttd="c" data-ci="' + i + '" title="Ziehen: Spaltenbreite" style="left:' + (cr.right - 4) + "px;top:" + r.top + "px;height:" + r.height + 'px"></div>'; }).join("");
+    const bs = tBounds(TT.tb).b;
+    el.querySelector(".tt-cols").innerHTML = bs.slice(1, -1).map((x, i) => '<div class="tt-c" data-ttd="c" data-ci="' + i + '" title="Ziehen: nur diese Spaltenlinie verschieben" style="left:' + (x - 4) + "px;top:" + r.top + "px;height:" + r.height + 'px"></div>').join("");
   }
   const ttCell = () => { const s = getSelection(), n = s.rangeCount ? s.anchorNode : null, el = n && (n.nodeType === 1 ? n : n.parentElement), c = el && el.closest("td, th"); return c && TT.tb && TT.tb.contains(c) ? c : null; };
   const ttBoxW = (tb) => { const p = tb.parentElement, cs = getComputedStyle(p); return p.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight); };
@@ -2396,8 +2453,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     if (b.dataset.tt !== "menu" && b.dataset.tt !== "move") HIST.brk = true;
     const k = b.dataset.tt, tb = TT.tb, host = TT.host;
     if (k === "move") return;
-    if (k === "dot") { const min = TT.el.classList.toggle("tt-min"); b.setAttribute("aria-expanded", String(!min)); if (min) TT.el.querySelector(".tt-bar").hidden = true; ttPlace(tb.getBoundingClientRect(), tb.rows[0] ? [...tb.rows[0].cells] : []); return; }
-    if (k === "menu") { const bar = TT.el.querySelector(".tt-bar"); bar.hidden = !bar.hidden; b.setAttribute("aria-expanded", String(!bar.hidden)); ttPlace(tb.getBoundingClientRect(), tb.rows[0] ? [...tb.rows[0].cells] : []); return; }
+    if (k === "dot") { const min = TT.el.classList.toggle("tt-min"); b.setAttribute("aria-expanded", String(!min)); if (min) TT.el.querySelector(".tt-bar").hidden = true; ttPlace(tb.getBoundingClientRect()); return; }
+    if (k === "menu") { const bar = TT.el.querySelector(".tt-bar"); bar.hidden = !bar.hidden; b.setAttribute("aria-expanded", String(!bar.hidden)); ttPlace(tb.getBoundingClientRect()); return; }
     if (/^tp-/.test(k)) {
       TAB_POS.forEach((c) => tb.classList.remove(c)); if (k !== "tp-") tb.classList.add(k);
       if (k !== "tp-" && !tb.style.width && ttPctW(tb) > 85) tb.style.width = k === "tp-c" ? "70%" : "50%";
@@ -2416,7 +2473,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       if (!cp) { cp = document.createElement("caption"); cp.innerHTML = "<br>"; tb.prepend(cp); }
       const r = document.createRange(); r.selectNodeContents(cp); r.collapse(false); getSelection().removeAllRanges(); getSelection().addRange(r);
       TT.el.querySelector(".tt-bar").hidden = true; ttChanged(); return;
-    } else if (k === "reset") { tb.style.removeProperty("width"); tb.style.removeProperty("height"); tb.style.removeProperty("table-layout"); if (tb.rows[0]) [...tb.rows[0].cells].forEach((c) => c.style.removeProperty("width")); }
+    } else if (k === "reset") { tb.style.removeProperty("width"); tb.style.removeProperty("height"); tb.style.removeProperty("table-layout"); if (tb.rows[0]) [...tb.rows[0].cells].forEach((c) => c.style.removeProperty("width")); const cg = tb.querySelector(":scope > colgroup"); if (cg) cg.remove(); }
     else if (k === "tdel") { const p = tb.previousElementSibling || tb.nextElementSibling; tb.remove(); ttHide(); if (p) caretIn(p); host.dispatchEvent(new Event("input", { bubbles: true })); return; }
     else { const c = ttCell() || tb.querySelector("td, th"); const f = tableOp(c, k); if (!tb.isConnected) { ttHide(); host.dispatchEvent(new Event("input", { bubbles: true })); return; } if (f) caretIn(f); else if (c && c.isConnected) caretIn(c); }
     ttChanged();
@@ -2433,10 +2490,11 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     if (kind === "w") move = (ev) => { tb.style.width = Math.max(15, Math.min(100, Math.round((r0.width + ev.clientX - x0) / boxW * 100))) + "%"; };
     else if (kind === "h") { const minH = [...tb.rows].reduce((s, row) => s + row.getBoundingClientRect().height, 0); move = (ev) => { const px = Math.max(r0.height + ev.clientY - y0, tb.rows.length * fs * 1.6); tb.style.height = Math.round(px / fs * 10) / 10 + "em"; }; void minH; }
     else if (kind === "c") {
-      const cells = [...tb.rows[0].cells], ws = cells.map((c) => c.getBoundingClientRect().width), tw = ws.reduce((a, b) => a + b, 0), i = +d.dataset.ci;
-      cells.forEach((c, k) => { c.style.width = Math.round(ws[k] / tw * 1000) / 10 + "%"; }); tb.style.tableLayout = "fixed";
-      const pair = ws[i] + ws[i + 1], min = Math.max(24, fs * 1.8);
-      move = (ev) => { const a = Math.max(min, Math.min(pair - min, ws[i] + ev.clientX - x0)); cells[i].style.width = Math.round(a / tw * 1000) / 10 + "%"; cells[i + 1].style.width = Math.round((pair - a) / tw * 1000) / 10 + "%"; };
+      // nur die gezogene Linie wandert: die Spalte links wird breiter, die rechts schmaler (alle anderen bleiben)
+      const ws = tColW(tb), i = +d.dataset.ci; tSetCols(tb, ws);
+      const cols = [...tb.querySelector(":scope > colgroup").children], tw = ws.reduce((a, b) => a + b, 0);
+      const pair = ws[i] + ws[i + 1], min = Math.max(16, fs * 1.2);
+      move = (ev) => { const a = Math.max(min, Math.min(pair - min, ws[i] + ev.clientX - x0)); cols[i].style.width = Math.round(a / tw * 1000) / 10 + "%"; cols[i + 1].style.width = Math.round((pair - a) / tw * 1000) / 10 + "%"; };
     } else {
       ind = document.createElement("div"); ind.className = "tt-drop"; document.body.appendChild(ind);
       tb.classList.add("tt-moving");
@@ -9888,19 +9946,66 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   }
   // Zeilen/Spalten einer Tabelle ändern (Unterrichtsseite und Notizen); gibt die Zelle für den Cursor zurück
   function tableOp(cell, cmd) {
-    const tb = cell.closest("table"), tr = cell.parentElement, ci = [...tr.children].indexOf(cell), rows = [...tb.rows];
+    const tb = cell.closest("table"), tr = cell.parentElement, rows = [...tb.rows], g = tGrid(rows), ri = rows.indexOf(tr);
+    const me = (g.rows[ri] || []).find((x) => x.cell === cell) || { start: 0, span: 1 };
+    const cg = tb.querySelector(":scope > colgroup"), ws = cg ? tColW(tb) : null;
     const mk = (tag) => { const c = document.createElement(tag); c.innerHTML = "<br>"; return c; };
     let focus = null;
-    if (cmd === "trow") { const n = document.createElement("tr"); [...tr.children].forEach(() => n.appendChild(mk("td"))); tr.after(n); focus = n.children[Math.max(0, ci)]; }
-    else if (cmd === "tcol") rows.forEach((r) => { const ref = r.children[ci], c = mk(ref && ref.tagName === "TH" ? "th" : "td"); if (ref) ref.after(c); else r.appendChild(c); if (r === tr) focus = c; });
-    else if (cmd === "tdelrow") { if (rows.length <= 1) tb.remove(); else tr.remove(); }
-    else if (cmd === "tdelcol") { if (tr.children.length <= 1) tb.remove(); else rows.forEach((r) => r.children[ci] && r.children[ci].remove()); }
-    else if (cmd === "thead") { const r0 = rows[0], toTh = !(r0.children[0] && r0.children[0].tagName === "TH"); [...r0.children].forEach((c) => { const n = document.createElement(toTh ? "th" : "td"); while (c.firstChild) n.appendChild(c.firstChild); c.replaceWith(n); }); }
+    if (cmd === "trow") {
+      // neue Zeile unter der Zeile mit dem Cursor; Zellen, die von oben herunterreichen, werden verlängert
+      const n = document.createElement("tr"), occ = g.occ[ri] || [], below = g.occ[ri + 1] || [], seen = new Set();
+      for (let c = 0; c < g.n; c++) {
+        const x = occ[c];
+        if (x && below[c] === x) { if (!seen.has(x)) { seen.add(x); x.rowSpan = (x.rowSpan || 1) + 1; } continue; }
+        const y = mk("td"); n.appendChild(y); if (c === me.start) focus = y;
+      }
+      tr.after(n); if (!focus) focus = n.firstElementChild;
+    } else if (cmd === "tcol") {
+      const at = me.start + me.span, seen = new Set();
+      rows.forEach((r, k) => {
+        const occ = g.occ[k] || [], x = occ[at - 1];
+        if (x && occ[at] === x) { if (!seen.has(x)) { seen.add(x); x.colSpan = (x.colSpan || 1) + 1; } return; } // Linie geht durch eine verbundene Zelle
+        if (x && seen.has(x)) return; // Zelle von oben, schon behandelt
+        const own = (g.rows[k] || []).filter((y) => y.start < at), ref = own.length ? own[own.length - 1].cell : null;
+        const c = mk(ref && ref.tagName === "TH" ? "th" : "td");
+        if (x && x.rowSpan > 1) { c.rowSpan = x.rowSpan; seen.add(x); }
+        if (ref) ref.after(c); else r.prepend(c);
+        if (r === tr) focus = c;
+      });
+      if (ws) { const half = ws[at - 1] / 2; ws.splice(at - 1, 1, half, half); tSetCols(tb, ws); }
+    }
+    else if (cmd === "tdelrow") {
+      if (rows.length <= 1) tb.remove();
+      else {
+        // Zellen, die über mehrere Zeilen gehen, werden kürzer bzw. rutschen in die nächste Zeile
+        const occ = g.occ[ri] || [], seen = new Set(), next = rows[ri + 1];
+        occ.forEach((x, c) => {
+          if (!x || seen.has(x)) return; seen.add(x);
+          if ((x.rowSpan || 1) <= 1) return;
+          if (x.parentElement !== tr) x.rowSpan -= 1;
+          else if (next) { x.rowSpan -= 1; const after = (g.rows[ri + 1] || []).filter((y) => y.start < c).pop(); if (after) after.cell.after(x); else next.prepend(x); }
+        });
+        tr.remove();
+      }
+    }
+    else if (cmd === "tdelcol") {
+      if (g.n <= 1) tb.remove();
+      else {
+        const c = me.start, seen = new Set();
+        g.occ.forEach((occ) => { const x = occ && occ[c]; if (!x || seen.has(x)) return; seen.add(x); if ((x.colSpan || 1) > 1) x.colSpan -= 1; else x.remove(); });
+        if (ws) { ws.splice(c, 1); tSetCols(tb, ws); }
+      }
+    }
+    else if (cmd === "thead") { const r0 = rows[0], toTh = !(r0.children[0] && r0.children[0].tagName === "TH"); [...r0.children].forEach((c) => { const n = document.createElement(toTh ? "th" : "td"); for (const at of ["colspan", "rowspan"]) if (c.getAttribute(at)) n.setAttribute(at, c.getAttribute(at)); while (c.firstChild) n.appendChild(c.firstChild); c.replaceWith(n); }); }
     else if (cmd === "tdel") tb.remove();
     else if (cmd === "tleft" || cmd === "tright") {
-      const d = cmd === "tleft" ? -1 : 1, k = ci + d; if (k < 0 || k >= tr.children.length) return cell;
-      rows.forEach((r) => { const a = r.children[ci], b = r.children[k]; if (!a || !b) return; if (d < 0) b.before(a); else b.after(a); });
-      // Kopfzeile bleibt Kopfzeile, Spaltenbreiten wandern mit
+      // nur bei einfachen Spalten (ohne verbundene Zellen)
+      const d = cmd === "tleft" ? -1 : 1, a = me.start, k = a + d;
+      if (me.span > 1 || k < 0 || k >= g.n) return cell;
+      const simple = g.occ.every((occ) => occ && occ[a] && occ[k] && occ[a] !== occ[k] && (occ[a].colSpan || 1) === 1 && (occ[k].colSpan || 1) === 1 && (occ[a].rowSpan || 1) === 1 && (occ[k].rowSpan || 1) === 1);
+      if (!simple) return cell;
+      g.occ.forEach((occ) => { const x = occ[a], y = occ[k]; if (d < 0) y.before(x); else y.after(x); });
+      if (ws) { [ws[a], ws[k]] = [ws[k], ws[a]]; tSetCols(tb, ws); }
       focus = cell;
     }
     else if (cmd === "tup" || cmd === "tdown") { const sib = cmd === "tup" ? tr.previousElementSibling : tr.nextElementSibling; if (!sib) return cell; if (cmd === "tup") sib.before(tr); else sib.after(tr); focus = cell; }
