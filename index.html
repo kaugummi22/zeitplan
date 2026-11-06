@@ -6034,6 +6034,20 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     tPop.addEventListener("click", (e) => { const c = e.target.closest(".ntab-c"); if (c) { tClose(); insTable(+c.dataset.r, +c.dataset.c); } });
     $("#d-ntok").addEventListener("click", () => { const r = +$("#d-ntr").value, c = +$("#d-ntc").value; tClose(); insTable(r, c); });
     tPop.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); $("#d-ntok").click(); } if (e.key === "Escape") { e.stopPropagation(); tClose(); } });
+    // Enter in «Aufgabe | Notizen» oder Textspalten: Text ohne eigene Zeile zuerst in eine Zeile packen,
+    // sonst teilt der Browser die ganze Spalte (neue Spalte statt neuer Zeile)
+    ned.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" || e.isComposing) return;
+      const sl = getSelection(); if (!sl.rangeCount) return;
+      const r0 = sl.getRangeAt(0), sn = r0.startContainer, so = r0.startOffset, en = r0.endContainer, eo = r0.endOffset;
+      let el = sn.nodeType === 1 ? sn : sn.parentElement;
+      while (el && el !== ned && !/^(DIV|P|LI|H[1-6]|BLOCKQUOTE|TD|TH)$/.test(el.tagName)) el = el.parentElement;
+      if (!el || !el.matches(".ncol, .nflow")) return;
+      let run = []; const wrap = () => { if (run.length) { const d = document.createElement("div"); run[0].before(d); run.forEach((n) => d.appendChild(n)); } run = []; };
+      [...el.childNodes].forEach((n) => { if (n.nodeType === 3 || (n.nodeType === 1 && !/^(DIV|P|UL|OL|TABLE|FIGURE|H[1-6]|BLOCKQUOTE)$/.test(n.tagName))) run.push(n); else wrap(); }); wrap();
+      if (!el.firstChild) el.appendChild(Object.assign(document.createElement("div"), { innerHTML: "<br>" }));
+      try { const r = document.createRange(); if (sn === el) { if (so === 0) r.setStart(el.firstChild, 0); else r.setStart(el.lastChild, el.lastChild.childNodes.length); } else r.setStart(sn, so); if (en !== el) r.setEnd(en, eo); sl.removeAllRanges(); sl.addRange(r); } catch (_) {}
+    });
     ned.addEventListener("keydown", (e) => {
       if (e.key !== "Tab" || e.ctrlKey || e.metaKey || e.altKey) return;
       const c = nCell(); if (!c) return;
