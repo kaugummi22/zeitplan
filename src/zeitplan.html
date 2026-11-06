@@ -2336,6 +2336,17 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
           const tt = (n.querySelector(".nsec-t") || n).textContent.replace(/[\u00a0\u200b]/g, " ").replace(/\s+/g, " ").trim().slice(0, 120);
           out += '<div class="nsec"' + (n.getAttribute("data-c") === "1" ? ' data-c="1"' : "") + ">" + esc(tt || "Abschnitt") + "</div>"; continue;
         }
+        if (/^(DIV|P|SECTION|ARTICLE|BLOCKQUOTE)$/.test(tag) && !/\b(ncols|ncol|nsec|al-[crj])\b/.test(n.className || "") && !n.closest("td, th") && [...n.children].some((c) => /^(DIV|P|TABLE|FIGURE|UL|OL|H[1-6]|BLOCKQUOTE|SECTION|ARTICLE)$/.test(c.tagName))) {
+          // Hülle um mehrere Absätze, Tabellen, Bilder (z. B. beim Einfügen aus Word): auflösen, damit jeder Teil für sich steht
+          // (sonst landet ein Abschnitt oder eine Spalte vor der ganzen Hülle statt bei der gewünschten Zeile)
+          let run = null; const doc = n.ownerDocument;
+          const flush = () => { if (!run) return; if (run.textContent.trim() || run.querySelector("img,br")) { const h = doc.createElement("div"); h.appendChild(run); walk(h); } run = null; };
+          [...n.childNodes].forEach((c) => {
+            if (c.nodeType === 1 && /^(DIV|P|TABLE|FIGURE|UL|OL|H[1-6]|BLOCKQUOTE|SECTION|ARTICLE)$/.test(c.tagName)) { flush(); const h = doc.createElement("div"); h.appendChild(c); walk(h); }
+            else { if (!run) run = doc.createElement("div"); run.appendChild(c); }
+          });
+          flush(); continue;
+        }
         if (tag === "UL" || tag === "OL") { const t = tag.toLowerCase(); out += "<" + t + ">"; walk(n); out += "</" + t + ">"; continue; }
         const isBlock = /^(DIV|P|H[1-6]|BLOCKQUOTE|LI)$/.test(tag);
         if (tag === "TR" && out && !out.endsWith("<br>")) out += "<br>";
@@ -4939,7 +4950,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       e.preventDefault(); e.stopPropagation();
       if (imgs.length) { insertImgs(imgs); return; }
       const h = cd.getData("text/html"), tx = cd.getData("text/plain");
-      if (h) { document.execCommand("insertHTML", false, sanitizeNotes(h.replace(/<img[^>]*>/gi, ""))); tabTail(); }
+      if (h) { document.execCommand("insertHTML", false, sanitizeNotes(h.replace(/<img[^>]*>/gi, ""))); flatTop(); tabTail(); }
       else document.execCommand("insertText", false, tx || "");
     }, true);
     // Bild ziehen = verschieben (nicht kopieren): zwischen Absätze, neben Text (Bild rückt auf die Seite, zu der es gezogen wird)
@@ -5038,6 +5049,23 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     ndocFill(ned, docFiles());
     // Bilder: im Text nicht bearbeitbar (ganzer Block), ein Klick öffnet Grösse, Lage, Bildunterschrift/Quelle
     // nach einer Tabelle ganz am Ende eine leere Zeile, damit man darunter weiterschreiben kann
+    // Der Browser packt Eingefügtes oft in den Absatz mit der Schreibmarke (eine Hülle um Text, Tabellen …): wieder auflösen
+    function flatTop() {
+      const BL = /^(DIV|P|TABLE|FIGURE|UL|OL|H[1-6]|BLOCKQUOTE)$/;
+      const sl = getSelection(), keep = sl.rangeCount ? sl.getRangeAt(0).cloneRange() : null;
+      let changed = false;
+      [...ned.children].forEach((w) => {
+        if (w.tagName !== "DIV" || w.classList.length || ![...w.children].some((c) => BL.test(c.tagName))) return;
+        let run = null; const frag = document.createDocumentFragment();
+        [...w.childNodes].forEach((c) => {
+          if (c.nodeType === 1 && BL.test(c.tagName)) { run = null; frag.appendChild(c); }
+          else if (c.nodeType === 3 && !c.nodeValue.trim() && !run) { /* Leerraum */ }
+          else { if (!run) { run = document.createElement("div"); frag.appendChild(run); } run.appendChild(c); }
+        });
+        w.replaceWith(frag); changed = true;
+      });
+      if (changed && keep && ned.contains(keep.startContainer)) { try { sl.removeAllRanges(); sl.addRange(keep); } catch (e) {} }
+    }
     function tabTail() { const l = ned.lastElementChild; if (l && l.tagName === "TABLE") { const d = document.createElement("div"); d.innerHTML = "<br>"; ned.appendChild(d); } }
     const figLock = () => ned.querySelectorAll("figure.nfig").forEach((f) => { f.contentEditable = "false"; });
     figLock(); nsecDeco(ned);
@@ -5051,11 +5079,17 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const nsecMk = (title) => { const d = document.createElement("div"); d.className = "nsec"; d.textContent = title; return d; };
     const putCaret = (el) => { const rg = document.createRange(); rg.selectNodeContents(el); rg.collapse(true); const sl = getSelection(); sl.removeAllRanges(); sl.addRange(rg); };
     // wo die Schreibmarke zuletzt in den Notizen stand (das Menü oder die Lektionsplanung nehmen ihr den Platz weg)
-    let lastTop = null;
-    document.addEventListener("selectionchange", () => { if (!ned.isConnected) return; const t = caretTop(); if (t && !(t.classList && t.classList.contains("nsec"))) lastTop = t; });
+    let lastTop = null, lastAnc = null;
+    document.addEventListener("selectionchange", () => { if (!ned.isConnected) return; const t = caretTop(); if (t && !(t.classList && t.classList.contains("nsec"))) { lastTop = t; const sl = getSelection(); lastAnc = sl.anchorNode !== ned ? sl.anchorNode : t; } });
     const nsecInsert = (title, atEnd, at) => {
       HIST.brk = true;
       let blk = atEnd ? null : at !== undefined ? at : caretTop(), d = nsecMk(title), line = null;
+      if (!atEnd) {
+        // genau die Zeile mit der Schreibmarke, auch wenn sie noch in einer Hülle (z. B. aus Word eingefügt) steckt
+        const sl = getSelection(), inNed = sl.rangeCount && ned.contains(sl.anchorNode), anc = inNed ? (sl.anchorNode !== ned ? sl.anchorNode : null) : lastAnc;
+        flatTop();
+        if (anc && anc.isConnected && ned.contains(anc) && anc !== ned) { const t = topOf(anc); if (t) blk = t; }
+      }
       if (blk && !blk.isConnected) blk = null;
       if (blk && blk.nodeType !== 1) { const w = document.createElement("div"); blk.before(w); w.appendChild(blk); blk = w; }
       if (!blk) { let last = ned.lastElementChild; while (last && last.dataset && last.dataset.fill && !last.textContent.trim()) { const p = last.previousElementSibling; last.remove(); last = p; } ned.appendChild(d); }
