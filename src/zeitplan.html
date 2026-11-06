@@ -1197,10 +1197,10 @@ table:is(.ntab, .lk-tab) caption { caption-side: bottom; text-align: left; font-
 .tt-bar button:hover { border-color: var(--line); background: var(--bg); }
 .tt-sep { width: 1px; height: 18px; background: var(--line); margin: 0 2px; }
 .tt-w, .tt-h, .tt-c, .tt-r { position: fixed; pointer-events: auto; touch-action: none; }
-.tt-r { height: 8px; margin-top: -4px; cursor: row-resize; } .tt-r:hover { background: color-mix(in srgb, var(--accent) 35%, transparent); }
+.tt-r { height: 6px; margin-top: -3px; cursor: row-resize; } .tt-r:hover { background: color-mix(in srgb, var(--accent) 35%, transparent); }
 .tt-w { width: 8px; height: 32px; margin-left: -2px; border-radius: 4px; background: var(--accent); cursor: ew-resize; }
 .tt-h { width: 32px; height: 8px; margin-top: -2px; border-radius: 4px; background: var(--accent); cursor: ns-resize; }
-.tt-c { width: 8px; cursor: col-resize; } .tt-c:hover { background: color-mix(in srgb, var(--accent) 35%, transparent); }
+.tt-c { width: 12px; margin-left: -2px; cursor: col-resize; display: flex; justify-content: center; } .tt-c::after { content: ""; width: 2px; height: 100%; background: color-mix(in srgb, var(--accent) 30%, transparent); } .tt-c:hover::after { width: 4px; background: var(--accent); }
 .tt-drop { position: fixed; z-index: 2001; background: var(--accent); border-radius: 2px; pointer-events: none; }
 table.tt-moving { opacity: 0.45; }
 .notes-ed table.ntab th, .notes table.ntab th { background: var(--accent-soft); font-weight: 700; }
@@ -2476,7 +2476,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     el.innerHTML = '<button type="button" class="tt-dot" data-tt="dot" title="Tabelle bearbeiten: Grösse, Lage, Verschieben, Zeilen und Spalten" aria-label="Tabelle bearbeiten" aria-expanded="false"></button><div class="tt-frame"></div><button type="button" class="tt-mv" data-tt="move" title="Gedrückt halten und ziehen: Tabelle an eine andere Stelle verschieben, z. B. neben ein Bild" aria-label="Tabelle verschieben">✥</button><button type="button" class="tt-mn" data-tt="menu" title="Lage, Zeilen und Spalten, Grösse zurücksetzen" aria-expanded="false">▦ Tabelle ▾</button><div class="tt-bar" hidden>' +
       B("tp-l", "◧", "Links, Text rechts daneben") + B("tp-c", "▣", "In der Mitte") + B("tp-r", "◨", "Rechts, Text links daneben") + B("tp-", "▭", "Normal (allein auf der Zeile)") + '<span class="tt-sep"></span>' +
       B("up", "↑", "Einen Absatz nach oben") + B("down", "↓", "Einen Absatz nach unten") + '<span class="tt-sep"></span>' +
-      B("trow", "+ Zeile", "Neue Zeile unter der Zeile mit dem Cursor") + B("tcol", "+ Spalte", "Neue Spalte rechts der Spalte mit dem Cursor") + B("tdelrow", "− Zeile", "Zeile mit dem Cursor löschen") + B("tdelcol", "− Spalte", "Spalte mit dem Cursor löschen") + B("tmerge", "⊞ →", "Zelle mit der Zelle rechts verbinden") + B("tmergedown", "⊞ ↓", "Zelle mit der Zelle darunter verbinden") + B("tsplit", "⊟ Teilen", "Zelle teilen (verbundene Zelle wieder auftrennen bzw. in zwei Zellen nebeneinander)") + B("thead", "Kopfzeile", "Erste Zeile hervorheben ein/aus") + '<span class="tt-sep"></span>' +
+      B("trow", "+ Zeile", "Neue Zeile unter der Zeile mit dem Cursor") + B("tcol", "+ Spalte", "Neue Spalte rechts der Spalte mit dem Cursor") + B("tdelrow", "− Zeile", "Zeile mit dem Cursor löschen") + B("tdelcol", "− Spalte", "Spalte mit dem Cursor löschen") + B("tmerge", "⊞ →", "Zelle mit der Zelle rechts verbinden") + B("tmergedown", "⊞ ↓", "Zelle mit der Zelle darunter verbinden") + B("tsplit", "⊟ Teilen", "Zelle teilen (verbundene Zelle wieder auftrennen bzw. in zwei Zellen nebeneinander)") + B("tjoin", "⊞ Tabelle ↓", "Mit der Tabelle darunter zu einer Tabelle verbinden") + B("thead", "Kopfzeile", "Erste Zeile hervorheben ein/aus") + '<span class="tt-sep"></span>' +
       B("tleft", "◀ Spalte", "Spalte mit dem Cursor nach links verschieben") + B("tright", "Spalte ▶", "Spalte mit dem Cursor nach rechts verschieben") + B("tup", "▲ Zeile", "Zeile mit dem Cursor nach oben verschieben") + B("tdown", "▼ Zeile", "Zeile mit dem Cursor nach unten verschieben") + '<span class="tt-sep"></span>' +
       B("lscol", "✎ Spalte", "Spalte mit dem Cursor in Lehrerschrift setzen bzw. wieder normal (Kopfzeile bleibt)") + B("cap", "Quelle", "Quellenangabe bzw. Beschriftung unter der Tabelle (wie bei Bildern)") + B("reset", "↺ Grösse", "Breite, Höhe und Spaltenbreiten zurücksetzen") + B("tdel", "🗑", "Ganze Tabelle löschen") + "</div>" +
       '<div class="tt-w" data-ttd="w" title="Ziehen: Breite der Tabelle"></div><div class="tt-h" data-ttd="h" title="Ziehen: Höhe der Tabelle"></div><div class="tt-cols"></div><div class="tt-rows"></div>';
@@ -2544,7 +2544,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   // nach einer Tabelle am Ende braucht es eine leere Zeile, damit man darunter weiterschreiben kann
   function ttTail(tb) { if (tb.nextElementSibling) return; const d = document.createElement(tb.parentElement.id === "lk-page" ? "p" : "div"); d.innerHTML = "<br>"; tb.after(d); }
   function ttDown(e) {
-    const d = e.target.closest("[data-ttd], [data-tt='move']"); if (!d || !TT.tb) return;
+    const d = e.target.closest("[data-ttd], [data-tt='move']"); if (!d || !TT.tb || e.button > 0) return; // Rechtsklick: Menü der Zelle darunter
     e.preventDefault();
     const tb = TT.tb, x0 = e.clientX, y0 = e.clientY, r0 = tb.getBoundingClientRect(), boxW = ttBoxW(tb), fs = parseFloat(getComputedStyle(tb).fontSize) || 16;
     const kind = d.dataset.ttd || "move"; TT.drag = true; document.body.classList.add("col-resizing");
@@ -2568,8 +2568,10 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       tb.classList.add("tt-moving");
       move = (ev) => { drop = ttDropAt(ev.clientX, ev.clientY); if (!drop) { ind.hidden = true; return; } ind.hidden = false; Object.assign(ind.style, drop.ind); };
     }
-    const up = () => {
+    let moved = false; const mv0 = move; move = (ev) => { if (Math.abs(ev.clientX - x0) + Math.abs(ev.clientY - y0) > 2) moved = true; if (moved) mv0(ev); };
+    const up = (ev) => {
       d.removeEventListener("pointermove", move); d.removeEventListener("pointerup", up); d.removeEventListener("pointercancel", up);
+      if (!moved && (kind === "c" || kind === "r") && ev && ev.clientX != null) { const cell = document.elementsFromPoint(ev.clientX, ev.clientY).find((x) => x.matches && x.matches("td, th")); if (cell && tb.contains(cell)) { TT.host.focus(); const rg = document.caretRangeFromPoint ? (() => { d.style.pointerEvents = "none"; const q = document.caretRangeFromPoint(ev.clientX, ev.clientY); d.style.pointerEvents = ""; return q; })() : null; if (rg && cell.contains(rg.startContainer)) { const sl = getSelection(); sl.removeAllRanges(); sl.addRange(rg); } else caretIn(cell); } }
       document.body.classList.remove("col-resizing"); TT.drag = false; HIST.brk = true;
       if (ind) { ind.remove(); tb.classList.remove("tt-moving"); if (drop) ttDrop(tb, drop); }
       ttChanged();
@@ -2623,9 +2625,10 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     m.style.left = Math.max(8, Math.min(x, innerWidth - r.width - 8)) + "px"; m.style.top = Math.max(8, Math.min(y, innerHeight - r.height - 8)) + "px";
     setTimeout(() => document.addEventListener("pointerdown", out, true), 0);
   }
-  const TAB_MENU = [["lscell", "✎ Zelle in Lehrerschrift / normal"], ["lscol", "✎ Spalte in Lehrerschrift / normal"], "-", ["tleft", "◀ Spalte nach links"], ["tright", "Spalte nach rechts ▶"], ["tup", "▲ Zeile nach oben"], ["tdown", "▼ Zeile nach unten"], "-", ["trow", "+ Zeile darunter"], ["tcol", "+ Spalte rechts"], ["tdelrow", "− Zeile löschen", 1], ["tdelcol", "− Spalte löschen", 1], "-", ["tmerge", "⊞ Mit Zelle rechts verbinden"], ["tmergedown", "⊞ Mit Zelle darunter verbinden"], ["tsplit", "⊟ Zelle teilen"]];
+  const TAB_MENU = [["lscell", "✎ Zelle in Lehrerschrift / normal"], ["lscol", "✎ Spalte in Lehrerschrift / normal"], "-", ["tleft", "◀ Spalte nach links"], ["tright", "Spalte nach rechts ▶"], ["tup", "▲ Zeile nach oben"], ["tdown", "▼ Zeile nach unten"], "-", ["trow", "+ Zeile darunter"], ["tcol", "+ Spalte rechts"], ["tdelrow", "− Zeile löschen", 1], ["tdelcol", "− Spalte löschen", 1], "-", ["tmerge", "⊞ Mit Zelle rechts verbinden"], ["tmergedown", "⊞ Mit Zelle darunter verbinden"], ["tsplit", "⊟ Zelle teilen"], "-", ["tjoin", "⊞ Mit Tabelle darunter verbinden"]];
   document.addEventListener("contextmenu", (e) => {
-    const c = e.target.closest && e.target.closest("table.ntab td, table.ntab th, table.lk-tab td, table.lk-tab th"), host = c && ttHostOf(c);
+    const under = e.target.closest && e.target.closest(".tt-c, .tt-r") ? document.elementsFromPoint(e.clientX, e.clientY).find((x) => x.matches && x.matches("td, th")) : e.target; // Rechtsklick auf eine Linie: die Zelle darunter
+    const c = under && under.closest && under.closest("table.ntab td, table.ntab th, table.lk-tab td, table.lk-tab th"), host = c && ttHostOf(c);
     if (!c || !host || !host.isContentEditable) return;
     e.preventDefault();
     host.focus(); caretIn(c);
@@ -10272,6 +10275,20 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       if (!simple) return cell;
       g.occ.forEach((occ) => { const x = occ[a], y = occ[k]; if (d < 0) y.before(x); else y.after(x); });
       if (ws) { [ws[a], ws[k]] = [ws[k], ws[a]]; tSetCols(tb, ws); }
+      focus = cell;
+    }
+    else if (cmd === "tjoin") {
+      // mit der nächsten Tabelle darunter zu einer Tabelle verbinden (leere Zeilen dazwischen fallen weg)
+      let nx = tb.nextElementSibling;
+      while (nx && nx.tagName !== "TABLE" && !nx.textContent.trim() && !nx.querySelector("img,figure,table")) nx = nx.nextElementSibling;
+      if (!nx || nx.tagName !== "TABLE") return cell;
+      while (tb.nextElementSibling && tb.nextElementSibling !== nx) tb.nextElementSibling.remove();
+      const body = tb.tBodies[0] || tb; [...nx.rows].forEach((r) => body.appendChild(r));
+      const cap2 = nx.querySelector(":scope > caption"); if (cap2 && !tb.querySelector(":scope > caption")) tb.prepend(cap2);
+      nx.remove();
+      const g2 = tGrid([...tb.rows]);
+      [...tb.rows].forEach((r, k) => { const used = (g2.occ[k] || []).filter(Boolean).length; for (let j = used; j < g2.n; j++) r.appendChild(mk("td")); });
+      const cg2 = tb.querySelector(":scope > colgroup"); if (cg2 && cg2.children.length !== g2.n) cg2.remove();
       focus = cell;
     }
     else if (cmd === "tmerge") {
