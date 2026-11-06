@@ -1062,6 +1062,11 @@ html.phone .lesson.mat-slim .ldocs { grid-column: 1 / -1; }
 .ncol + .ncol { border-left: 1px solid var(--line); }
 .notes-ed .ncols { border: 1px dashed var(--line); border-radius: 4px; }
 .ncols[data-w] > .ncol:first-child { min-width: 0; }
+.nflow { column-count: 2; column-gap: 32px; column-rule: 1px solid var(--line); margin: 8px 0; }
+.nflow[data-n="3"] { column-count: 3; }
+.nflow > :not(ul):not(ol), .nflow li { break-inside: avoid; }
+.nflow ul, .nflow ol { margin-top: 0; }
+.notes-ed .nflow { outline: 1px dashed var(--line); outline-offset: 3px; border-radius: 2px; }
 .notes-ed .ncols.nc-near, .notes-ed .ncols.nc-near * { cursor: col-resize; }
 .notes-ed .ncols.nc-drag > .ncol + .ncol { border-left: 2px solid var(--accent); }
 /* Abschnitte in den Notizen: schmale Trennstriche links und rechts vom Titel */
@@ -2331,12 +2336,16 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
           continue;
         }
         const st = n.style || {};
+        if (tag === "DIV" && n.classList.contains("nflow")) {
+          // markierter Text auf Spalten verteilt (fliesst wie in Word von Spalte zu Spalte)
+          const k = parseInt(n.getAttribute("data-n"), 10) === 3 ? 3 : 2; out += '<div class="nflow" data-n="' + k + '">'; walk(n); out += "</div>"; continue;
+        }
         if (tag === "DIV" && n.classList.contains("nsec")) {
           // Abschnitt (Trennstrich mit Titel, z. B. «10' · Einstieg»); data-c = zugeklappt
           const tt = (n.querySelector(".nsec-t") || n).textContent.replace(/[\u00a0\u200b]/g, " ").replace(/\s+/g, " ").trim().slice(0, 120);
           out += '<div class="nsec"' + (n.getAttribute("data-c") === "1" ? ' data-c="1"' : "") + ">" + esc(tt || "Abschnitt") + "</div>"; continue;
         }
-        if (/^(DIV|P|SECTION|ARTICLE|BLOCKQUOTE)$/.test(tag) && !/\b(ncols|ncol|nsec|al-[crj])\b/.test(n.className || "") && !n.closest("td, th") && [...n.children].some((c) => /^(DIV|P|TABLE|FIGURE|UL|OL|H[1-6]|BLOCKQUOTE|SECTION|ARTICLE)$/.test(c.tagName))) {
+        if (/^(DIV|P|SECTION|ARTICLE|BLOCKQUOTE)$/.test(tag) && !/\b(ncols|ncol|nsec|nflow|al-[crj])\b/.test(n.className || "") && !n.closest("td, th") && [...n.children].some((c) => /^(DIV|P|TABLE|FIGURE|UL|OL|H[1-6]|BLOCKQUOTE|SECTION|ARTICLE)$/.test(c.tagName))) {
           // Hülle um mehrere Absätze, Tabellen, Bilder (z. B. beim Einfügen aus Word): auflösen, damit jeder Teil für sich steht
           // (sonst landet ein Abschnitt oder eine Spalte vor der ganzen Hülle statt bei der gewünschten Zeile)
           let run = null; const doc = n.ownerDocument;
@@ -3607,7 +3616,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   }
 
   // ---------- Drucken: eine Datei, die sich im Browser öffnet und gleich das Druckfenster zeigt ----------
-  const PRINT_CSS = "@page{size:A4;margin:10mm 11mm}body{font-family:Arial,Helvetica,sans-serif;font-size:9.5pt;color:#111;line-height:1.3;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}h1{font-size:13pt;margin:0 0 4px}h2{font-size:11pt;margin:10px 0 4px;padding-bottom:2px;border-bottom:1.2px solid #333}h3{font-size:8.5pt;margin:6px 0 2px;text-transform:uppercase;letter-spacing:.04em;color:#444}.meta{color:#444;margin:0 0 10px}.box{border:1px solid #bbb;border-radius:4px;padding:6px 8px;margin:4px 0}table{width:100%;border-collapse:collapse;margin:4px 0;table-layout:fixed}th,td{border:1px solid #999;padding:4px 6px;vertical-align:top;text-align:left;overflow-wrap:break-word}th{background:#eee;font-size:9.5pt}.pre{white-space:pre-wrap}tr{break-inside:avoid}.notes img{max-width:100%;max-height:120mm}.notes img.w50{max-width:50%}.notes img.w33{max-width:33%}.notes img.w25{max-width:25%}.notes img.w75{max-width:75%}.notes{display:flow-root}.nfig{margin:4px 0;width:fit-content;max-width:100%;break-inside:avoid}.nfig img{display:block;max-width:100%;max-height:120mm}.nfig[class*=\" w\"] img{width:100%}.nfig.w25{width:25%}.nfig.w33{width:33%}.nfig.w50{width:50%}.nfig.w75{width:75%}.nfig.w100{width:100%}.nfig figcaption{contain:inline-size;font-size:8pt;font-style:italic;color:#555;margin-top:2px}.nfig.p-l{float:left;margin:2px 10px 6px 0}.nfig.p-r{float:right;margin:2px 0 6px 10px}.nfig.p-c{margin-left:auto;margin-right:auto}.nfig.p-c figcaption{text-align:center}.ls{font-family:'Ink Free','Segoe Print','Bradley Hand',Noteworthy,'Comic Sans MS',cursive;color:#c8402c}table caption{caption-side:bottom;text-align:left;font-size:8pt;font-style:italic;color:#555;padding-top:2px}table.tp-l{float:left;margin:2px 10px 6px 0}table.tp-r{float:right;margin:2px 0 6px 10px}table.tp-c{margin-left:auto;margin-right:auto}mark.hl-y{background:#fff1a6}mark.hl-g{background:#d3f2c4}mark.hl-b{background:#cfe4ff}mark{color:inherit}.fs-s{font-size:85%}.fs-l{font-size:125%}.fs-xl{font-size:150%}.one h1{border-bottom:1.2px solid #333;padding-bottom:2px}.al-c{text-align:center}.al-r{text-align:right}.al-j{text-align:justify}.notes ul,.notes ol{margin:2px 0;padding-left:20px}.ncols{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);margin:4px 0;break-inside:avoid}.ncol{padding:2px 8px}.ncol+.ncol{border-left:1px solid #999}.nsec{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px 0 4px;font-size:8.5pt;font-weight:700;color:#555;break-after:avoid}.nsec::before,.nsec::after{content:\"\";flex:0 1 22%;border-top:1px solid #999}.nsec .nsec-tg{display:none}.phase{font-weight:400;color:#555}ul{margin:2px 0;padding-left:18px}@media screen{body{max-width:190mm;margin:20px auto;padding:0 12px}}figure.ndoc::before{content:\"📄 \" attr(data-name);display:block;color:#555;font-style:italic}" + FF_CSS;
+  const PRINT_CSS = "@page{size:A4;margin:10mm 11mm}body{font-family:Arial,Helvetica,sans-serif;font-size:9.5pt;color:#111;line-height:1.3;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}h1{font-size:13pt;margin:0 0 4px}h2{font-size:11pt;margin:10px 0 4px;padding-bottom:2px;border-bottom:1.2px solid #333}h3{font-size:8.5pt;margin:6px 0 2px;text-transform:uppercase;letter-spacing:.04em;color:#444}.meta{color:#444;margin:0 0 10px}.box{border:1px solid #bbb;border-radius:4px;padding:6px 8px;margin:4px 0}table{width:100%;border-collapse:collapse;margin:4px 0;table-layout:fixed}th,td{border:1px solid #999;padding:4px 6px;vertical-align:top;text-align:left;overflow-wrap:break-word}th{background:#eee;font-size:9.5pt}.pre{white-space:pre-wrap}tr{break-inside:avoid}.notes img{max-width:100%;max-height:120mm}.notes img.w50{max-width:50%}.notes img.w33{max-width:33%}.notes img.w25{max-width:25%}.notes img.w75{max-width:75%}.notes{display:flow-root}.nfig{margin:4px 0;width:fit-content;max-width:100%;break-inside:avoid}.nfig img{display:block;max-width:100%;max-height:120mm}.nfig[class*=\" w\"] img{width:100%}.nfig.w25{width:25%}.nfig.w33{width:33%}.nfig.w50{width:50%}.nfig.w75{width:75%}.nfig.w100{width:100%}.nfig figcaption{contain:inline-size;font-size:8pt;font-style:italic;color:#555;margin-top:2px}.nfig.p-l{float:left;margin:2px 10px 6px 0}.nfig.p-r{float:right;margin:2px 0 6px 10px}.nfig.p-c{margin-left:auto;margin-right:auto}.nfig.p-c figcaption{text-align:center}.ls{font-family:'Ink Free','Segoe Print','Bradley Hand',Noteworthy,'Comic Sans MS',cursive;color:#c8402c}table caption{caption-side:bottom;text-align:left;font-size:8pt;font-style:italic;color:#555;padding-top:2px}table.tp-l{float:left;margin:2px 10px 6px 0}table.tp-r{float:right;margin:2px 0 6px 10px}table.tp-c{margin-left:auto;margin-right:auto}mark.hl-y{background:#fff1a6}mark.hl-g{background:#d3f2c4}mark.hl-b{background:#cfe4ff}mark{color:inherit}.fs-s{font-size:85%}.fs-l{font-size:125%}.fs-xl{font-size:150%}.one h1{border-bottom:1.2px solid #333;padding-bottom:2px}.al-c{text-align:center}.al-r{text-align:right}.al-j{text-align:justify}.notes ul,.notes ol{margin:2px 0;padding-left:20px}.ncols{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);margin:4px 0;break-inside:avoid}.ncol{padding:2px 8px}.ncol+.ncol{border-left:1px solid #999}.nflow{column-count:2;column-gap:8mm;column-rule:1px solid #bbb;margin:4px 0}.nflow[data-n=\"3\"]{column-count:3}.nflow li{break-inside:avoid}.nsec{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px 0 4px;font-size:8.5pt;font-weight:700;color:#555;break-after:avoid}.nsec::before,.nsec::after{content:\"\";flex:0 1 22%;border-top:1px solid #999}.nsec .nsec-tg{display:none}.phase{font-weight:400;color:#555}ul{margin:2px 0;padding-left:18px}@media screen{body{max-width:190mm;margin:20px auto;padding:0 12px}}figure.ndoc::before{content:\"📄 \" attr(data-name);display:block;color:#555;font-style:italic}" + FF_CSS;
   const safeName = (t) => String(t || "Planung").replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, " ").trim().slice(0, 120);
   async function inlineImgs(body) {
     const ids = [...new Set([...body.matchAll(/src="\/_blob\/([0-9a-f]+)"/g)].map((m) => m[1]))];
@@ -5381,6 +5390,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const el = node && (node.nodeType === 1 ? node : node.parentElement);
       const block = el && el.closest(".ncols");
       if (v === "0") {
+        const fl0 = el && el.closest(".nflow");
+        if (fl0 && ned.contains(fl0) && !block) { HIST.brk = true; const frag = document.createDocumentFragment(); while (fl0.firstChild) frag.appendChild(fl0.firstChild); fl0.replaceWith(frag); save(); return; }
         if (!block) { $("#d-nmsg").textContent = "Setzen Sie den Cursor zuerst in die Spalten, die aufgehoben werden sollen."; return; }
         const frag = document.createDocumentFragment();
         block.querySelectorAll(":scope > .ncol").forEach((c) => { const d = document.createElement("div"); d.innerHTML = c.innerHTML; frag.appendChild(d); });
@@ -5406,6 +5417,22 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         $("#d-nmsg").textContent = "Links die Aufgabe, rechts Ihre Notizen. Die Linie dazwischen lässt sich ziehen."; save(); return;
       }
       const n = +v;
+      // markierter Text bzw. Aufzählung: auf Spalten verteilen (fliessend wie in Word)
+      const flow = el && el.closest(".nflow");
+      if (flow && ned.contains(flow)) { HIST.brk = true; flow.dataset.n = String(n); save(); return; }
+      const rg0 = sl.rangeCount ? sl.getRangeAt(0) : null;
+      if (!block && rg0 && !rg0.collapsed && ned.contains(rg0.commonAncestorContainer) && !(rg0.commonAncestorContainer.nodeType === 1 ? rg0.commonAncestorContainer : rg0.commonAncestorContainer.parentElement).closest(".ncol, td, th")) {
+        HIST.brk = true;
+        const pick = (c, o, end) => (c === ned ? ned.childNodes[end ? Math.max(0, o - 1) : o] || ned.lastChild : c);
+        const a = topOf(pick(rg0.startContainer, rg0.startOffset, false)), z = topOf(pick(rg0.endContainer, rg0.endOffset, true));
+        if (a && z) {
+          const fl = document.createElement("div"); fl.className = "nflow"; fl.dataset.n = String(n);
+          const move = []; for (let x = a; x; x = x.nextSibling) { if (x.nodeType === 1 && x.classList.contains("nsec")) break; move.push(x); if (x === z) break; }
+          a.before(fl); move.forEach((x) => { if (x.nodeType === 3) { if (!x.nodeValue.trim()) { x.remove(); return; } const w = document.createElement("div"); w.appendChild(x); fl.appendChild(w); } else fl.appendChild(x); });
+          if (!fl.nextElementSibling) { const d2 = document.createElement("div"); d2.innerHTML = "<br>"; fl.after(d2); }
+          $("#d-nmsg").textContent = "Auf " + n + " Spalten verteilt. Aufheben: hineinklicken, Spalten › «Spalten aufheben»."; save(); return;
+        }
+      }
       if (block) { // Anzahl Spalten ändern
         const cols = [...block.querySelectorAll(":scope > .ncol")];
         while (cols.length < n) { const c = document.createElement("div"); c.className = "ncol"; c.innerHTML = "<br>"; block.appendChild(c); cols.push(c); }
