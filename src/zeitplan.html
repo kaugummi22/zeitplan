@@ -6719,9 +6719,9 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       '<button type="button" class="lexp' + (more ? " on" : "") + '" data-lexp="' + key + '" title="Gross öffnen: Kommentare, Notizen, Dokumente (gilt für die Unterreihe)" aria-label="Materialsammlung gross öffnen">+</button>' +
       (ro ? "" : '<button type="button" class="ln-rm" data-lnrm="' + k + '" title="Diese Materialsammlung aus der Unterreihe entfernen" aria-label="Materialsammlung entfernen">×</button>') + "</div>" +
       '<input type="text" class="ln-name" data-lnname="' + k + '" value="' + esc(m.name || "") + '" placeholder="Name, z. B. Bilder" aria-label="Name der Materialsammlung"' + (ro ? " readonly" : "") + ">" +
-      matFoldBtn(m, k) + (m.fold ? "" : '<button type="button" class="linkbtn mat-slim-tog" data-matslim="' + k + '" title="' + (slim ? "Notizfeld wieder breit zeigen" : "Notizfeld klein machen, Dokumente in Spalten über die ganze Breite") + '">' + (slim ? "▸ Notiz zeigen" : "◂ Notiz klein") + (slim && filled(m.html) ? " •" : "") + "</button>") +
+      matFoldBtn(m, k) + (m.fold ? "" : '<button type="button" class="linkbtn mat-slim-tog" data-matslim="' + k + '" title="' + (slim ? "Notizfeld wieder breit zeigen" : "Notizfeld klein machen, Dokumente in Spalten über die ganze Breite") + '">' + (slim ? "▸ Notiz zeigen" : "◂ Notiz klein") + "</button>") +
       (lk ? '<span class="mat-link"><button type="button" class="linkbtn" data-goto="' + esc(m.rid) + '" title="Verknüpfte Reihe öffnen">↗ ' + esc(lk.title || "Reihe") + "</button>" + (ro ? "" : '<button type="button" class="x" data-matunlink="' + k + '" title="Verknüpfung lösen" aria-label="Verknüpfung lösen">×</button>') + "</span>"
-        : ro ? "" : '<button type="button" class="linkbtn mat-pick" data-matlink="' + k + '" title="Eine Reihe (z. B. eine Materialsammlung) verknüpfen">+ Reihe verknüpfen</button>') +
+        : "") +
       '<span class="ms-from">aus ' + esc(ch.title || "Unterreihe") + "</span></div>" +
       cellHtml2('data-rf="cln.' + esc(rid) + "." + k + '" aria-label="Kurzzusammenfassung der Materialsammlung"', m.html || "", { color: m.color, more, cellAttrs: ' data-lesson="' + key + '"' }) +
       matFoldSum(m, k) + '<div class="ldocs">' + (m.files || []).map((f) => '<button type="button" class="doc" data-open-cfile="' + esc(rid) + "|" + esc(f.id) + '"><span class="tag">' + typeTag(f) + "</span><span>" + esc(f.name) + "</span></button>").join("") + "</div></div>";
@@ -6757,7 +6757,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   }
   // Materialsammlung ganz zuklappen (Dokumente und Notiz ausblenden), gemerkt pro Sammlung (m.fold), ohne Wahl offen
   const matFoldBtn = (m, k) => '<button type="button" class="linkbtn mat-fold-tog" data-matfold="' + k + '" aria-expanded="' + !m.fold + '" title="' + (m.fold ? "Materialsammlung aufklappen: Dokumente und Notiz zeigen" : "Materialsammlung zuklappen: nur Name und Anzahl Dokumente zeigen") + '">' + (m.fold ? "▸ Aufklappen" : "▾ Zuklappen") + "</button>";
-  const matFoldSum = (m, k) => { const n = (m.files || []).length, nt = filled(m.html); return '<button type="button" class="mat-foldsum" data-matfold="' + k + '" title="Aufklappen">' + (n ? n + (n === 1 ? " Dokument" : " Dokumente") : "keine Dokumente") + (nt ? " · mit Notiz" : "") + " – zugeklappt, Klick zum Aufklappen</button>"; };
+  const matFoldSum = (m, k) => { const n = (m.files || []).length, nt = filled(m.html); return '<button type="button" class="mat-foldsum" data-matfold="' + k + '" title="Aufklappen">' + (n ? n + (n === 1 ? " Dokument" : " Dokumente") : "keine Dokumente") + (nt ? " · mit Notiz" : "") + "</button>"; };
   function matRowHtml(r, m, k) {
     const key = "ln" + k, more = !!(m.details || filled(m.notesHtml) || (m.files && m.files.length) || hasPlan(m.plan));
         const lk = m.rid && U.reihen[m.rid];
@@ -6766,9 +6766,9 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         return '<div class="lesson ln-row mat-row' + (slim ? " mat-slim" : "") + (m.fold ? " mat-fold" : "") + '" data-li="' + key + '"><div class="lh"><div class="lh-top"><b' + (' class="l-drag" draggable="true" data-mdrag="' + k + '" title="Ziehen, um die Materialsammlung zwischen die Lektionen zu verschieben"') + ">M" + matNo(r, k) + "</b>" + '<button type="button" class="lexp' + (more ? " on" : "") + '" data-lexp="' + key + '" title="Gross öffnen: Kommentare, Notizen, Dokumente" aria-label="Materialsammlung gross öffnen">+</button>' +
           '<button type="button" class="ln-rm" data-lnrm="' + k + '" title="Diese Materialsammlung entfernen" aria-label="Materialsammlung entfernen">×</button></div>' +
           '<input type="text" class="ln-name" data-lnname="' + k + '" value="' + esc(m.name || "") + '" placeholder="Name, z. B. Bilder" aria-label="Name der Materialsammlung">' +
-          matFoldBtn(m, k) + (m.fold ? "" : '<button type="button" class="linkbtn mat-slim-tog" data-matslim="' + k + '" title="' + (slim ? "Notizfeld wieder breit zeigen" : "Notizfeld klein machen, Dokumente in Spalten über die ganze Breite") + '">' + (slim ? "▸ Notiz zeigen" : "◂ Notiz klein") + (slim && filled(m.html) ? " •" : "") + "</button>") +
+          matFoldBtn(m, k) + (m.fold ? "" : '<button type="button" class="linkbtn mat-slim-tog" data-matslim="' + k + '" title="' + (slim ? "Notizfeld wieder breit zeigen" : "Notizfeld klein machen, Dokumente in Spalten über die ganze Breite") + '">' + (slim ? "▸ Notiz zeigen" : "◂ Notiz klein") + "</button>") +
           (lk ? '<span class="mat-link"><button type="button" class="linkbtn" data-goto="' + esc(m.rid) + '" title="Verknüpfte Reihe öffnen">↗ ' + esc(lk.title || "Reihe") + '</button><button type="button" class="x" data-matunlink="' + k + '" title="Verknüpfung lösen" aria-label="Verknüpfung lösen">×</button></span>'
-              : '<button type="button" class="linkbtn mat-pick" data-matlink="' + k + '" title="Eine Reihe (z. B. eine Materialsammlung) verknüpfen">+ Reihe verknüpfen</button>') + "</div>" +
+              : "") + "</div>" +
           cellHtml2('data-rf="lnItems.' + k + '.html" id="l-' + key + '" aria-label="Kurzzusammenfassung der Materialsammlung"', m.html || "", { color: m.color, more, cellAttrs: ' data-lesson="' + key + '"' }) +
           matFoldSum(m, k) + '<div class="ldocs">' + filesHtml(m.files, key) + "</div></div>";
   }
