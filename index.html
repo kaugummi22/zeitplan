@@ -2156,19 +2156,19 @@ body.p-rowdrag, body.p-rowdrag * { cursor: grabbing !important; user-select: non
 .sub-link:hover { text-decoration: underline; }
 .lit-mark { display: inline-block; font-size: 10px; font-weight: 600; line-height: 1; letter-spacing: 0.02em; color: var(--muted); border: 1px solid var(--line); border-radius: 3px; padding: 1px 3px; margin-right: 4px; vertical-align: 1px; }
 .lit-pick { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
-/* Leitfrage mit aufklappbaren Arbeitsnotizen rechts daneben */
-.r-lfrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: start; }
-.r-lfrow.arb-open { grid-template-columns: minmax(0, 1fr) minmax(220px, 34%); }
-@media (max-width: 760px) { .r-lfrow.arb-open { grid-template-columns: minmax(0, 1fr); } }
-.r-arb { min-width: 0; }
-.r-arb .cell { display: none; }
-.r-lfrow.arb-open .r-arb .cell { display: flex; }
-.r-arb .cell { background: color-mix(in srgb, var(--c-gelb) 35%, var(--surface)); }
-.arb-tog { border: 0; background: none; font: inherit; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); padding: 0 8px 2px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
-.arb-tog:hover { color: var(--accent); }
-.arb-car { display: inline-block; transition: transform 0.15s; }
-.r-lfrow.arb-open .arb-car { transform: rotate(90deg); }
-.arb-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--p-wich); display: inline-block; }
+/* Übersichtsseite der Reihe über den Lektionen */
+.rf-hrow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.rf-hrow > .v-inr-tog { flex-basis: auto; }
+.ueb-new { padding-top: 1px; padding-bottom: 1px; font-size: 0.85rem; }
+.ueb { margin: 4px 0 10px; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; background: var(--surface); padding: 6px 10px; }
+.ueb-head { display: flex; align-items: center; gap: 6px 12px; flex-wrap: wrap; }
+.ueb-tog { border: 0; background: none; font: inherit; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); padding: 2px 0; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.ueb-car { display: inline-block; transition: transform 0.15s; }
+.ueb.open .ueb-car { transform: rotate(90deg); }
+.ueb-ed { padding-top: 1px; padding-bottom: 1px; font-size: 0.85rem; }
+.ueb .ueb-view { min-height: 0; margin-top: 6px; max-height: 55vh; overflow: auto; border-radius: 6px; cursor: default; }
+.ueb .ueb-view:empty { padding: 8px 12px; }
+.ueb-panel .notes-ed { min-height: 55vh; }
 .r-list .jp-kids { display: grid; margin: 2px 0 0 4px; font-size: 12px; line-height: 1.3; }
 .r-list .jp-kids > span::before { content: "↳ "; }
 .r-list button[aria-current="true"] .jp-kids .sub-link { color: inherit; }
@@ -5305,14 +5305,15 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       '<label class="nb nimg" title="Bild oder Screenshot einfügen (auch mit Strg+V)">🖼 Bild<input type="file" id="d-nimg" accept="image/*" multiple hidden></label>' +
       '<button type="button" class="nb nimg" id="d-nword" aria-haspopup="menu" title="Word-Dokument (Arbeitsblatt) in die Notizen einfügen – grösser/kleiner wie ein Bild, Doppelklick = direkt bearbeiten und in dieselbe Datei speichern">📄 Word</button><input type="file" id="d-nwordf" accept=".docx" hidden><span class="msg" id="d-nmsg"></span></div>' +
       '<div class="notes-ed" style="line-height:' + (x.notesLh || 1.5) + '" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Notizen" id="d-notes" data-ph="Fragen, Hinweise, Tafelbild, Lösungen … Screenshots mit Strg+V einfügen.">' + sanitizeNotes(x.notesHtml || "") + '</div><div class="links" id="d-links">' + linkify(x.notesHtml ? notesLinkText(x.notesHtml) : x.details || "") + "</div></div>";
-    const notesF = opt.plan ? notesRich : '<div class="field"><label for="d-details">' + (opt.plan ? "Notizen, Querverweise, Links" : "Details, Querverweise, Links") + '</label><textarea id="d-details" placeholder="' + (opt.plan ? "Fragen, Hinweise, Tafelbild, Querverweise … Links (https://…) werden unten anklickbar." : "Alles, was nicht in die Liste muss. Links (https://…) werden unten anklickbar.") + '">' + esc(x.details) + '</textarea><div class="links" id="d-links">' + linkify(x.details || "") + "</div></div>";
+    const notesF = opt.plan || opt.page ? notesRich : '<div class="field"><label for="d-details">' + (opt.plan ? "Notizen, Querverweise, Links" : "Details, Querverweise, Links") + '</label><textarea id="d-details" placeholder="' + (opt.plan ? "Fragen, Hinweise, Tafelbild, Querverweise … Links (https://…) werden unten anklickbar." : "Alles, was nicht in die Liste muss. Links (https://…) werden unten anklickbar.") + '">' + esc(x.details) + '</textarea><div class="links" id="d-links">' + linkify(x.details || "") + "</div></div>";
     const rfl = (opt.reiheFiles || []);
     const rdocsF = rfl.length ? '<div class="field"><span class="lbl">Dokumente der ganzen Reihe</span><div class="d-rfiles">' + rfl.map((f) => '<button type="button" class="doc" data-open-rfile="' + esc(f.id) + '"><span class="tag">' + typeTag(f) + "</span><span>" + esc(f.name) + "</span></button>" + (f.link ? '<a class="btn ghost od-link" href="' + esc(f.link) + '" target="_blank" rel="noopener">↗ OneDrive</a>' : "")).join("") + "</div></div>" : "";
     const docsF = '<div class="field"><span class="lbl">Dokumente</span>' + (false ? '<div class="d-rfiles"><span class="help">Aus der ganzen Reihe:</span> ' + rfl.map((f) => '<button type="button" class="doc" data-open-rfile="' + esc(f.id) + '"><span class="tag">' + typeTag(f) + "</span><span>" + esc(f.name) + "</span></button>" + (f.link ? '<a class="btn ghost od-link" href="' + esc(f.link) + '" target="_blank" rel="noopener">↗ OneDrive</a>' : "")).join("") + "</div>" : "") + '<div class="files" id="d-files"></div>' +
       '<div class="upload"><label class="btn" for="d-file" id="d-up">Dokument hinzufügen</label><input type="file" id="d-file" multiple accept="application/pdf,image/*,video/*,.txt,.md,.csv,.json,.docx,.xlsx,.pptx,.zip,.epub"><span class="msg" id="d-msg">PDF, Word, Excel, PowerPoint, Bilder oder Textdateien.</span></div></div>';
     const actionsF = '<div class="actions">' + (opt.onPrint ? '<button class="btn" id="d-print" type="button" title="Druckt Kurzeintrag, Lernziele, Lektionsplanung und Notizen">Drucken</button>' : "") + '<div class="right"><button class="btn primary" id="d-close" type="button">Fertig</button></div></div>';
     let body;
-    if (opt.plan) {
+    if (opt.page) body = '<div hidden>' + textF + colorF + "</div>" + notesF.replace('aria-label="Notizen" id="d-notes" data-ph="Fragen, Hinweise, Tafelbild, Lösungen …', 'aria-label="Übersichtsseite" id="d-notes" data-ph="Allgemeine Notizen zur Reihe, z. B. wo welches Material zu finden ist (Buch, Seite, Ordner) …').replace('<span class="lbl">Notizen</span>', '<span class="lbl">Übersichtsseite</span>') + docsF + actionsF;
+    else if (opt.plan) {
       // Lektion: oben ausklappbare Zusatzinfos, darunter Lektionsplanung und grosse Notizen
       ensurePlan(opt.plan);
       if (!window.__dopen) { window.__dopen = {}; try { window.__dopen = JSON.parse(localStorage.getItem("zeitplan-dopen") || "{}"); } catch (e) {} }
@@ -5371,6 +5372,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
             if (k === "z" && !e.shiftKey) { e.preventDefault(); step(-1); } else if (k === "y" || (k === "z" && e.shiftKey)) { e.preventDefault(); step(1); }
           }, true);
         }
+        if (opt.page) root.querySelector(".panel").classList.add("wide", "ueb-panel");
         if (opt.plan) { root.querySelector(".panel").classList.add("wide"); root.querySelector(".panel").classList.toggle("side", dSide()); bindPlan(root, opt.plan, () => opt.changed()); bindSide(root);
           // Lektionsplanung zuklappen (z. B. auf kleinen Bildschirmen); Zustand pro Gerät
           const pf = root.querySelector("#d-pfold"), pfield = root.querySelector("#d-pfield");
@@ -5488,6 +5490,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         pnl.addEventListener("dragleave", (e) => { if (!pnl.contains(e.relatedTarget)) pnl.classList.remove("file-drop"); });
         pnl.addEventListener("drop", (e) => { pnl.classList.remove("file-drop"); if (!fdrag(e)) return; e.preventDefault(); try { dIn.files = e.dataTransfer.files; dIn.dispatchEvent(new Event("change")); } catch (err) {} const sec = root.querySelector('[data-dsec="docs"]'), tg = root.querySelector('[data-dtog="docs"]'); if (sec && sec.hidden && tg) tg.click(); });
         if (tDet) tDet.focus();
+        if (opt.page && ned) { ned.focus(); const rg = document.createRange(); rg.selectNodeContents(ned); rg.collapse(false); const sl = getSelection(); sl.removeAllRanges(); sl.addRange(rg); }
       });
   }
   function bindNotes(root, ned, x, changed, nopt) {
@@ -6199,6 +6202,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     if (r.lnItem && !Array.isArray(r.lnItems)) r.lnItems = [{ name: r.ln || "", ...r.lnItem }];
     delete r.lnItem;
     if (!Array.isArray(r.lnItems)) r.lnItems = [];
+    // frühere kleine «Notizen» neben der Leitfrage gehören jetzt auf die Übersichtsseite
+    if (r.arbnotiz != null) { if (String(r.arbnotiz).replace(/<[^>]*>|&nbsp;/g, "").trim()) { const u = r.ueb || { notesHtml: "" }; u.notesHtml = "<div>" + r.arbnotiz + "</div>" + (u.notesHtml || ""); r.ueb = u; } delete r.arbnotiz; }
     return r;
   }
   const yearsOf = (r) => (r.years && r.years.length ? r.years : [5]);
@@ -6588,9 +6593,33 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     if (U.view === "vorlagen") { $("#u-legend").hidden = true; renderV(); return; }
     if (U.view === "jahresplan") renderJP(); else { renderRSide(); renderRDetail(); }
   }
-  // Arbeitsnotizen neben der Leitfrage: offen, wenn etwas drinsteht oder auf diesem Gerät aufgeklappt
-  let ARB = {}; try { ARB = JSON.parse(localStorage.getItem("zeitplan-arb") || "{}") || {}; } catch (e) {}
-  const arbOpen = (r) => (typeof ARB[U.sel] === "boolean" ? ARB[U.sel] : filled(r.arbnotiz));
+  // Übersichtsseite der Reihe (r.ueb): über den Lektionen auf- und zuklappbar; Zustand pro Gerät, ohne Wahl offen
+  let UEB = {}; try { UEB = JSON.parse(localStorage.getItem("zp-ueb") || "{}") || {}; } catch (e) {}
+  const uebOpen = (rid) => UEB[rid] !== false;
+  const uebHas = (r) => !!(r && r.ueb);
+  function uebHtml(r, rid) {
+    if (!uebHas(r)) return "";
+    const o = uebOpen(rid), u = r.ueb, n = (u.files || []).length;
+    return '<div class="r-field ueb' + (o ? " open" : "") + '" data-uebrid="' + esc(rid) + '"><div class="ueb-head"><button type="button" class="ueb-tog" data-uebtog aria-expanded="' + o + '" title="Übersichtsseite auf- oder zuklappen (wird auf diesem Gerät gemerkt)"><span class="ueb-car" aria-hidden="true">▸</span> Übersichtsseite</button>' +
+      '<button type="button" class="btn ghost ueb-ed" data-uebed title="Notizen, Bilder und Screenshots (Strg+V) auf der Übersichtsseite bearbeiten">✎ Bearbeiten</button>' + (n ? '<span class="help">' + n + (n === 1 ? " Dokument" : " Dokumente") + "</span>" : "") + "</div>" +
+      (o ? '<div class="notes-ed ueb-view" style="line-height:' + (u.notesLh || 1.5) + '" title="Doppelklick zum Bearbeiten" data-ph="Noch leer. Doppelklick oder «✎ Bearbeiten»: Notizen, Bilder und Screenshots sammeln, z. B. wo welches Material zu finden ist.">' + sanitizeNotes(u.notesHtml || "") + "</div>" : "") + "</div>";
+  }
+  function uebFill(box) {
+    const v = box && box.querySelector(".ueb-view"), r = U.reihen[U.sel]; if (!v || !r || !r.ueb) return;
+    v.querySelectorAll("figure.nfig").forEach((f) => { f.contentEditable = "false"; });
+    nsecDeco(v); ndocFill(v, [...(r.ueb.files || []), ...(r.mainFiles || []), ...(r.files || [])]);
+  }
+  function openUebersicht(rid, isNew) {
+    const r = U.reihen[rid]; if (!r) return;
+    const u = r.ueb || {};
+    const x = { html: "", text: "", notesHtml: u.notesHtml || "", notesLh: u.notesLh || 0, files: (u.files || []).slice() };
+    if (isNew && !r.ueb) { r.ueb = { notesHtml: "" }; UEB[rid] = true; try { localStorage.setItem("zp-ueb", JSON.stringify(UEB)); } catch (e) {} }
+    dirtyU.add(rid);
+    const put = () => { const rr = U.reihen[rid]; if (!rr) return; rr.ueb = { notesHtml: x.notesHtml || "" }; if (x.notesLh) rr.ueb.notesLh = x.notesLh; if (x.files && x.files.length) rr.ueb.files = x.files; };
+    openDetailBox({ editDocs: true, page: true, title: r.title || "Reihe", sub: "Übersichtsseite", x, reiheFiles: [...(r.mainFiles || []), ...(r.files || [])],
+      changed: () => { put(); saveReihe(rid, 900); },
+      onClose: () => { const rr = U.reihen[rid]; if (rr && rr.ueb && !filled(rr.ueb.notesHtml) && !/<(img|figure|table)\b/i.test(rr.ueb.notesHtml || "") && !(rr.ueb.files || []).length) { delete rr.ueb; saveReihe(rid, 0); } uFlush("r:" + rid); renderU(); } });
+  }
   // Unterpunkte einer Reihe (z. B. Wortarten: Nomen, Verb …)
   const subsOf = (r) => (Array.isArray(r.subs) ? r.subs.filter((x) => String(x || "").trim()) : []);
   const subRid = (x) => (String(x).startsWith("@") ? String(x).slice(1) : null);
@@ -6617,7 +6646,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       if (hit(r.title)) where.push(["", "Titel"]);
       subsOf(r).forEach((x) => { if (hit(subLabel(x))) where.push(["", "Unterpunkt «" + subLabel(x) + "»"]); });
       if (hit(htmlToPlain(r.leitfrage || ""))) where.push(["", "Leitfrage"]);
-      if (hit(htmlToPlain(r.arbnotiz || ""))) where.push(["", "Notizen"]);
+      if (r.ueb && hit(htmlToPlain(r.ueb.notesHtml || ""))) where.push(["", "Übersichtsseite"]);
       blocksOf(r).forEach(([i, sp]) => {
         const m = (r.meta || {})[i] || {}, pl = m.plan || {};
         const txt = [phaseOf(r, i), htmlToPlain(r.lessons[i] || ""), m.details || "", htmlToPlain(m.notesHtml || ""), htmlToPlain(pl.ziele || ""), ...(pl.rows || []).flat().map((c) => htmlToPlain(c || ""))].join(" ");
@@ -6932,7 +6961,9 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       return '<div class="rf-grp' + (o ? " open" : "") + '" data-gid="' + esc(g.id) + '"><div class="rf-ghead"><button type="button" class="rf-gtog" data-gtog="' + esc(g.id) + '" aria-expanded="' + o + '" title="' + (o ? "Zuklappen" : "Aufklappen") + '"><span class="rf-car" aria-hidden="true">' + (o ? "▾" : "▸") + "</span>📁</button>" +
         '<input type="text" class="rf-gname" data-gname="' + esc(g.id) + '" value="' + esc(g.name || "") + '" placeholder="Name der Gruppe" aria-label="Name der Gruppe"><span class="n">' + list.length + '</span><button type="button" class="rf-pen" data-gdel="' + esc(g.id) + '" title="Gruppe auflösen – die Dokumente kommen zurück nach links">×</button></div>' +
         (o ? '<div class="rf-glist">' + (list.length ? list.map((f) => rfRowHtml(r, f, "g:" + g.id)).join("") : '<span class="help">Dokumente hierher ziehen.</span>') + "</div>" : "") + "</div>"; };
-    const docsB = !open ? '<div class="r-field rf-docs">' + head + "</div>" : '<div class="r-field rf-docs">' + head + '<div class="rf-cols"><div class="rf-col"><span class="rf-ch">Einzeldokumente</span><div class="rf-list">' +
+    const uebB = r.klasse || uebHas(r) ? "" : '<button type="button" class="btn ghost ueb-new" data-uebnew title="Eine Übersichtsseite über den Lektionen anlegen: Notizen, Bilder, Screenshots – z. B. welches Material wo zu finden ist">+ Übersichtsseite</button>';
+    const hrow = '<div class="rf-hrow">' + head + uebB + "</div>";
+    const docsB = !open ? '<div class="r-field rf-docs">' + hrow + "</div>" : '<div class="r-field rf-docs">' + hrow + '<div class="rf-cols"><div class="rf-col"><span class="rf-ch">Einzeldokumente</span><div class="rf-list">' +
       (single.length ? single.map((f) => rfRowHtml(r, f, "reihe")).join("") : '<span class="help">Noch keine. Hier gehören Unterlagen hin, die Sie in mehreren Lektionen brauchen.</span>') +
       '</div></div><div class="rf-col rf-colr"><span class="rf-ch">Ordner und Gruppen</span>' + (links.length ? '<div class="rf-list rf-links">' + links.map((f) => rfRowHtml(r, f, "reihe")).join("") + "</div>" : "") +
       groups.map(grpHtml).join("") + '<div class="rf-gbtns"><button type="button" class="btn ghost rf-gadd" id="rf-gadd" title="Eine Gruppe für Dokumente anlegen, z. B. «Lektionsplanungen» oder «Archiv»">+ Gruppe</button>' + (window.ZLOCAL && window.ZLOCAL.list ? '<button type="button" class="btn ghost" id="rf-addfolder" title="Einen ganzen Ordner (z. B. Bilder oder Scans) aus OneDrive verknüpfen">+ OneDrive-Ordner</button>' : "") + "</div></div></div>" + (!state.assets ? "" : '<label class="btn ghost rf-up">+ Dokument für die ganze Reihe<input type="file" id="rf-file" multiple hidden accept="application/pdf,image/*,.txt,.md,.csv,.json,.docx,.xlsx,.pptx"></label>' + '<span class="msg" id="rf-msg"></span>') + "</div>";
@@ -7252,7 +7283,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       if (!first) { U.sel = null; box.innerHTML = '<div class="empty">Noch keine Reihe hier. Mit „+ Neue Reihe“ legen Sie eine an.</div>'; return; }
       U.sel = first[0]; r = first[1]; renderRSide();
     }
-    rSnapBase(U.sel); setTimeout(rUndoBtn, 0);
+    rSnapBase(U.sel); setTimeout(rUndoBtn, 0); setTimeout(() => uebFill(box), 0);
     box.innerHTML =
       '<div class="r-top">' + (mastersOf(U.sel).length ? '<button type="button" class="ms-up-btn" data-goto="' + mastersOf(U.sel)[0][0] + '" title="Unterreihe von: ' + esc(mastersOf(U.sel).map(([, m]) => m.title || "Reihe").join(", ")) + ' – klicken öffnet die Masterreihe">↳</button>' : "") + '<input class="r-title" id="r-title" data-rf="title" value="' + esc(r.title || "") + '" aria-label="Titel der Reihe" placeholder="Titel der Reihe">' +
       '<div class="r-tools"><button class="btn ghost" type="button" id="r-undo" disabled title="Noch nichts rückgängig zu machen">↶ Rückgängig</button>' + '<button class="btn ghost' + (r.folder ? " has-folder" : "") + '" type="button" id="r-folder" title="' + (r.folder ? "Ordnerpfad kopieren: " + esc(r.folder) : "Ordner auf dem Computer hinterlegen") + '">📁 Ordner</button>' + (window.ZLOCAL ? '<button class="btn ghost" type="button" id="r-folder-ed" title="Ordner wählen oder ändern" aria-label="Ordner wählen">✎</button>' : "") + '' + (r.klasse ? "" : r.master ? '<button class="btn ghost ms-btn" type="button" id="r-mlist" aria-haspopup="menu" title="Unterreihen dieser Masterreihe">◆ Unterreihen (' + childrenOf(r).length + ') ▾</button>' : '<button class="btn ghost" type="button" id="r-master" title="Diese Reihe zur Masterreihe machen, um Unterreihen hinzuzufügen">◆ Masterreihe</button>') + '<button class="btn ghost" type="button" id="r-print" title="Ganze Reihe als Lektionsplanung drucken">Drucken</button><button class="btn ghost" type="button" data-move="-1" title="Reihe in der Liste nach oben schieben" aria-label="Reihe nach oben">↑</button><button class="btn ghost" type="button" data-move="1" title="Reihe in der Liste nach unten schieben" aria-label="Reihe nach unten">↓</button></div></div>' +
@@ -7269,9 +7300,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
           (canFolders() ? (r.kfolder ? '<br>Die Dokumente sind Kopien im Klassenordner (' + esc(relPath(r.folder)) + '). Die Originale im Unterricht bleiben unverändert. Ein bearbeitetes Dokument können Sie beim Ansehen mit «Als Original übernehmen» zurück in den Unterricht geben.'
             : '<br><b>Achtung:</b> Die Dokumente dieser Kopie sind noch die Originale aus dem Unterricht – wenn Sie sie in Word bearbeiten, ändern sich die Originale. <button type="button" class="btn ghost" data-kcopyfiles="1">In den Klassenordner kopieren</button>') : "") + "</div>"
         : '<div class="r-years-pick"><span class="lbl">Schuljahr</span><div class="chips" id="r-chips">' + yearChips(r) + '</div><span id="r-homewrap">' + homePick(r) + "</span></div>") +
-      '<div class="r-lfrow' + (arbOpen(r) ? " arb-open" : "") + '"><div class="r-field"><span class="lbl">Leitfrage oder Leitproblem</span>' + cellHtml2('data-rf="leitfrage" id="r-leitfrage" aria-label="Leitfrage"', r.leitfrage) + "</div>" +
-      '<div class="r-field r-arb"><button type="button" class="arb-tog" data-arbtog title="Arbeitsnotizen zur Überarbeitung ein- oder ausklappen"><span class="arb-car">▸</span> Notizen' + (filled(r.arbnotiz) ? ' <i class="arb-dot" aria-label="enthält Text"></i>' : "") + "</button>" + cellHtml2('data-rf="arbnotiz" id="r-arbnotiz" aria-label="Arbeitsnotizen zur Überarbeitung"', r.arbnotiz) + "</div></div>" +
-      reiheFilesHtml(r) +
+      '<div class="r-field"><span class="lbl">Leitfrage oder Leitproblem</span>' + cellHtml2('data-rf="leitfrage" id="r-leitfrage" aria-label="Leitfrage"', r.leitfrage) + "</div>" +
+      reiheFilesHtml(r) + uebHtml(r, U.sel) +
       '<div class="lessons" id="r-lessons">' + lessonsHtml(r) + "</div>" +
       '<div class="r-field r-subs"><span class="lbl">Unterpunkte</span><div class="subs-ed" id="r-subs">' + subsEdHtml(r) + "</div></div>" +
       '<div class="r-field"><span class="lbl">Zusätzliches, Links, Material</span>' + cellHtml2('data-rf="zusatz" id="r-zusatz" aria-label="Zusätzliches"', r.zusatz) + '<div class="links zus-links" id="r-zuslinks">' + zusLinks(r.zusatz) + "</div></div>" +
@@ -7400,7 +7430,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     if (e.target.closest(".ucell .exp")) { e.preventDefault(); return; }
     const t = e.target.closest(".ucell .inp"); if (t && !t.isContentEditable && e.detail > 1) e.preventDefault();
   });
-  uEl.addEventListener("dblclick", (e) => { const t = e.target.closest(".ucell .inp"); if (t && !t.isContentEditable) { e.preventDefault(); uStart(t, e); } });
+  uEl.addEventListener("dblclick", (e) => { const uv = e.target.closest(".ueb-view"); if (uv && !e.target.closest("figure.ndoc")) { e.preventDefault(); const w = uv.closest("[data-uebrid]"); if (w) openUebersicht(w.dataset.uebrid); return; } const t = e.target.closest(".ucell .inp"); if (t && !t.isContentEditable) { e.preventDefault(); uStart(t, e); } });
   uEl.addEventListener("keydown", (e) => {
     const t = e.target.closest && e.target.closest(".ucell .inp");
     if (!t) {
@@ -8263,7 +8293,9 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const st = e.target.closest && e.target.closest("[data-subtog]");
     if (st) { e.preventDefault(); e.stopPropagation(); const id = st.dataset.subtog; UP.subOpen = { ...(UP.subOpen || {}), [id]: !subsOpen(id) }; saveUP(); renderU(); return; }
     const b = e.target.closest("button"); if (!b || !uEl.contains(b)) return;
-    if (b.dataset.arbtog != null) { const row = b.closest(".r-lfrow"), on = !row.classList.contains("arb-open"); row.classList.toggle("arb-open", on); ARB[U.sel] = on; try { localStorage.setItem("zeitplan-arb", JSON.stringify(ARB)); } catch (err) {} if (on) { const inp = row.querySelector("#r-arbnotiz"); if (inp) inp.focus(); } return; }
+    if (b.dataset.uebnew != null) { if (U.sel) openUebersicht(U.sel, true); return; }
+    if (b.dataset.uebed != null) { const w = b.closest("[data-uebrid]"); if (w) openUebersicht(w.dataset.uebrid); return; }
+    if (b.dataset.uebtog != null) { const w = b.closest("[data-uebrid]"), rid = w && w.dataset.uebrid, r = rid && U.reihen[rid]; if (!r) return; UEB[rid] = !uebOpen(rid); try { localStorage.setItem("zp-ueb", JSON.stringify(UEB)); } catch (err) {} const tmp = document.createElement("div"); tmp.innerHTML = uebHtml(r, rid); const nw = tmp.firstChild; w.replaceWith(nw); uebFill(nw); return; }
     if (b.dataset.matslim != null) { const id = mrOf(b), r = U.reihen[id]; if (!r) return; const k = +b.dataset.matslim, m = (r.lnItems || [])[k]; if (!m) return; const row = b.closest(".lesson"); r.lnItems = r.lnItems.slice(); r.lnItems[k] = { ...m, slim: !row.classList.contains("mat-slim") }; saveReihe(id, 0); renderLessonsOnly(U.reihen[U.sel]); return; }
     if (b.id === "u-legend") { prioFilterMenu(b); return; }
     if (b.id === "u-subs") { UP.subs = !UP.subs; UP.subOpen = {}; saveUP(); renderU(); return; }
