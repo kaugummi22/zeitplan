@@ -2170,17 +2170,27 @@ main.wrap:has(#u-view-reihen:not([hidden]) .r-layout.ueb-on) { max-width: none; 
 .ueb-gut { align-self: stretch; cursor: col-resize; position: relative; touch-action: none; }
 .ueb-gut::after { content: ""; position: absolute; left: 3px; top: 0; bottom: 0; width: 2px; background: var(--line); border-radius: 2px; }
 .ueb-gut:hover::after { background: var(--accent); }
-.ueb-pane { position: sticky; top: calc(env(safe-area-inset-top, 0px) + var(--hdr) + 8px); height: calc(100vh - var(--hdr) - 24px); display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); min-width: 0; overflow: hidden; }
+.ueb-pane { position: sticky; top: calc(env(safe-area-inset-top, 0px) + var(--hdr) + 8px); height: calc(100vh - var(--hdr) - 76px); display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); min-width: 0; overflow: hidden; }
 .ueb-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 6px 10px; border-bottom: 1px solid var(--line); }
 .ueb-name { font-weight: 700; color: var(--accent); }
 .ueb-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; }
 .ueb-right { margin-left: auto; display: flex; gap: 4px; }
 .ueb-right .btn { padding-top: 2px; padding-bottom: 2px; font-size: 0.85rem; }
 .ueb-scroll { flex: 1; overflow: auto; min-height: 0; }
-.ueb-canvas { position: relative; min-height: 100%; cursor: text; outline: none; background-image: radial-gradient(color-mix(in srgb, var(--muted) 22%, transparent) 1px, transparent 1px); background-size: 24px 24px; }
-.ueb-canvas.file-drop { outline: 3px dashed var(--accent); outline-offset: -6px; }
+.ueb-sheet { position: relative; min-height: 100%; font-family: Candara, "Avenir Next", "Segoe UI", "Trebuchet MS", sans-serif; font-size: 1.05rem; color: var(--ink); --ul: 28px;
+  background: linear-gradient(90deg, transparent 52px, color-mix(in srgb, #e57373 45%, transparent) 52px 53px, transparent 53px), repeating-linear-gradient(to bottom, transparent 0 calc(var(--ul) - 1px), color-mix(in srgb, var(--accent) 14%, transparent) calc(var(--ul) - 1px) var(--ul)); background-position: 0 12px; }
+.ueb-sheet.free { cursor: crosshair; background-color: color-mix(in srgb, var(--accent) 4%, transparent); }
+.ueb-sheet.file-drop { outline: 3px dashed var(--accent); outline-offset: -6px; }
+.ueb-page.notes-ed { min-height: 120px; border: 0; border-radius: 0; background: none; padding: 12px 16px 12px 64px; line-height: var(--ul); }
+.ueb-page.notes-ed:focus { border: 0; }
+.ueb-sheet.free .ueb-page { cursor: crosshair; }
+.ueb-page .nsec { font-size: 0.95em; color: var(--accent); margin: 14px 0 4px; line-height: var(--ul); }
+.ueb-page figure.nfig { margin: 6px 0; } .ueb-page figure.nfig img { max-width: 100%; }
+.ueb-page figure.nfig.w33 { width: 33%; } .ueb-page figure.nfig.w50 { width: 50%; } .ueb-page figure.nfig.w75 { width: 75%; }
+#ueb-free[aria-pressed="true"] { background: var(--accent); color: #fff; border-radius: 6px; }
 .ueb-it { position: absolute; padding: 10px 4px 4px; border: 1px solid transparent; border-radius: 6px; cursor: auto; }
-.ueb-it:hover, .ueb-it:focus-within, .ueb-it.sel { border-color: var(--line); background: color-mix(in srgb, var(--surface) 88%, transparent); }
+.ueb-it:hover, .ueb-it:focus-within, .ueb-it.sel { border-color: var(--line); background: color-mix(in srgb, var(--surface) 92%, transparent); }
+.ueb-it { z-index: 1; } .ueb-sheet.free .ueb-it { cursor: auto; }
 .ueb-it.sel { border-color: var(--accent); }
 .ueb-grip { position: absolute; left: 0; right: 22px; top: 0; height: 10px; cursor: move; border-radius: 6px 6px 0 0; touch-action: none; }
 .ueb-it:hover .ueb-grip, .ueb-it:focus-within .ueb-grip, .ueb-it.sel .ueb-grip { background: color-mix(in srgb, var(--muted) 25%, transparent); }
@@ -2190,7 +2200,7 @@ main.wrap:has(#u-view-reihen:not([hidden]) .r-layout.ueb-on) { max-width: none; 
 .ueb-rs { position: absolute; right: -4px; bottom: -4px; width: 14px; height: 14px; cursor: nwse-resize; touch-action: none; visibility: hidden; }
 .ueb-rs::after { content: ""; position: absolute; right: 4px; bottom: 4px; width: 7px; height: 7px; border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent); }
 .ueb-it:hover .ueb-rs, .ueb-it.sel .ueb-rs, .ueb-it:focus-within .ueb-rs { visibility: visible; }
-.ueb-txt { outline: none; min-height: 1.5em; line-height: 1.5; padding: 0 4px; overflow-wrap: anywhere; }
+.ueb-txt { outline: none; min-height: 1.5em; line-height: var(--ul); padding: 0 4px; overflow-wrap: anywhere; }
 .ueb-txt ul, .ueb-txt ol { margin: 2px 0; padding-left: 22px; }
 .ueb-txt img { max-width: 100%; height: auto; }
 .ueb-img > img { display: block; width: 100%; height: auto; border-radius: 4px; cursor: move; touch-action: none; user-select: none; }
@@ -6623,26 +6633,38 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     if (U.view === "vorlagen") { $("#u-legend").hidden = true; renderV(); return; }
     if (U.view === "jahresplan") renderJP(); else { renderRSide(); renderRDetail(); }
   }
-  // Übersichtsseite der Reihe (r.ueb.items): freie Fläche wie in OneNote, links neben der Reihe (geteilter Bildschirm)
+  // Übersichtsseite der Reihe (r.ueb): normale Notizseite (html, Absätze mit data-k) plus frei platzierte Elemente (items),
+  // die an einem Absatz hängen (k + dy) und mit ihm wandern; links neben der Reihe (geteilter Bildschirm)
   let UEBS = {}; try { UEBS = JSON.parse(localStorage.getItem("zp-uebs") || "{}") || {}; } catch (e) {}
   const uebsSave = () => { try { localStorage.setItem("zp-uebs", JSON.stringify(UEBS)); } catch (e) {} };
   const uebHas = (r) => !!(r && r.ueb);
   const uebOn = (r) => uebHas(r) && !r.klasse && !!UEBS.open;
   const uebId = () => "u" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-  function uebItems(r) {
+  function uebData(r) {
     const u = r.ueb || (r.ueb = {});
-    if (!Array.isArray(u.items)) {
-      u.items = [];
-      if (u.notesHtml && (filled(u.notesHtml) || /<(img|figure|table)\b/i.test(u.notesHtml))) u.items.push({ id: uebId(), t: "text", x: 24, y: 24, w: 460, html: u.notesHtml });
-    }
+    if (typeof u.html !== "string") u.html = u.notesHtml && (filled(u.notesHtml) || /<(img|figure|table)\b/i.test(u.notesHtml)) ? uebSan(u.notesHtml) : "";
+    if (!Array.isArray(u.items)) u.items = [];
     delete u.notesHtml; delete u.notesLh;
-    return u.items;
+    return u;
+  }
+  // jeden obersten Absatz einzeln säubern und seine Kennung (data-k) behalten
+  function uebSan(html) {
+    const tpl = document.createElement("template"); tpl.innerHTML = html || "";
+    let run = null; const parts = [];
+    [...tpl.content.childNodes].forEach((n) => { const blk = n.nodeType === 1 && /^(DIV|P|H[1-6]|UL|OL|TABLE|FIGURE|BLOCKQUOTE)$/.test(n.tagName); if (blk) { run = null; parts.push(n); } else if (n.nodeType === 1 || (n.nodeType === 3 && n.nodeValue.trim())) { if (!run) { run = document.createElement("div"); parts.push(run); } run.appendChild(n); } });
+    const seen = new Set(); let out = "";
+    parts.forEach((n) => {
+      let k = n.getAttribute && n.getAttribute("data-k"); const t = document.createElement("template"); t.innerHTML = sanitizeNotes(n.outerHTML);
+      [...t.content.childNodes].forEach((c) => { if (c.nodeType !== 1) { const d = document.createElement("div"); d.appendChild(c.cloneNode()); c.replaceWith(d); } });
+      [...t.content.children].forEach((c) => { if (!k || !/^[\w-]{1,24}$/.test(k) || seen.has(k)) k = uebId(); seen.add(k); c.setAttribute("data-k", k); k = null; out += c.outerHTML; });
+    });
+    return out;
   }
   // Leiste über den Lektionen, wenn die Übersichtsseite eingeklappt ist
   function uebHtml(r, rid) {
     if (!uebHas(r) || r.klasse || uebOn(r)) return "";
-    const n = uebItems(r).length;
-    return '<div class="r-field ueb" data-uebrid="' + esc(rid) + '"><button type="button" class="btn ghost ueb-open" data-uebopen title="Übersichtsseite links neben der Reihe öffnen">◧ Übersichtsseite öffnen</button><span class="help">' + (n ? n + (n === 1 ? " Element" : " Elemente") : "noch leer") + "</span></div>";
+    const u = uebData(r), has = filled(u.html) || /<(img|figure|table)\b/i.test(u.html) || u.items.length;
+    return '<div class="r-field ueb" data-uebrid="' + esc(rid) + '"><button type="button" class="btn ghost ueb-open" data-uebopen title="Übersichtsseite links neben der Reihe öffnen">◧ Übersichtsseite öffnen</button><span class="help">' + (has ? "" : "noch leer") + "</span></div>";
   }
   function uebLayout(box, r, rid) {
     const lay = box.closest(".r-layout"); if (!lay) return;
@@ -6653,140 +6675,233 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     lay.style.setProperty("--uw", (UEBS.w || 50) + "%");
     pane.hidden = gut.hidden = !on;
     if (!on) { pane.innerHTML = ""; pane.dataset.rid = ""; pane.dataset.sig = ""; return; }
-    const sig = JSON.stringify(uebItems(r));
-    if (pane.dataset.rid === rid && pane.dataset.sig === sig && pane.querySelector(".ueb-canvas")) { uebBarState(pane); return; }
+    const u = uebData(r), sig = JSON.stringify([u.html, u.items]);
+    if (pane.dataset.rid === rid && pane.dataset.sig === sig && pane.querySelector(".ueb-sheet")) { uebBarState(pane); return; }
     if (pane.dataset.rid === rid && pane.contains(document.activeElement) && document.activeElement.isContentEditable) return;
     uebMount(pane, rid);
   }
   function uebGut(lay, gut) {
     gut.addEventListener("pointerdown", (e) => {
       e.preventDefault(); gut.setPointerCapture(e.pointerId); const rc = lay.getBoundingClientRect();
-      const mv = (ev) => { const w = Math.max(25, Math.min(80, Math.round(((ev.clientX - rc.left) / rc.width) * 100))); UEBS.w = w; lay.style.setProperty("--uw", w + "%"); };
-      const up = () => { gut.removeEventListener("pointermove", mv); gut.removeEventListener("pointerup", up); uebsSave(); const c = lay.querySelector(".ueb-canvas"); if (c && c._fit) c._fit(); };
+      const mv = (ev) => { const w = Math.max(25, Math.min(80, Math.round(((ev.clientX - rc.left) / rc.width) * 100))); UEBS.w = w; lay.style.setProperty("--uw", w + "%"); const s = lay.querySelector(".ueb-sheet"); if (s && s._place) s._place(); };
+      const up = () => { gut.removeEventListener("pointermove", mv); gut.removeEventListener("pointerup", up); uebsSave(); };
       gut.addEventListener("pointermove", mv); gut.addEventListener("pointerup", up);
     });
   }
   function uebBarState(pane) {
     const b = pane.querySelector("#ueb-solo"); if (b) { b.textContent = UEBS.solo ? "◨ Reihe zeigen" : "◨ Reihe ausblenden"; b.title = UEBS.solo ? "Die Reihe mit den Lektionen wieder rechts daneben zeigen" : "Nur die Übersichtsseite zeigen (ganze Breite)"; }
+    const f = pane.querySelector("#ueb-free"); if (f) f.setAttribute("aria-pressed", String(!!UEBS.free));
     const u = pane.querySelector("#ueb-undo"), rb = $("#r-undo"); if (u) u.disabled = !rb || rb.disabled;
   }
   function uebMount(pane, rid) {
     const r = U.reihen[rid]; if (!r) return;
-    const items = uebItems(r);
-    pane.dataset.rid = rid; pane.dataset.sig = JSON.stringify(items);
+    const u0 = uebData(r);
+    pane.dataset.rid = rid; pane.dataset.sig = JSON.stringify([u0.html, u0.items]);
     const TB = (cmd, label, title, cls) => '<button type="button" class="nb' + (cls ? " " + cls : "") + '" data-ucmd="' + cmd + '" title="' + title + '" aria-label="' + title + '">' + label + "</button>";
     pane.innerHTML = '<div class="ueb-bar"><span class="ueb-name">Übersichtsseite</span><span class="ueb-tools">' +
       '<button type="button" class="nb" id="ueb-undo" title="Letzte Änderung rückgängig machen" aria-label="Rückgängig">↶</button><span class="nsep"></span>' +
+      '<button type="button" class="nb nimg ueb-free" id="ueb-free" aria-pressed="false" title="Frei schreiben: irgendwo hinklicken und schreiben, Bilder frei hinlegen (wie in OneNote). Ausgeschaltet: normale Seite">✥ Frei schreiben</button><span class="nsep"></span>' +
       TB("bold", "<b>F</b>", "Fett (Strg+B)") + TB("italic", "<i>K</i>", "Kursiv (Strg+I)") + TB("underline", "<u>U</u>", "Unterstrichen (Strg+U)") + TB("hl", "", "Gelb markieren", "sw-y") + TB("hlx", "✕", "Markierung entfernen", "sw-x") +
       TB("insertUnorderedList", "•", "Aufzählung") + TB("ls", '<span class="ls">✎</span>', "Lehrerschrift (Strg+Umschalt+L)", "nls") + '<span class="nsep"></span>' +
-      '<label class="nb nimg" title="Bild einfügen (an der zuletzt angeklickten Stelle)">🖼 Bild<input type="file" id="ueb-img" accept="image/*" multiple hidden></label></span>' +
+      '<button type="button" class="nb nimg" id="ueb-sec" title="Abschnitt mit Titel einfügen (lässt sich zuklappen und samt Inhalt und freien Notizen nach oben/unten schieben)">§ Abschnitt</button>' +
+      '<label class="nb nimg" title="Bild einfügen">🖼 Bild<input type="file" id="ueb-img" accept="image/*" multiple hidden></label></span>' +
       '<span class="ueb-right"><button type="button" class="btn ghost" id="ueb-solo"></button><button type="button" class="btn ghost" id="ueb-close" title="Übersichtsseite einklappen – die Reihenliste erscheint wieder">✕ Einklappen</button></span></div>' +
-      '<div class="ueb-scroll"><div class="ueb-canvas" tabindex="-1"></div></div>' +
-      '<div class="ueb-hint" id="ueb-msg">Irgendwo hinklicken und schreiben. Screenshot: Stelle anklicken, dann Strg+V. Am grauen Rand oben ziehen = verschieben, Ecke unten rechts = Grösse.</div>';
-    uebBarState(pane);
-    const cv = pane.querySelector(".ueb-canvas"), sc = pane.querySelector(".ueb-scroll"), msg = pane.querySelector("#ueb-msg");
-    let last = { x: 24, y: 24 }, saveT = null;
+      '<div class="ueb-scroll"><div class="ueb-sheet"><div class="notes-ed ueb-page" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Übersichtsseite" data-ph="Notizen zur Reihe: was alles hinein muss, Gedanken, wo welches Material ist … Screenshots mit Strg+V.">' + u0.html + '</div></div></div>' +
+      '<div class="ueb-hint" id="ueb-msg"></div>';
+    const sheet = pane.querySelector(".ueb-sheet"), page = pane.querySelector(".ueb-page"), sc = pane.querySelector(".ueb-scroll"), msg = pane.querySelector("#ueb-msg");
+    const HINT_N = "Normale Seite: einfach schreiben. «✥ Frei schreiben» einschalten, um irgendwo daneben, dazwischen oder darunter zu schreiben.";
+    const HINT_F = "Frei schreiben: irgendwo hinklicken und schreiben, Screenshot = Stelle anklicken, dann Strg+V. Grauer Rand oben = verschieben, Ecke = Grösse.";
+    let last = null, saveT = null, kText = {};
     const say = (t) => { msg.textContent = t; };
     const R = () => U.reihen[rid];
-    const itemOf = (el) => { const rr = R(); return rr && rr.ueb && (rr.ueb.items || []).find((q) => q.id === el.dataset.id); };
-    const save = (now) => { clearTimeout(saveT); const go = () => { const rr = R(); if (!rr) return; pane.dataset.sig = JSON.stringify(rr.ueb.items); saveReihe(rid, 300); setTimeout(() => uebBarState(pane), 700); }; if (now) go(); else saveT = setTimeout(go, 500); };
-    const itHtml = (q) => '<div class="ueb-it ueb-' + q.t + '" data-id="' + esc(q.id) + '" style="left:' + q.x + "px;top:" + q.y + "px;width:" + q.w + 'px"><div class="ueb-grip" title="Ziehen zum Verschieben"></div><button type="button" class="ueb-x" title="Entfernen" aria-label="Entfernen">×</button>' +
+    const U_ = () => { const rr = R(); return rr ? uebData(rr) : null; };
+    const itemOf = (el) => { const u = U_(); return u && u.items.find((q) => q.id === el.dataset.id); };
+    const blocks = () => [...page.children];
+    const kOf = (k) => (k ? page.querySelector(':scope > [data-k="' + k + '"]') : null);
+    // obersten Absätzen eine eindeutige Kennung geben (Enter kopiert sie mit)
+    const norm = (wrap) => {
+      if (wrap !== false) {
+        const sl = getSelection(), an = sl.rangeCount ? sl.anchorNode : null, ao = sl.anchorOffset; let moved = false;
+        let run = null; [...page.childNodes].forEach((n) => { if (n.nodeType === 3 ? n.nodeValue.trim() : n.nodeType === 1 && !/^(DIV|P|H[1-6]|UL|OL|TABLE|FIGURE|BLOCKQUOTE)$/.test(n.tagName)) { if (!run) { run = document.createElement("div"); n.before(run); } run.appendChild(n); moved = true; } else run = null; });
+        if (moved && an && an.isConnected && page.contains(an)) { try { const rg = document.createRange(); rg.setStart(an, ao); rg.collapse(true); sl.removeAllRanges(); sl.addRange(rg); } catch (e) {} }
+      }
+      // Enter teilt einen Absatz und kopiert die Kennung: sie bleibt beim Teil mit dem bisherigen Text
+      const grp = {}; blocks().forEach((b) => { const k = b.getAttribute("data-k") || ""; (grp[k] = grp[k] || []).push(b); });
+      Object.keys(grp).forEach((k) => { const g = grp[k]; let keep = k ? g.find((b) => b.textContent === kText[k]) || g.reduce((m, b) => (b.textContent.trim().length > m.textContent.trim().length ? b : m), g[0]) : null; g.forEach((b) => { if (b !== keep) b.setAttribute("data-k", uebId()); }); });
+      kText = {}; blocks().forEach((b) => { kText[b.getAttribute("data-k")] = b.textContent; });
+    };
+    const place = () => {
+      const u = U_(); if (!u) return; let h = page.offsetHeight;
+      sheet.querySelectorAll(".ueb-it").forEach((el) => {
+        const q = itemOf(el); if (!q) return; const b = kOf(q.k);
+        const top = b ? b.offsetTop + (q.dy || 0) : q.y || 0; el.style.top = top + "px"; el.style.left = q.x + "px"; el.style.width = q.w + "px";
+        el.hidden = !!(b && (b.classList.contains("nsec-hid") || (b.classList.contains("nsec") && false)));
+        if (!el.hidden) h = Math.max(h, top + el.offsetHeight);
+      });
+      sheet.style.minHeight = Math.max(sc.clientHeight - 2, h + 240) + "px";
+      let w = 0; sheet.querySelectorAll(".ueb-it").forEach((el) => { if (!el.hidden) w = Math.max(w, el.offsetLeft + el.offsetWidth); }); sheet.style.minWidth = w ? w + 40 + "px" : "";
+    };
+    sheet._place = place;
+    const anchor = (q, x, y) => {
+      q.x = Math.max(0, Math.round(x)); y = Math.max(0, Math.round(y));
+      const bs = blocks().filter((b) => !b.classList.contains("nsec-hid")); let b = null;
+      bs.forEach((c) => { if (c.offsetTop <= y + 4) b = c; }); if (!b) b = bs[0];
+      if (b) { q.k = b.getAttribute("data-k"); q.dy = y - b.offsetTop; delete q.y; } else { q.y = y; delete q.k; delete q.dy; }
+    };
+    const save = (now) => {
+      clearTimeout(saveT);
+      const go = () => { const rr = R(); if (!rr) return; const u = uebData(rr); norm(); u.html = uebSan(page.innerHTML); pane.dataset.sig = JSON.stringify([u.html, u.items]); saveReihe(rid, 300); setTimeout(() => uebBarState(pane), 700); };
+      if (now) go(); else saveT = setTimeout(go, 600);
+    };
+    const itHtml = (q) => '<div class="ueb-it ueb-' + q.t + '" data-id="' + esc(q.id) + '"><div class="ueb-grip" title="Ziehen zum Verschieben"></div><button type="button" class="ueb-x" title="Entfernen" aria-label="Entfernen">×</button>' +
       (q.t === "img" ? '<img src="' + esc(q.src) + '" alt="" draggable="false">' : '<div class="ueb-txt" contenteditable="true" role="textbox" aria-multiline="true">' + sanitizeNotes(q.html || "") + "</div>") + '<div class="ueb-rs" title="Ziehen für die Grösse"></div></div>';
-    const fit = () => { let w = 0, h = 0; cv.querySelectorAll(".ueb-it").forEach((el) => { w = Math.max(w, el.offsetLeft + el.offsetWidth); h = Math.max(h, el.offsetTop + el.offsetHeight); }); cv.style.minWidth = w + 80 + "px"; cv.style.minHeight = Math.max(sc.clientHeight - 4, h + 320) + "px"; };
-    cv._fit = fit;
-    cv.innerHTML = items.map(itHtml).join("");
-    cv.querySelectorAll(".ueb-txt").forEach((t) => { nsecDeco(t); t.querySelectorAll("figure.nfig").forEach((f) => { f.contentEditable = "false"; }); });
-    setTimeout(fit, 0); cv.querySelectorAll("img").forEach((im) => im.addEventListener("load", fit));
-    const at = (e) => { const rc = cv.getBoundingClientRect(); return { x: Math.max(0, Math.round(e.clientX - rc.left)), y: Math.max(0, Math.round(e.clientY - rc.top)) }; };
-    const add = (q, focus) => { const rr = R(); if (!rr) return null; uebItems(rr).push(q); const tmp = document.createElement("div"); tmp.innerHTML = itHtml(q); const el = tmp.firstChild; cv.appendChild(el); const im = el.querySelector("img"); if (im) im.addEventListener("load", fit); fit(); if (focus) { const t = el.querySelector(".ueb-txt"); if (t) t.focus(); } return el; };
-    const remove = (el) => { const rr = R(); if (!rr) return; rr.ueb.items = rr.ueb.items.filter((q) => q.id !== el.dataset.id); el.remove(); fit(); save(true); };
+    const deco = () => { nsecDeco(page); page.querySelectorAll("figure.nfig").forEach((f) => { f.contentEditable = "false"; }); };
+    const setFree = () => { const on = !!UEBS.free; sheet.classList.toggle("free", on); page.contentEditable = on ? "false" : "true"; say(on ? HINT_F : HINT_N); uebBarState(pane); };
+    sheet.insertAdjacentHTML("beforeend", u0.items.map(itHtml).join(""));
+    norm(); deco(); setFree(); uebBarState(pane);
+    setTimeout(place, 0); sheet.querySelectorAll("img").forEach((im) => im.addEventListener("load", place));
+    if (window.ResizeObserver) { const ro = new ResizeObserver(() => { if (!pane.isConnected) { ro.disconnect(); return; } place(); }); ro.observe(page); }
+    const at = (e) => { const rc = sheet.getBoundingClientRect(); return { x: e.clientX - rc.left, y: e.clientY - rc.top }; };
+    const add = (q, focus) => { const u = U_(); if (!u) return null; u.items.push(q); sheet.insertAdjacentHTML("beforeend", itHtml(q)); const el = sheet.lastElementChild; const im = el.querySelector("img"); if (im) im.addEventListener("load", place); place(); if (focus) { const t = el.querySelector(".ueb-txt"); if (t) t.focus(); } return el; };
+    const drop = (el) => { const u = U_(); if (u) u.items = u.items.filter((q) => q.id !== el.dataset.id); el.remove(); place(); };
     const textOk = (t) => !!(t.textContent.trim() || t.querySelector("img, figure, table"));
-    const sel = (el) => { cv.querySelectorAll(".ueb-it.sel").forEach((x) => x !== el && x.classList.remove("sel")); if (el) el.classList.add("sel"); };
-    // Klick ins Leere: neues Textfeld an dieser Stelle
-    cv.addEventListener("pointerdown", (e) => {
-      if (e.button !== 0) return;
+    const sel = (el) => { sheet.querySelectorAll(".ueb-it.sel").forEach((x) => x !== el && x.classList.remove("sel")); if (el) el.classList.add("sel"); };
+    const newText = (p) => { const q = { id: uebId(), t: "text", w: Math.max(160, Math.min(380, sheet.clientWidth - p.x - 16)), html: "" }; anchor(q, p.x, p.y - 12); const el = add(q, true); if (el) el.classList.add("fresh"); };
+    // Klicken: im Frei-Modus neues Textfeld an der Stelle; sonst Schreibmarke in die Seite
+    const onDown = (e, touch) => {
       const it = e.target.closest(".ueb-it");
-      if (it) { sel(it); last = { x: it.offsetLeft, y: it.offsetTop + it.offsetHeight + 12 }; return; }
-      if (e.target !== cv) return;
-      if (e.pointerType !== "mouse") return; // Tablet/Handy: erst beim Tippen (click), damit Wischen nicht schreibt
-      e.preventDefault(); newAt(e);
-    });
-    cv.addEventListener("click", (e) => { if (e.target === cv && e.pointerType && e.pointerType !== "mouse") newAt(e); });
-    function newAt(e) {
-      sel(null);
-      const p = at(e); last = p;
-      const a = document.activeElement; if (a && a.classList && a.classList.contains("ueb-txt")) a.blur();
-      const el = add({ id: uebId(), t: "text", x: p.x, y: Math.max(0, p.y - 10), w: Math.max(160, Math.min(420, cv.clientWidth - p.x - 16)), html: "" }, true);
-      if (el) el.classList.add("fresh");
-    }
-    cv.addEventListener("input", (e) => { const t = e.target.closest && e.target.closest(".ueb-txt"); if (!t) return; const el = t.closest(".ueb-it"), q = itemOf(el); if (!q) return; q.html = sanitizeNotes(t.innerHTML); el.classList.remove("fresh"); fit(); save(); });
-    cv.addEventListener("focusout", (e) => {
+      if (it) { if (!touch) { sel(it); last = { x: it.offsetLeft, y: it.offsetTop + it.offsetHeight + 12 }; } return; }
+      sel(null); const p = at(e); last = p;
+      if (!UEBS.free) { if (e.target === sheet) { e.preventDefault(); page.focus(); caretToEnd(page); } return; }
+      if (e.target.closest(".nsec-tg, .nsec-t")) return;
+      e.preventDefault(); const a = document.activeElement; if (a && a.blur && pane.contains(a)) a.blur(); newText(p);
+    };
+    sheet.addEventListener("pointerdown", (e) => { if (e.button !== 0 || e.pointerType !== "mouse") return; onDown(e); });
+    sheet.addEventListener("click", (e) => { if (e.pointerType && e.pointerType !== "mouse") onDown(e, true); });
+    // Seite: schreiben, einfügen, Abschnitte
+    page.addEventListener("input", () => { norm(false); place(); save(); });
+    page.addEventListener("blur", () => save(true));
+    sheet.addEventListener("input", (e) => { const t = e.target.closest && e.target.closest(".ueb-txt"); if (!t) return; const el = t.closest(".ueb-it"), q = itemOf(el); if (!q) return; q.html = sanitizeNotes(t.innerHTML); el.classList.remove("fresh"); place(); save(); });
+    sheet.addEventListener("focusout", (e) => {
       const t = e.target.closest && e.target.closest(".ueb-txt"); if (!t) return; const el = t.closest(".ueb-it");
-      setTimeout(() => { if (!el.isConnected || el.contains(document.activeElement)) return; if (!textOk(t)) { const rr = R(); if (rr) rr.ueb.items = rr.ueb.items.filter((q) => q.id !== el.dataset.id); el.remove(); fit(); save(true); } else save(true); }, 0);
+      setTimeout(() => { if (!el.isConnected || el.contains(document.activeElement)) return; if (!textOk(t)) drop(el); save(true); }, 0);
     });
-    cv.addEventListener("keydown", (e) => {
-      const t = e.target.closest && e.target.closest(".ueb-txt");
+    sheet.addEventListener("keydown", (e) => {
+      const t = e.target.closest && e.target.closest(".ueb-txt, .ueb-page");
       if (t && e.key === "Escape") { e.preventDefault(); t.blur(); return; }
       if (t && e.key.toLowerCase() === "l" && e.ctrlKey && e.shiftKey) { e.preventDefault(); lsToggle(t); return; }
-      if (!t && (e.key === "Delete" || e.key === "Backspace")) { const s = cv.querySelector(".ueb-it.sel"); if (s) { e.preventDefault(); remove(s); } }
+      if (!t && (e.key === "Delete" || e.key === "Backspace")) { const s = sheet.querySelector(".ueb-it.sel"); if (s) { e.preventDefault(); drop(s); save(true); } }
     });
-    cv.addEventListener("click", (e) => { const x = e.target.closest(".ueb-x"); if (x) { remove(x.closest(".ueb-it")); say("Entfernt. «↶» oben links holt es zurück."); } });
-    // Verschieben (oberer Rand) und Grösse (Ecke unten rechts)
-    cv.addEventListener("pointerdown", (e) => {
+    pane.addEventListener("keydown", (e) => { if (e.target === pane || e.target === sc) { const s = sheet.querySelector(".ueb-it.sel"); if (s && (e.key === "Delete" || e.key === "Backspace")) { e.preventDefault(); drop(s); save(true); } } });
+    sheet.addEventListener("click", (e) => {
+      const x = e.target.closest(".ueb-x"); if (x) { drop(x.closest(".ueb-it")); save(true); say("Entfernt. «↶» holt es zurück."); return; }
+      const tg = e.target.closest(".nsec-tg"); if (tg && page.contains(tg)) { e.preventDefault(); const d = tg.closest(".nsec"); if (d.dataset.c === "1") delete d.dataset.c; else d.dataset.c = "1"; nsecDeco(page); place(); save(true); return; }
+      const st = e.target.closest(".nsec-t"); if (st && page.contains(st)) { e.preventDefault(); secMenu(st.closest(".nsec"), st); return; }
+      const fg = e.target.closest("figure.nfig"); if (fg && page.contains(fg)) { e.preventDefault(); figMenu(fg); }
+    });
+    page.addEventListener("mousedown", (e) => { if (e.target.closest(".nsec")) e.preventDefault(); });
+    // Abschnitt = Trennstrich mit Titel bis zum nächsten Trennstrich
+    const span = (d) => { const a = [d]; let n = d.nextElementSibling; while (n && !n.classList.contains("nsec")) { a.push(n); n = n.nextElementSibling; } return a; };
+    const curBlock = () => { const s = getSelection(); if (!s.rangeCount || !page.contains(s.anchorNode)) return null; let n = s.anchorNode; while (n && n.parentNode !== page) n = n.parentNode; return n && n.nodeType === 1 ? n : null; };
+    const menu = (anchorEl, html, on) => {
+      const old = document.getElementById("uebmenu"); if (old) old.remove();
+      const m = document.createElement("div"); m.className = "cmenu ffmenu nsecmenu"; m.id = "uebmenu"; m.setAttribute("role", "menu"); m.innerHTML = html; document.body.appendChild(m);
+      const rc = anchorEl.getBoundingClientRect(); m.style.left = Math.max(8, Math.min(innerWidth - m.offsetWidth - 8, rc.left)) + "px"; m.style.top = Math.max(8, Math.min(innerHeight - m.offsetHeight - 8, rc.bottom + 4)) + "px";
+      const close = () => { m.remove(); document.removeEventListener("pointerdown", out, true); document.removeEventListener("keydown", key, true); };
+      const out = (e) => { if (!m.contains(e.target)) close(); };
+      const key = (e) => { if (e.key === "Escape") { e.preventDefault(); close(); } else if (e.key === "Enter" && e.target.tagName === "INPUT") { e.preventDefault(); const b = m.querySelector("[data-um=ok]"); if (b) b.click(); } };
+      document.addEventListener("pointerdown", out, true); document.addEventListener("keydown", key, true);
+      m.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; const inp = m.querySelector("input"); close(); on(b.dataset.um, inp ? inp.value.replace(/\s+/g, " ").trim() : ""); });
+      const inp = m.querySelector("input"); if (inp) { inp.focus(); inp.select(); }
+    };
+    const secInsert = (title) => {
+      const d = document.createElement("div"); d.className = "nsec"; d.textContent = title; d.setAttribute("data-k", uebId());
+      const after = document.createElement("div"); after.innerHTML = "<br>"; after.setAttribute("data-k", uebId());
+      const b = curBlock(); if (b) page.insertBefore(d, b); else { page.appendChild(d); page.appendChild(after); }
+      nsecDeco(page); place(); save(true);
+      if (!b) { page.focus(); const rg = document.createRange(); rg.selectNodeContents(after); rg.collapse(true); const s = getSelection(); s.removeAllRanges(); s.addRange(rg); }
+    };
+    const secMenu = (d, el) => menu(el, '<div class="cm-title">Abschnitt</div><button type="button" role="menuitem" data-um="fold">' + (d.dataset.c === "1" ? "▾ Aufklappen" : "▸ Zuklappen") + '</button><hr>' +
+      '<div class="nsm-own"><input type="text" maxlength="120" value="' + esc((d.querySelector(".nsec-t") || d).textContent.trim()) + '" aria-label="Titel des Abschnitts"><button type="button" class="btn primary" data-um="ok">OK</button></div><hr>' +
+      '<button type="button" role="menuitem" data-um="up">↑ Nach oben (mit Inhalt und freien Notizen)</button><button type="button" role="menuitem" data-um="down">↓ Nach unten (mit Inhalt und freien Notizen)</button><button type="button" role="menuitem" class="cm-danger" data-um="del">🗑 Trennstrich entfernen (Text bleibt)</button>', (k, v) => {
+      if (k === "fold") { if (d.dataset.c === "1") delete d.dataset.c; else d.dataset.c = "1"; }
+      else if (k === "ok") { if (!v) return; d.querySelector(".nsec-t").textContent = v; }
+      else if (k === "del") d.remove();
+      else if (k === "up") { const mine = span(d), p = d.previousElementSibling; if (!p) return; let s = p; while (s.previousElementSibling && !s.classList.contains("nsec")) s = s.previousElementSibling; mine.forEach((x) => page.insertBefore(x, s)); }
+      else if (k === "down") { const mine = span(d), nx = mine[mine.length - 1].nextElementSibling; if (!nx) return; const other = span(nx); const ref = other[other.length - 1].nextElementSibling; mine.forEach((x) => page.insertBefore(x, ref)); }
+      nsecDeco(page); place(); save(true);
+      if (k === "up" || k === "down") { d.scrollIntoView({ block: "nearest" }); d.classList.add("flash"); setTimeout(() => d.classList.remove("flash"), 900); }
+    });
+    const figMenu = (fg) => menu(fg, '<div class="cm-title">Bild</div><button type="button" role="menuitem" data-um="w33">Klein</button><button type="button" role="menuitem" data-um="w50">Mittel</button><button type="button" role="menuitem" data-um="w75">Gross</button><button type="button" role="menuitem" data-um="w0">Ganze Breite</button><hr><button type="button" role="menuitem" class="cm-danger" data-um="del">🗑 Entfernen</button>', (k) => {
+      if (k === "del") fg.remove(); else { fg.classList.remove("w25", "w33", "w50", "w75", "w100"); if (k !== "w0") fg.classList.add(k); }
+      place(); save(true);
+    });
+    // Verschieben (oberer Rand bzw. Bild) und Grösse (Ecke unten rechts)
+    sheet.addEventListener("pointerdown", (e) => {
       const g = e.target.closest(".ueb-grip, .ueb-rs, .ueb-img > img"); if (!g || e.button !== 0) return;
       const el = g.closest(".ueb-it"), q = itemOf(el); if (!q) return;
-      e.preventDefault(); e.stopPropagation(); g.setPointerCapture(e.pointerId);
-      const rs = g.classList.contains("ueb-rs"), x0 = e.clientX, y0 = e.clientY, a = { x: q.x, y: q.y, w: q.w }; let moved = false;
+      e.preventDefault(); e.stopPropagation(); g.setPointerCapture(e.pointerId); sel(el);
+      const rs = g.classList.contains("ueb-rs"), x0 = e.clientX, y0 = e.clientY, a = { x: el.offsetLeft, y: el.offsetTop, w: el.offsetWidth }; let moved = false;
       const mv = (ev) => { const dx = ev.clientX - x0, dy = ev.clientY - y0; if (Math.abs(dx) + Math.abs(dy) > 3) moved = true; if (!moved) return;
-        if (rs) { q.w = Math.max(60, Math.round(a.w + dx)); el.style.width = q.w + "px"; } else { q.x = Math.max(0, Math.round(a.x + dx)); q.y = Math.max(0, Math.round(a.y + dy)); el.style.left = q.x + "px"; el.style.top = q.y + "px"; } fit(); };
-      const up = () => { g.removeEventListener("pointermove", mv); g.removeEventListener("pointerup", up); g.removeEventListener("pointercancel", up); if (moved) save(true); };
+        if (rs) { q.w = Math.max(60, Math.round(a.w + dx)); el.style.width = q.w + "px"; } else { el.style.left = Math.max(0, a.x + dx) + "px"; el.style.top = Math.max(0, a.y + dy) + "px"; } };
+      const up = () => { g.removeEventListener("pointermove", mv); g.removeEventListener("pointerup", up); g.removeEventListener("pointercancel", up); if (!moved) return; if (!rs) anchor(q, el.offsetLeft, el.offsetTop); place(); save(true); };
       g.addEventListener("pointermove", mv); g.addEventListener("pointerup", up); g.addEventListener("pointercancel", up);
     }, true);
-    // Bilder: einfügen (Strg+V), ins Feld ziehen oder über «🖼 Bild»
-    const putImgs = async (files, p) => {
+    // Bilder: im Frei-Modus frei hinlegen, sonst in die Seite an der Schreibmarke
+    const upload = async (f) => { const r2 = await state.assets.upload(f, { type: f.type === "image/svg+xml" ? "image/png" : f.type }); return "/_blob/" + r2.id; };
+    const putImgs = async (files, p, inPage) => {
       if (!state.assets) { say("Bilder einfügen geht nur, wenn Semper mit OneDrive verbunden ist."); return; }
-      let y = p.y;
+      const s = getSelection(), rg = inPage && s.rangeCount && page.contains(s.anchorNode) ? s.getRangeAt(0).cloneRange() : null;
+      let y = p ? p.y : 0;
       for (const f of files) {
         if (!/^image\//.test(f.type)) continue;
         say("Bild wird gespeichert …");
         try {
-          const up = await state.assets.upload(f, { type: f.type === "image/svg+xml" ? "image/png" : f.type });
-          const w = Math.max(120, Math.min(480, cv.clientWidth - p.x - 24));
-          const el = add({ id: uebId(), t: "img", x: p.x, y, w, src: "/_blob/" + up.id }); sel(el);
-          y += Math.round(w * 0.6) + 16; save(true); say("Bild eingefügt. Am Rand oben verschieben, an der Ecke unten rechts grösser oder kleiner ziehen.");
+          const src = await upload(f);
+          if (inPage) {
+            page.focus(); const sl = getSelection(); sl.removeAllRanges(); if (rg) sl.addRange(rg); else { const r3 = document.createRange(); r3.selectNodeContents(page); r3.collapse(false); sl.addRange(r3); }
+            document.execCommand("insertHTML", false, '<figure class="nfig w50" contenteditable="false"><img src="' + src + '" alt=""></figure><div><br></div>');
+            deco(); norm(); place(); save(true); say("Bild eingefügt. Ein Klick aufs Bild: Grösse oder entfernen.");
+          } else {
+            const w = Math.max(120, Math.min(420, sheet.clientWidth - p.x - 24)), q = { id: uebId(), t: "img", w, src }; anchor(q, p.x, y);
+            const el = add(q); sel(el); y += Math.round(w * 0.6) + 16; save(true); say("Bild eingefügt. Am Bild ziehen = verschieben, Ecke unten rechts = Grösse.");
+          }
         } catch (err) { console.error(err); say(err && err.code === "too_large" ? "Das Bild ist zu gross (höchstens 20 MB)." : "Das Bild konnte nicht gespeichert werden."); }
       }
-      last = { x: p.x, y };
+      if (p) last = { x: p.x, y };
     };
     pane.addEventListener("paste", (e) => {
       if (!pane.contains(e.target)) return;
       const cd = e.clipboardData; if (!cd) return;
       const imgs = [...cd.files].filter((f) => /^image\//.test(f.type));
-      const t = e.target.closest && e.target.closest(".ueb-txt");
+      const t = e.target.closest && e.target.closest(".ueb-txt"), inPage = !!(e.target.closest && e.target.closest(".ueb-page"));
       if (imgs.length) {
         e.preventDefault();
-        let p = last;
-        if (t) { const el = t.closest(".ueb-it"); if (!textOk(t)) { p = { x: el.offsetLeft, y: el.offsetTop }; const rr = R(); if (rr) rr.ueb.items = rr.ueb.items.filter((q) => q.id !== el.dataset.id); el.remove(); } else p = { x: el.offsetLeft, y: el.offsetTop + el.offsetHeight + 12 }; }
-        putImgs(imgs, p); return;
+        if (inPage && !UEBS.free) { putImgs(imgs, null, true); return; }
+        let p = last || { x: 24, y: page.offsetHeight + 12 };
+        if (t) { const el = t.closest(".ueb-it"); if (!textOk(t)) { p = { x: el.offsetLeft, y: el.offsetTop }; drop(el); } else p = { x: el.offsetLeft, y: el.offsetTop + el.offsetHeight + 12 }; }
+        putImgs(imgs, p, false); return;
       }
-      if (t) { const h = cd.getData("text/html"); e.preventDefault(); if (h) document.execCommand("insertHTML", false, sanitizeNotes(h)); else document.execCommand("insertText", false, cd.getData("text/plain") || ""); return; }
-      const txt = cd.getData("text/plain"); if (!txt) return;
-      e.preventDefault(); const el = add({ id: uebId(), t: "text", x: last.x, y: last.y, w: Math.max(160, Math.min(420, cv.clientWidth - last.x - 16)), html: sanitizeNotes(cd.getData("text/html") || esc(txt).replace(/\n/g, "<br>")) }); save(true); if (el) sel(el);
+      if (t || inPage) { const h = cd.getData("text/html"); e.preventDefault(); if (h) document.execCommand("insertHTML", false, sanitizeNotes(h)); else document.execCommand("insertText", false, cd.getData("text/plain") || ""); return; }
+      const txt = cd.getData("text/plain"); if (!txt || !UEBS.free) return;
+      e.preventDefault(); const p = last || { x: 24, y: page.offsetHeight + 12 }; const q = { id: uebId(), t: "text", w: Math.max(160, Math.min(380, sheet.clientWidth - p.x - 16)), html: sanitizeNotes(cd.getData("text/html") || esc(txt).replace(/\n/g, "<br>")) }; anchor(q, p.x, p.y); sel(add(q)); save(true);
     });
-    cv.addEventListener("dragover", (e) => { if ([...((e.dataTransfer && e.dataTransfer.types) || [])].includes("Files")) { e.preventDefault(); e.stopPropagation(); cv.classList.add("file-drop"); } });
-    cv.addEventListener("dragleave", (e) => { if (!cv.contains(e.relatedTarget)) cv.classList.remove("file-drop"); });
-    cv.addEventListener("drop", (e) => { cv.classList.remove("file-drop"); const fl = [...((e.dataTransfer && e.dataTransfer.files) || [])].filter((f) => /^image\//.test(f.type)); if (!fl.length) return; e.preventDefault(); e.stopPropagation(); putImgs(fl, at(e)); });
-    pane.querySelector("#ueb-img").addEventListener("change", (e) => { const fl = [...e.target.files]; e.target.value = ""; putImgs(fl, last); });
+    sheet.addEventListener("dragover", (e) => { if ([...((e.dataTransfer && e.dataTransfer.types) || [])].includes("Files")) { e.preventDefault(); e.stopPropagation(); sheet.classList.add("file-drop"); } });
+    sheet.addEventListener("dragleave", (e) => { if (!sheet.contains(e.relatedTarget)) sheet.classList.remove("file-drop"); });
+    sheet.addEventListener("drop", (e) => { sheet.classList.remove("file-drop"); const fl = [...((e.dataTransfer && e.dataTransfer.files) || [])].filter((f) => /^image\//.test(f.type)); if (!fl.length) return; e.preventDefault(); e.stopPropagation(); if (UEBS.free) putImgs(fl, at(e), false); else { const p = at(e); const cr = document.caretRangeFromPoint ? document.caretRangeFromPoint(e.clientX, e.clientY) : null; if (cr && page.contains(cr.startContainer)) { page.focus(); const s = getSelection(); s.removeAllRanges(); s.addRange(cr); } putImgs(fl, p, true); } });
+    pane.querySelector("#ueb-img").addEventListener("change", (e) => { const fl = [...e.target.files]; e.target.value = ""; if (UEBS.free) putImgs(fl, last || { x: 24, y: page.offsetHeight + 12 }, false); else putImgs(fl, null, true); });
     // Leiste
-    pane.querySelector(".ueb-bar").addEventListener("mousedown", (e) => { if (e.target.closest("[data-ucmd]")) e.preventDefault(); });
+    pane.querySelector(".ueb-bar").addEventListener("mousedown", (e) => { if (e.target.closest("[data-ucmd], #ueb-sec")) e.preventDefault(); });
     pane.querySelector(".ueb-bar").addEventListener("click", (e) => {
       const b = e.target.closest("button"); if (!b) return;
-      if (b.id === "ueb-close") { UEBS.open = false; uebsSave(); renderU(); return; }
-      if (b.id === "ueb-solo") { UEBS.solo = !UEBS.solo; uebsSave(); const lay = pane.closest(".r-layout"); if (lay) lay.classList.toggle("ueb-solo", UEBS.solo); uebBarState(pane); fit(); return; }
-      if (b.id === "ueb-undo") { const rb = $("#r-undo"); if (rb && !rb.disabled) { const a = document.activeElement; if (a && a.blur) a.blur(); setTimeout(() => rb.click(), 0); } return; }
+      if (b.id === "ueb-close") { save(true); UEBS.open = false; uebsSave(); renderU(); return; }
+      if (b.id === "ueb-free") { UEBS.free = !UEBS.free; uebsSave(); const a = document.activeElement; if (a && pane.contains(a) && a.blur) a.blur(); setFree(); return; }
+      if (b.id === "ueb-solo") { UEBS.solo = !UEBS.solo; uebsSave(); const lay = pane.closest(".r-layout"); if (lay) lay.classList.toggle("ueb-solo", UEBS.solo); uebBarState(pane); setTimeout(place, 0); return; }
+      if (b.id === "ueb-undo") { const rb = $("#r-undo"); if (rb && !rb.disabled) { save(true); const a = document.activeElement; if (a && a.blur) a.blur(); setTimeout(() => rb.click(), 0); } return; }
+      if (b.id === "ueb-sec") { menu(b, '<div class="cm-title">Abschnitt einfügen</div><div class="nsm-own"><input type="text" maxlength="120" placeholder="Titel, z. B. Material oder Epoche" aria-label="Titel des Abschnitts"><button type="button" class="btn primary" data-um="ok">Einfügen</button></div>', (k, v) => { if (k === "ok" && v) { if (UEBS.free) { UEBS.free = false; uebsSave(); setFree(); } secInsert(v); } }); return; }
       const c = b.dataset.ucmd; if (!c) return;
-      const a = document.activeElement, t = a && a.classList && a.classList.contains("ueb-txt") ? a : null;
-      if (!t) { say("Zuerst in ein Textfeld klicken bzw. Text markieren."); return; }
+      const a = document.activeElement, t = a && a.classList && (a.classList.contains("ueb-txt") || a.classList.contains("ueb-page")) ? a : null;
+      if (!t) { say("Zuerst in den Text klicken bzw. Text markieren."); return; }
       if (c === "ls") lsToggle(t);
       else if (c === "hl" || c === "hlx") { try { document.execCommand("styleWithCSS", false, true); } catch (err) {} document.execCommand("hiliteColor", false, c === "hl" ? HL.y : "transparent"); try { document.execCommand("styleWithCSS", false, false); } catch (err) {} }
       else document.execCommand(c, false, null);
@@ -6819,7 +6934,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       if (hit(r.title)) where.push(["", "Titel"]);
       subsOf(r).forEach((x) => { if (hit(subLabel(x))) where.push(["", "Unterpunkt «" + subLabel(x) + "»"]); });
       if (hit(htmlToPlain(r.leitfrage || ""))) where.push(["", "Leitfrage"]);
-      if (r.ueb && hit(htmlToPlain((r.ueb.notesHtml || "") + " " + (r.ueb.items || []).map((q) => q.html || "").join(" ")))) where.push(["", "Übersichtsseite"]);
+      if (r.ueb && hit(htmlToPlain((r.ueb.html || r.ueb.notesHtml || "") + " " + (r.ueb.items || []).map((q) => q.html || "").join(" ")))) where.push(["", "Übersichtsseite"]);
       blocksOf(r).forEach(([i, sp]) => {
         const m = (r.meta || {})[i] || {}, pl = m.plan || {};
         const txt = [phaseOf(r, i), htmlToPlain(r.lessons[i] || ""), m.details || "", htmlToPlain(m.notesHtml || ""), htmlToPlain(pl.ziele || ""), ...(pl.rows || []).flat().map((c) => htmlToPlain(c || ""))].join(" ");
@@ -8466,7 +8581,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const st = e.target.closest && e.target.closest("[data-subtog]");
     if (st) { e.preventDefault(); e.stopPropagation(); const id = st.dataset.subtog; UP.subOpen = { ...(UP.subOpen || {}), [id]: !subsOpen(id) }; saveUP(); renderU(); return; }
     const b = e.target.closest("button"); if (!b || !uEl.contains(b)) return;
-    if (b.dataset.uebnew != null) { const r = U.sel && U.reihen[U.sel]; if (!r) return; if (!r.ueb) { r.ueb = { items: [] }; saveReihe(U.sel, 0); } UEBS.open = true; uebsSave(); renderU(); return; }
+    if (b.dataset.uebnew != null) { const r = U.sel && U.reihen[U.sel]; if (!r) return; if (!r.ueb) { r.ueb = { html: "", items: [] }; saveReihe(U.sel, 0); } UEBS.open = true; uebsSave(); renderU(); return; }
     if (b.dataset.uebopen != null) { UEBS.open = true; uebsSave(); renderU(); return; }
     if (b.dataset.matslim != null) { const id = mrOf(b), r = U.reihen[id]; if (!r) return; const k = +b.dataset.matslim, m = (r.lnItems || [])[k]; if (!m) return; const row = b.closest(".lesson"); r.lnItems = r.lnItems.slice(); r.lnItems[k] = { ...m, slim: !row.classList.contains("mat-slim") }; saveReihe(id, 0); renderLessonsOnly(U.reihen[U.sel]); return; }
     if (b.id === "u-legend") { prioFilterMenu(b); return; }
