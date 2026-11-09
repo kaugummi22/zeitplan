@@ -2178,6 +2178,9 @@ main.wrap:has(#u-view-reihen:not([hidden]) .r-layout.ueb-on) { max-width: none; 
 .ueb-right .btn { padding-top: 2px; padding-bottom: 2px; font-size: 0.85rem; }
 .ueb-scroll { flex: 1; overflow: auto; min-height: 0; }
 .ueb-in { display: contents; }
+.d-modes { display: inline-flex; margin-left: 14px; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; vertical-align: middle; font-size: 0.8rem; font-weight: 600; }
+.d-modes button { border: 0; background: var(--surface); color: var(--muted); padding: 3px 10px; cursor: pointer; font: inherit; }
+.d-modes button[aria-pressed="true"] { background: var(--accent); color: #fff; }
 .ueb-sheet { position: relative; min-height: 100%; font-family: Calibri, Candara, "Avenir Next", "Segoe UI", "Trebuchet MS", sans-serif; font-size: var(--ufs, 0.92rem); color: var(--ink); --ulh: 1.3; --cmw: 0px; }
 .ueb-sheet.rand { --cmw: 15em; } .ueb-sheet.rand-zu { --cmw: 7em; }
 .ueb-sheet .ueb-page.notes-ed { max-width: calc(52em + var(--cmw)); padding-right: calc(var(--cmw) + 20px); }
@@ -5364,7 +5367,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       '<div class="upload"><label class="btn" for="d-file" id="d-up">Dokument hinzufügen</label><input type="file" id="d-file" multiple accept="application/pdf,image/*,video/*,.txt,.md,.csv,.json,.docx,.xlsx,.pptx,.zip,.epub"><span class="msg" id="d-msg">PDF, Word, Excel, PowerPoint, Bilder oder Textdateien.</span></div></div>';
     const actionsF = '<div class="actions">' + (opt.onPrint ? '<button class="btn" id="d-print" type="button" title="Druckt Kurzeintrag, Lernziele, Lektionsplanung und Notizen">Drucken</button>' : "") + '<div class="right"><button class="btn primary" id="d-close" type="button">Fertig</button></div></div>';
     let body;
-    if (opt.page) body = '<div hidden>' + textF + colorF + "</div>" + notesF.replace('aria-label="Notizen" id="d-notes" data-ph="Fragen, Hinweise, Tafelbild, Lösungen …', 'aria-label="Übersichtsseite" id="d-notes" data-ph="Allgemeine Notizen zur Reihe, z. B. wo welches Material zu finden ist (Buch, Seite, Ordner) …').replace('<span class="lbl">Notizen</span>', '<span class="lbl">Übersichtsseite</span>') + docsF + actionsF;
+    if (opt.page) body = (opt.pageText ? textF + '<div hidden>' + colorF + "</div>" : '<div hidden>' + textF + colorF + "</div>") + notesF.replace(/aria-label="Notizen" id="d-notes" data-ph="[^"]*"/, 'aria-label="' + esc(opt.pageLabel || "Übersichtsseite") + '" id="d-notes" data-ph="' + esc(opt.pagePh || "Allgemeine Notizen zur Reihe, z. B. wo welches Material zu finden ist (Buch, Seite, Ordner) …") + '"').replace('<span class="lbl">Notizen</span>', '<span class="lbl">' + esc(opt.pageLabel || "Übersichtsseite") + "</span>") + docsF + actionsF;
     else if (opt.plan) {
       // Lektion: oben ausklappbare Zusatzinfos, darunter Lektionsplanung und grosse Notizen
       ensurePlan(opt.plan);
@@ -5383,9 +5386,10 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     } else body = textF + (opt.todo ? '<div class="field d-todof"><button type="button" class="btn ghost tdb" id="d-tdb" title="Die Zeile mit der Schreibmarke bekommt ein Kästchen zum Abhaken (oder verliert es). Enter = nächstes To-do, Enter in einem leeren To-do = fertig.">'+'<span class="tdq"></span> To-do</button></div>' : "") + (opt.time ? '<div class="field d-timef"><span class="lbl">Zeit (freiwillig)</span><div class="d-time"><input type="time" id="d-from" value="' + esc(x.from || "") + '" aria-label="von"><span>bis</span><input type="time" id="d-to" value="' + esc(x.to || "") + '" aria-label="bis"><button type="button" class="btn ghost" id="d-tclr" title="Zeit entfernen">×</button>' + (x.split ? '<span class="msg">(erster Teil)</span>' : "") + "</div>" +
       (x.split ? Array.from({ length: (x.nparts || 2) - 1 }, (_, k) => { const n = k + 2; return '<div class="d-time" data-ptime="' + n + '"><input type="time" class="pf" value="' + esc(x["from" + n] || "") + '" aria-label="Teil ' + n + ' von"><span>bis</span><input type="time" class="pt" value="' + esc(x["to" + n] || "") + '" aria-label="Teil ' + n + ' bis"><button type="button" class="btn ghost pc" title="Zeit entfernen">×</button><span class="msg">(Teil ' + n + ")</span></div>"; }).join("") : "") + '</div>' : "") + colorF + notesF + docsF + actionsF;
     openModal(
-      '<h3 class="d-title">' + esc(opt.title) + "<small>" + esc(opt.sub || "") + "</small></h3>" + body,
+      '<h3 class="d-title">' + esc(opt.title) + "<small>" + esc(opt.sub || "") + "</small>" + (opt.modeSwitch ? '<span class="d-modes" role="group" aria-label="Materialsammlung öffnen als"><button type="button" data-dmode="m" aria-pressed="' + (opt.modeSwitch.cur === "m") + '" title="Grosse Materialseite: Screenshots, Bilder mit Namen, Notizen">Materialsammlung</button><button type="button" data-dmode="l" aria-pressed="' + (opt.modeSwitch.cur === "l") + '" title="Wie eine Lektion planen: Lernziele, Lektionsplanung, Notizen («Alias-Lektion», zählt nicht als Lektion)">Als Lektionsplanung</button></span>' : "") + "</h3>" + body,
       (root) => {
         const tText = $("#d-text"), tDet = $("#d-details");
+        if (opt.modeSwitch) root.querySelectorAll("[data-dmode]").forEach((b) => b.addEventListener("click", () => { if (b.dataset.dmode !== opt.modeSwitch.cur) opt.modeSwitch.set(b.dataset.dmode); }));
         if (conv) opt.changed();
         // Rückgängig/Wiederholen für die ganze Lektion (Planung, Lernziele, Kurzeintrag, Notizen)
         if (opt.plan) {
@@ -7741,7 +7745,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const plan = hasPlan(x.plan) ? clone(x.plan) : null;
       const o = { html: x.html || "", color: x.color || "", details: x.details || "", files: x.files || [] };
       if (filled(x.notesHtml) || /<img/.test(x.notesHtml || "")) o.notesHtml = x.notesHtml; if (x.notesLh) o.notesLh = x.notesLh; if (plan) o.plan = plan;
-      r.lnItems = (r.lnItems || []).slice(); const k = lnIdx(i), prev = r.lnItems[k] || {}; o.name = prev.name || ""; if (prev.mat) o.mat = true; if (prev.rid) o.rid = prev.rid; if (prev.lekt) o.lekt = prev.lekt; r.lnItems[k] = o; return;
+      r.lnItems = (r.lnItems || []).slice(); const k = lnIdx(i), prev = r.lnItems[k] || {}; o.name = prev.name || ""; const keep = { ...prev }; ["html", "text", "color", "details", "files", "notesHtml", "notesLh", "plan"].forEach((q) => delete keep[q]); r.lnItems[k] = { ...keep, ...o }; return;
     }
     r.lessons = (r.lessons || []).slice(); while (r.lessons.length <= i) r.lessons.push("");
     r.lessons[i] = x.html || "";
@@ -7753,10 +7757,18 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const id = rid || U.sel, r = U.reihen[id]; if (!r) return;
     if (isLN(i)) {
       const x = lessonX(r, i); dirtyU.add(id);
-      const isMat = !!lnItemOf(r, i).mat;
-      // Materialsammlung mit Lektionsplanung oder Bildern in den Notizen (z. B. aus einer Lektion umgewandelt): ganzes Lektionsfenster
-      const matFull = isMat && (hasPlan(x.plan) || /<(img|figure)\b/i.test(x.notesHtml || ""));
-      openDetailBox({ editDocs: true, title: r.title || "Reihe", sub: lnLabel(r, i), x, textLabel: isMat ? "Kurzzusammenfassung" : "Kurzeintrag in der Tabelle", plan: isMat && !matFull ? undefined : x.plan, reiheFiles: [...(r.mainFiles || []), ...(r.files || [])],
+      const it = lnItemOf(r, i), isMat = !!it.mat;
+      // Materialsammlung: als Materialseite (grosse Notizen mit Screenshots) oder als Lektionsplanung («Alias-Lektion»)
+      const asL = isMat && (it.asLesson === true || (it.asLesson == null && hasPlan(x.plan)));
+      const modeSwitch = isMat ? { cur: asL ? "l" : "m", set: (v) => { const rr = U.reihen[id]; if (!rr) return; putLessonX(rr, i, x); const k = lnIdx(i); rr.lnItems = (rr.lnItems || []).slice(); rr.lnItems[k] = { ...(rr.lnItems[k] || {}), asLesson: v === "l" }; saveReihe(id, 0); closeModal(); setTimeout(() => openLessonDetail(i, id, after), 30); } } : null;
+      if (isMat && !asL) {
+        openDetailBox({ editDocs: true, page: true, pageText: true, modeSwitch, title: r.title || "Reihe", sub: lnLabel(r, i), x, textLabel: "Kurzzusammenfassung (erscheint in der Reihe)", pageLabel: "Material", pagePh: "Material sammeln: Screenshots mit Strg+V einfügen, ein Klick aufs Bild = Grösse, Lage und Bildunterschrift (Name) … Dazu Notizen, wo was zu finden ist.", reiheFiles: [...(r.mainFiles || []), ...(r.files || [])],
+          onPrint: () => { const rr = U.reihen[id]; if (rr) printLesson(rr, i); },
+          changed: () => { const rr = U.reihen[id]; if (rr) { putLessonX(rr, i, x); saveReihe(id, 900); } },
+          onClose: () => { uFlush("r:" + id); renderU(); if (after) after(); } });
+        return;
+      }
+      openDetailBox({ editDocs: true, modeSwitch, title: r.title || "Reihe", sub: lnLabel(r, i), x, textLabel: isMat ? "Kurzzusammenfassung" : "Kurzeintrag in der Tabelle", plan: x.plan, reiheFiles: [...(r.mainFiles || []), ...(r.files || [])],
         onPrint: () => { const rr = U.reihen[id]; if (rr) printLesson(rr, i); },
         changed: () => { const rr = U.reihen[id]; if (rr) { putLessonX(rr, i, x); saveReihe(id, 900); } },
         onClose: () => { uFlush("r:" + id); renderU(); if (after) after(); } });
