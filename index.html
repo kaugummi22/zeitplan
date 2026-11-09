@@ -6334,48 +6334,36 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   const mastersOf = (id) => Object.entries(U.reihen).filter(([, m]) => m && !m.klasse && m.master && (m.children || []).some((c) => c && c.rid === id));
   const msArrow = (id) => { const ms = mastersOf(id); if (!ms.length) return ""; return '<span class="ms-up" data-msgo="' + ms[0][0] + '" role="button" title="Unterreihe von: ' + esc(ms.map(([, m]) => m.title || "Reihe").join(", ")) + ' – klicken öffnet die Masterreihe">↳ </span>'; };
   const effL = (r) => totalL(r) + shownChildren(r).reduce((a, c) => a + totalL(U.reihen[c.rid]), 0);
-  // Anpassungen einer Unterreihen-Lektion gelten nur in der Masterreihe (c.ov[i]); die Unterreihe bleibt unverändert
+  // Eine einzige Quelle: Die Masterreihe zeigt immer die Lektion der Unterreihe; Änderungen in der Masterreihe werden direkt in der Unterreihe gespeichert.
+  // (Frühere eigene Fassungen c.ov werden nicht mehr angezeigt und beim nächsten Bearbeiten der Lektion entfernt.)
   const strHash = (t) => { let h = 0; t = String(t); for (let k = 0; k < t.length; k++) h = (h * 31 + t.charCodeAt(k)) | 0; return String(h); };
   const chBase = (ch, i) => strHash(JSON.stringify([(ch.lessons || [])[i] || "", (ch.meta || {})[i] || {}]));
   function chLessonX(c, i) {
-    const ch = U.reihen[c.rid] || {}, ov = (c.ov || {})[i];
-    if (ov) return { html: ov.html || "", color: ov.color || "", details: ov.details || "", notesHtml: ov.notesHtml || "", notesLh: ov.notesLh || 0, plan: ov.plan ? clone(ov.plan) : {}, files: (ov.files || []).slice() };
-    const m = (ch.meta || {})[i] || {};
+    const ch = U.reihen[c.rid] || {}, m = (ch.meta || {})[i] || {};
     return { html: (ch.lessons || [])[i] || "", color: m.color || "", details: m.details || "", notesHtml: m.notesHtml != null ? m.notesHtml : plainToHtml(m.details || ""), notesLh: m.notesLh || 0, plan: m.plan ? clone(m.plan) : {}, files: (m.files || []).slice() };
   }
-  function putChOv(mid, rid, i, x) {
-    const r = U.reihen[mid]; if (!r) return;
-    r.children = (r.children || []).map((c) => {
-      if (c.rid !== rid) return c;
-      const ch = U.reihen[rid] || {}, old = (c.ov || {})[i];
-      const o = { html: x.html || "", color: x.color || "", details: x.details || "", files: x.files || [], base: old ? old.base : chBase(ch, i) };
-      if (filled(x.notesHtml) || /<img/.test(x.notesHtml || "")) o.notesHtml = x.notesHtml; if (x.notesLh) o.notesLh = x.notesLh; if (hasPlan(x.plan)) o.plan = clone(x.plan);
-      return { ...c, ov: { ...(c.ov || {}), [i]: o } };
-    });
+  function putChOv(mid, rid, i, x, delay) {
+    const ch = U.reihen[rid]; if (!ch) return;
+    putLessonX(ch, i, x); saveReihe(rid, delay);
+    for (const [id, m] of mastersOf(rid)) {
+      let hit = false;
+      m.children = (m.children || []).map((c) => { if (!c || c.rid !== rid || !(c.ov || {})[i]) return c; hit = true; const ov = { ...c.ov }; delete ov[i]; const n = { ...c, ov }; if (!Object.keys(ov).length) delete n.ov; return n; });
+      if (hit) saveReihe(id, delay);
+    }
   }
-  // Unterreihe so, wie sie in dieser Masterreihe erscheint (mit Anpassungen) – für Kopie und Druck
-  function childEff(c) {
-    const ch = U.reihen[c.rid]; if (!ch || !c.ov) return ch;
-    const e = { ...ch, lessons: (ch.lessons || []).slice(), meta: { ...(ch.meta || {}) } };
-    for (const [i, o] of Object.entries(c.ov)) { e.lessons[i] = o.html || ""; e.meta[i] = { ...(e.meta[i] || {}), color: o.color, details: o.details, notesHtml: o.notesHtml, notesLh: o.notesLh, plan: o.plan, files: o.files }; }
-    return e;
-  }
-  function setCopyCtx(mid, rid, f) {
-    const mr = U.reihen[mid], ch = U.reihen[rid]; window.__vctx = null;
-    if (!mr || !mr.master || !ch) return;
-    const L = chLetterOf(mr, rid) || "A", c = (mr.children || []).find((q) => q.rid === rid) || {}, cp = (c.fcopies || {})[f.id];
-    window.__vctx = { prefix: L + "_", sub: L + "_" + safeName(ch.title || "Unterreihe"), orig: f, view: { ...f, path: cp || undefined },
-      onCopied: (p) => { const m2 = U.reihen[mid]; if (!m2) return; m2.children = (m2.children || []).map((q) => (q.rid === rid ? { ...q, fcopies: { ...(q.fcopies || {}), [f.id]: p } } : q)); saveReihe(mid, 0); } };
-  }
+  // Unterreihe so, wie sie in der Masterreihe erscheint (für Kopie und Druck) – immer die Unterreihe selbst
+  function childEff(c) { return U.reihen[c.rid]; }
+  // Dokumente einer Unterreihe werden auch in der Masterreihe direkt bearbeitet (keine eigene Kopie mehr)
+  function setCopyCtx() { window.__vctx = null; }
   function openChildLessonDetail(rid, i) {
     const mid = U.sel, mr = U.reihen[mid], ch = U.reihen[rid]; if (!mr || !ch) return;
     const c = (mr.children || []).find((q) => q.rid === rid); if (!c) return;
     const x = chLessonX(c, i), L = chLetterOf(mr, rid), s = Number((ch.spans || {})[i]) || 1;
     dirtyU.add(mid);
     window.__vctxRid = rid;
-    openDetailBox({ editDocs: true, title: mr.title || "Masterreihe", sub: L + "·" + lessonLabel(i, s) + " · aus «" + (ch.title || "Unterreihe") + "» – Änderungen gelten nur hier", x, textLabel: "Kurzeintrag in der Tabelle", plan: x.plan, reiheFiles: [...(mr.mainFiles || []), ...(ch.mainFiles || [])],
-      changed: () => { putChOv(mid, rid, i, x); saveReihe(mid, 900); },
-      onClose: () => { window.__vctx = null; window.__vctxRid = null; uFlush("r:" + mid); renderU(); } });
+    openDetailBox({ editDocs: true, title: mr.title || "Masterreihe", sub: L + "·" + lessonLabel(i, s) + " · aus «" + (ch.title || "Unterreihe") + "» – Änderungen gelten auch in der Unterreihe", x, textLabel: "Kurzeintrag in der Tabelle", plan: x.plan, reiheFiles: [...(mr.mainFiles || []), ...(ch.mainFiles || [])],
+      changed: () => { putChOv(mid, rid, i, x, 900); },
+      onClose: () => { window.__vctx = null; window.__vctxRid = null; uFlush("r:" + rid); uFlush("r:" + mid); renderU(); } });
   }
   const chLetterOf = (r, rid) => { const n = chOrdered(r).findIndex((c) => c.rid === rid); return n < 0 ? "" : CH_LET(n); };
   const CH_LET = (n) => String.fromCharCode(65 + (n % 26));
@@ -7234,13 +7222,11 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         (it.empty ? '<div class="lesson ms-l" data-crid="' + esc(c.rid) + '"><div class="lh"></div><div class="cell ro"><span class="help">Noch keine Lektionen in dieser Unterreihe.</span></div><div class="ldocs"></div></div>' : "");
     }
     if (it.t === "cm") return childMatHtml(r, it);
-    const i = it.i, x = chLessonX(c, i), ov = (c.ov || {})[i], conflict = ov && ov.base !== chBase(ch, i);
+    const i = it.i, x = chLessonX(c, i);
     const more = !!(x.details || filled(x.notesHtml) || (x.files && x.files.length) || hasPlan(x.plan));
-    return '<div class="lesson ms-l' + (it.moved ? " ms-moved" : "") + (ov ? " ms-ov" : "") + '" data-crid="' + esc(c.rid) + '" data-clid="' + i + '"' + (it.moved ? ' data-cmoved="1"' : "") + '><div class="lh"><div class="lh-top"><b' + (r.klasse ? "" : ' class="l-drag" draggable="true" data-cldrag="' + esc(c.rid) + "|" + i + '" title="Ziehen: an eine andere Stelle, in eine andere Unterreihe oder zwischen die Lektionen der Masterreihe (dann gehört sie zur Masterreihe) · Rechtsklick (lange drücken): Menü"') + ">" + it.L + "·" + lessonLabel(i, it.s) + "</b>" +
-      '<button type="button" class="lexp' + (more ? " on" : "") + '" data-clexp="' + esc(c.rid) + "|" + i + '" title="Gross öffnen – Anpassungen gelten nur in dieser Masterreihe" aria-label="Lektion gross öffnen">+</button></div>' +
-      '<div class="ph ro">' + esc(phaseOf(ch, i)) + (it.moved ? ' <span class="ms-from">aus ' + esc(ch.title || "Unterreihe") + "</span>" : "") + "</div>" +
-      (ov ? '<span class="ms-ovtag">angepasst<button type="button" class="ms-reset" data-cvtake="' + esc(c.rid) + "|" + i + '" title="Anpassung verwerfen und wieder die Fassung der Unterreihe zeigen">↺</button></span>' : "") +
-      (conflict ? '<div class="cv-note">Die Unterreihe hat diese Lektion geändert.<button type="button" data-cvtake="' + esc(c.rid) + "|" + i + '">Neue Fassung übernehmen</button><button type="button" data-cvkeep="' + esc(c.rid) + "|" + i + '">Meine behalten</button></div>' : "") + "</div>" +
+    return '<div class="lesson ms-l' + (it.moved ? " ms-moved" : "") + '" data-crid="' + esc(c.rid) + '" data-clid="' + i + '"' + (it.moved ? ' data-cmoved="1"' : "") + '><div class="lh"><div class="lh-top"><b' + (r.klasse ? "" : ' class="l-drag" draggable="true" data-cldrag="' + esc(c.rid) + "|" + i + '" title="Ziehen: an eine andere Stelle, in eine andere Unterreihe oder zwischen die Lektionen der Masterreihe (dann gehört sie zur Masterreihe) · Rechtsklick (lange drücken): Menü"') + ">" + it.L + "·" + lessonLabel(i, it.s) + "</b>" +
+      '<button type="button" class="lexp' + (more ? " on" : "") + '" data-clexp="' + esc(c.rid) + "|" + i + '" title="Gross öffnen – Änderungen gelten auch in der Unterreihe" aria-label="Lektion gross öffnen">+</button></div>' +
+      '<div class="ph ro">' + esc(phaseOf(ch, i)) + (it.moved ? ' <span class="ms-from">aus ' + esc(ch.title || "Unterreihe") + "</span>" : "") + "</div></div>" +
       cellHtml2('data-rf="cov.' + esc(c.rid) + "." + i + '" aria-label="' + it.L + "·" + lessonLabel(i, it.s) + '"', x.html, { color: x.color, more }) +
       '<div class="ldocs">' + (x.files || []).map((f) => '<button type="button" class="doc" data-open-cfile="' + esc(c.rid) + "|" + esc(f.id) + "|" + i + '"><span class="tag">' + typeTag(f) + "</span><span>" + esc(f.name) + "</span></button>").join("") + "</div></div>";
   }
@@ -7993,7 +7979,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     }
     const r = U.reihen[U.sel]; if (!r) return;
     const f = t.dataset.rf;
-    if (f && f.startsWith("cov.")) { const parts = f.split("."), ci = +parts.pop(), rid = parts.slice(1).join("."); const c = (r.children || []).find((q) => q.rid === rid); if (!c) return; const x = chLessonX(c, ci); x.html = val; putChOv(U.sel, rid, ci, x); saveReihe(U.sel); return; }
+    if (f && f.startsWith("cov.")) { const parts = f.split("."), ci = +parts.pop(), rid = parts.slice(1).join("."); const c = (r.children || []).find((q) => q.rid === rid); if (!c) return; const x = chLessonX(c, ci); x.html = val; putChOv(U.sel, rid, ci, x); return; }
     if (f && f.startsWith("cln.")) { const parts = f.split("."), k = +parts.pop(), rid = parts.slice(1).join("."), ch = U.reihen[rid]; if (!ch) return; ch.lnItems = (ch.lnItems || []).slice(); ch.lnItems[k] = { ...(ch.lnItems[k] || {}), html: val }; saveReihe(rid); return; }
     if (/^lnItems\.\d+\.html$/.test(f)) { const k = +f.split(".")[1]; r.lnItems = (r.lnItems || []).slice(); r.lnItems[k] = { ...(r.lnItems[k] || {}), html: val }; saveReihe(U.sel); return; }
     if (f.startsWith("lessons.")) {
