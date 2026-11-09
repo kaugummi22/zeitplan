@@ -2177,14 +2177,13 @@ main.wrap:has(#u-view-reihen:not([hidden]) .r-layout.ueb-on) { max-width: none; 
 .ueb-right { margin-left: auto; display: flex; gap: 4px; }
 .ueb-right .btn { padding-top: 2px; padding-bottom: 2px; font-size: 0.85rem; }
 .ueb-scroll { flex: 1; overflow: auto; min-height: 0; }
-.ueb-sheet { position: relative; min-height: 100%; font-family: Candara, "Avenir Next", "Segoe UI", "Trebuchet MS", sans-serif; font-size: 1.05rem; color: var(--ink); --ul: 28px;
-  background: linear-gradient(90deg, transparent 52px, color-mix(in srgb, #e57373 45%, transparent) 52px 53px, transparent 53px), repeating-linear-gradient(to bottom, transparent 0 calc(var(--ul) - 1px), color-mix(in srgb, var(--accent) 14%, transparent) calc(var(--ul) - 1px) var(--ul)); background-position: 0 12px; }
-.ueb-sheet.free { cursor: crosshair; background-color: color-mix(in srgb, var(--accent) 4%, transparent); }
+.ueb-sheet { position: relative; min-height: 100%; font-family: Candara, "Avenir Next", "Segoe UI", "Trebuchet MS", sans-serif; font-size: var(--ufs, 1.05rem); color: var(--ink); --ulh: 1.3; }
+.ueb-sheet.free { cursor: crosshair; background-color: color-mix(in srgb, var(--accent) 4%, transparent); background-image: radial-gradient(color-mix(in srgb, var(--muted) 25%, transparent) 1px, transparent 1px); background-size: 24px 24px; }
 .ueb-sheet.file-drop { outline: 3px dashed var(--accent); outline-offset: -6px; }
-.ueb-page.notes-ed { min-height: 120px; border: 0; border-radius: 0; background: none; padding: 12px 16px 12px 64px; line-height: var(--ul); }
+.ueb-page.notes-ed { min-height: 120px; border: 0; border-radius: 0; background: none; padding: 14px 20px; line-height: var(--ulh); }
 .ueb-page.notes-ed:focus { border: 0; }
 .ueb-sheet.free .ueb-page { cursor: crosshair; }
-.ueb-page .nsec { font-size: 0.95em; color: var(--accent); margin: 14px 0 4px; line-height: var(--ul); }
+.ueb-page .nsec { font-size: 0.95em; color: var(--accent); margin: 14px 0 4px; line-height: 1.4; }
 .ueb-page figure.nfig { margin: 6px 0; } .ueb-page figure.nfig img { max-width: 100%; }
 .ueb-page figure.nfig.w33 { width: 33%; } .ueb-page figure.nfig.w50 { width: 50%; } .ueb-page figure.nfig.w75 { width: 75%; }
 #ueb-free[aria-pressed="true"] { background: var(--accent); color: #fff; border-radius: 6px; }
@@ -2200,7 +2199,8 @@ main.wrap:has(#u-view-reihen:not([hidden]) .r-layout.ueb-on) { max-width: none; 
 .ueb-rs { position: absolute; right: -4px; bottom: -4px; width: 14px; height: 14px; cursor: nwse-resize; touch-action: none; visibility: hidden; }
 .ueb-rs::after { content: ""; position: absolute; right: 4px; bottom: 4px; width: 7px; height: 7px; border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent); }
 .ueb-it:hover .ueb-rs, .ueb-it.sel .ueb-rs, .ueb-it:focus-within .ueb-rs { visibility: visible; }
-.ueb-txt { outline: none; min-height: 1.5em; line-height: var(--ul); padding: 0 4px; overflow-wrap: anywhere; }
+.ueb-txt { outline: none; min-height: 1.5em; line-height: var(--ulh); padding: 0 4px; overflow-wrap: anywhere; }
+.ueb-txt font[size="2"], .ueb-txt font[size="1"] { font-size: 85%; } .ueb-txt font[size="4"] { font-size: 125%; } .ueb-txt font[size="5"], .ueb-txt font[size="6"], .ueb-txt font[size="7"] { font-size: 150%; }
 .ueb-txt ul, .ueb-txt ol { margin: 2px 0; padding-left: 22px; }
 .ueb-txt img { max-width: 100%; height: auto; }
 .ueb-img > img { display: block; width: 100%; height: auto; border-radius: 4px; cursor: move; touch-action: none; user-select: none; }
@@ -6675,7 +6675,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     lay.style.setProperty("--uw", (UEBS.w || 50) + "%");
     pane.hidden = gut.hidden = !on;
     if (!on) { pane.innerHTML = ""; pane.dataset.rid = ""; pane.dataset.sig = ""; return; }
-    const u = uebData(r), sig = JSON.stringify([u.html, u.items]);
+    const u = uebData(r), sig = JSON.stringify([u.html, u.items, u.lh || 0, u.fs || 0]);
     if (pane.dataset.rid === rid && pane.dataset.sig === sig && pane.querySelector(".ueb-sheet")) { uebBarState(pane); return; }
     if (pane.dataset.rid === rid && pane.contains(document.activeElement) && document.activeElement.isContentEditable) return;
     uebMount(pane, rid);
@@ -6696,12 +6696,14 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   function uebMount(pane, rid) {
     const r = U.reihen[rid]; if (!r) return;
     const u0 = uebData(r);
-    pane.dataset.rid = rid; pane.dataset.sig = JSON.stringify([u0.html, u0.items]);
+    pane.dataset.rid = rid; pane.dataset.sig = JSON.stringify([u0.html, u0.items, u0.lh || 0, u0.fs || 0]);
     const TB = (cmd, label, title, cls) => '<button type="button" class="nb' + (cls ? " " + cls : "") + '" data-ucmd="' + cmd + '" title="' + title + '" aria-label="' + title + '">' + label + "</button>";
     pane.innerHTML = '<div class="ueb-bar"><span class="ueb-name">Übersichtsseite</span><span class="ueb-tools">' +
       '<button type="button" class="nb" id="ueb-undo" title="Letzte Änderung rückgängig machen" aria-label="Rückgängig">↶</button><span class="nsep"></span>' +
       '<button type="button" class="nb nimg ueb-free" id="ueb-free" aria-pressed="false" title="Frei schreiben: irgendwo hinklicken und schreiben, Bilder frei hinlegen (wie in OneNote). Ausgeschaltet: normale Seite">✥ Frei schreiben</button><span class="nsep"></span>' +
-      TB("bold", "<b>F</b>", "Fett (Strg+B)") + TB("italic", "<i>K</i>", "Kursiv (Strg+I)") + TB("underline", "<u>U</u>", "Unterstrichen (Strg+U)") + TB("hl", "", "Gelb markieren", "sw-y") + TB("hlx", "✕", "Markierung entfernen", "sw-x") +
+      TB("bold", "<b>F</b>", "Fett (Strg+B)") + TB("italic", "<i>K</i>", "Kursiv (Strg+I)") + TB("underline", "<u>U</u>", "Unterstrichen (Strg+U)") + '<span class="nsep"></span>' +
+      TB("size:2", '<span style="font-size:11px">A</span>', "Kleine Schrift (markierter Text)") + TB("size:3", '<span style="font-size:14px">A</span>', "Normale Schrift (markierter Text)") + TB("size:4", '<span style="font-size:17px">A</span>', "Grosse Schrift (markierter Text)") + TB("size:5", '<span style="font-size:20px">A</span>', "Sehr grosse Schrift (markierter Text)") +
+      '<button type="button" class="nb nimg" id="ueb-lh" aria-haspopup="menu" title="Zeilenabstand der markierten Zeilen oder der ganzen Seite, Schriftgrösse der ganzen Seite">Zeilenabstand ▾</button><span class="nsep"></span>' + TB("hl", "", "Gelb markieren", "sw-y") + TB("hlx", "✕", "Markierung entfernen", "sw-x") +
       TB("insertUnorderedList", "•", "Aufzählung") + TB("ls", '<span class="ls">✎</span>', "Lehrerschrift (Strg+Umschalt+L)", "nls") + '<span class="nsep"></span>' +
       '<button type="button" class="nb nimg" id="ueb-sec" title="Abschnitt mit Titel einfügen (lässt sich zuklappen und samt Inhalt und freien Notizen nach oben/unten schieben)">§ Abschnitt</button>' +
       '<label class="nb nimg" title="Bild einfügen">🖼 Bild<input type="file" id="ueb-img" accept="image/*" multiple hidden></label></span>' +
@@ -6750,13 +6752,16 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     };
     const save = (now) => {
       clearTimeout(saveT);
-      const go = () => { const rr = R(); if (!rr) return; const u = uebData(rr); norm(); u.html = uebSan(page.innerHTML); pane.dataset.sig = JSON.stringify([u.html, u.items]); saveReihe(rid, 300); setTimeout(() => uebBarState(pane), 700); };
+      const go = () => { const rr = R(); if (!rr) return; const u = uebData(rr); norm(); u.html = uebSan(page.innerHTML); pane.dataset.sig = JSON.stringify([u.html, u.items, u.lh || 0, u.fs || 0]); saveReihe(rid, 300); setTimeout(() => uebBarState(pane), 700); };
       if (now) go(); else saveT = setTimeout(go, 600);
     };
     const itHtml = (q) => '<div class="ueb-it ueb-' + q.t + '" data-id="' + esc(q.id) + '"><div class="ueb-grip" title="Ziehen zum Verschieben"></div><button type="button" class="ueb-x" title="Entfernen" aria-label="Entfernen">×</button>' +
       (q.t === "img" ? '<img src="' + esc(q.src) + '" alt="" draggable="false">' : '<div class="ueb-txt" contenteditable="true" role="textbox" aria-multiline="true">' + sanitizeNotes(q.html || "") + "</div>") + '<div class="ueb-rs" title="Ziehen für die Grösse"></div></div>';
     const deco = () => { nsecDeco(page); page.querySelectorAll("figure.nfig").forEach((f) => { f.contentEditable = "false"; }); };
     const setFree = () => { const on = !!UEBS.free; sheet.classList.toggle("free", on); page.contentEditable = on ? "false" : "true"; say(on ? HINT_F : HINT_N); uebBarState(pane); };
+    const ULH = [[1.15, "eng"], [1.3, "mittel"], [1.5, "normal"], [1.8, "weit"]], UFS = [[0.9, "klein"], [1.05, "mittel"], [1.2, "gross"]];
+    const look = () => { const u = U_(); if (!u) return; sheet.style.setProperty("--ulh", String(u.lh || 1.3)); sheet.style.setProperty("--ufs", (u.fs || 1.05) + "rem"); };
+    look();
     sheet.insertAdjacentHTML("beforeend", u0.items.map(itHtml).join(""));
     norm(); deco(); setFree(); uebBarState(pane);
     setTimeout(place, 0); sheet.querySelectorAll("img").forEach((im) => im.addEventListener("load", place));
@@ -6891,18 +6896,40 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     sheet.addEventListener("drop", (e) => { sheet.classList.remove("file-drop"); const fl = [...((e.dataTransfer && e.dataTransfer.files) || [])].filter((f) => /^image\//.test(f.type)); if (!fl.length) return; e.preventDefault(); e.stopPropagation(); if (UEBS.free) putImgs(fl, at(e), false); else { const p = at(e); const cr = document.caretRangeFromPoint ? document.caretRangeFromPoint(e.clientX, e.clientY) : null; if (cr && page.contains(cr.startContainer)) { page.focus(); const s = getSelection(); s.removeAllRanges(); s.addRange(cr); } putImgs(fl, p, true); } });
     pane.querySelector("#ueb-img").addEventListener("change", (e) => { const fl = [...e.target.files]; e.target.value = ""; if (UEBS.free) putImgs(fl, last || { x: 24, y: page.offsetHeight + 12 }, false); else putImgs(fl, null, true); });
     // Leiste
-    pane.querySelector(".ueb-bar").addEventListener("mousedown", (e) => { if (e.target.closest("[data-ucmd], #ueb-sec")) e.preventDefault(); });
+    pane.querySelector(".ueb-bar").addEventListener("mousedown", (e) => { if (e.target.closest("[data-ucmd], #ueb-sec, #ueb-lh")) e.preventDefault(); });
     pane.querySelector(".ueb-bar").addEventListener("click", (e) => {
       const b = e.target.closest("button"); if (!b) return;
       if (b.id === "ueb-close") { save(true); UEBS.open = false; uebsSave(); renderU(); return; }
       if (b.id === "ueb-free") { UEBS.free = !UEBS.free; uebsSave(); const a = document.activeElement; if (a && pane.contains(a) && a.blur) a.blur(); setFree(); return; }
       if (b.id === "ueb-solo") { UEBS.solo = !UEBS.solo; uebsSave(); const lay = pane.closest(".r-layout"); if (lay) lay.classList.toggle("ueb-solo", UEBS.solo); uebBarState(pane); setTimeout(place, 0); return; }
       if (b.id === "ueb-undo") { const rb = $("#r-undo"); if (rb && !rb.disabled) { save(true); const a = document.activeElement; if (a && a.blur) a.blur(); setTimeout(() => rb.click(), 0); } return; }
+      if (b.id === "ueb-lh") {
+        const s0 = getSelection(), host = s0.rangeCount ? [page, ...sheet.querySelectorAll(".ueb-txt")].find((h) => h.contains(s0.anchorNode)) : null, rg = host ? s0.getRangeAt(0).cloneRange() : null, u = U_();
+        menu(b, '<div class="cm-title">Markierte Zeilen</div>' + (host ? [[1, "eng"], [2, "normal"], [3, "weit"], [4, "sehr weit"]].map(([k, l]) => '<button type="button" role="menuitem" data-um="l' + k + '">' + l + "</button>").join("") + '<button type="button" role="menuitem" data-um="l0">↺ Wie die ganze Seite</button>' : '<span class="help ndoc-mh">Zuerst Zeilen markieren bzw. in den Text klicken.</span>') +
+          '<hr><div class="cm-title">Zeilenabstand der ganzen Seite</div>' + ULH.map(([v, l]) => '<button type="button" role="menuitem" data-um="p' + v + '">' + l + ((u.lh || 1.3) === v ? ' <span class="nlh-d">✓</span>' : "") + "</button>").join("") +
+          '<hr><div class="cm-title">Schriftgrösse der ganzen Seite</div>' + UFS.map(([v, l]) => '<button type="button" role="menuitem" data-um="f' + v + '">' + l + ((u.fs || 1.05) === v ? ' <span class="nlh-d">✓</span>' : "") + "</button>").join(""), (k) => {
+          const uu = U_(); if (!uu || !k) return;
+          if (k[0] === "p") { const v = +k.slice(1); if (v === 1.3) delete uu.lh; else uu.lh = v; look(); place(); save(true); return; }
+          if (k[0] === "f") { const v = +k.slice(1); if (v === 1.05) delete uu.fs; else uu.fs = v; look(); place(); save(true); return; }
+          if (!host || !rg) return; const lk = +k.slice(1);
+          let run = []; const flush = () => { if (run.length && run.some((n) => rg.intersectsNode(n))) { const d = document.createElement("div"); run[0].before(d); run.forEach((n) => d.appendChild(n)); } run = []; };
+          [...host.childNodes].forEach((n) => { if (n.nodeType === 3 || (n.nodeType === 1 && /^(B|I|U|SPAN|MARK|A|BR|STRONG|EM|FONT)$/.test(n.tagName))) run.push(n); else flush(); }); flush();
+          const BL = "div, p, li, h1, h2, h3, h4, h5, h6, blockquote";
+          let bl = [...host.querySelectorAll(BL)].filter((el) => rg.intersectsNode(el) && !el.closest("td, th, .nsec, figure") && !el.querySelector(BL + ", ul, ol, table, figure"));
+          if (!bl.length && host.classList.contains("ueb-txt")) bl = [host];
+          bl.forEach((el) => { el.classList.remove("lhn-1", "lhn-2", "lhn-3", "lhn-4"); if (lk) el.classList.add("lhn-" + lk); if (!el.className) el.removeAttribute("class"); });
+          host.focus(); const sl = getSelection(); sl.removeAllRanges(); sl.addRange(rg); host.dispatchEvent(new Event("input", { bubbles: true }));
+        });
+        return;
+      }
       if (b.id === "ueb-sec") { menu(b, '<div class="cm-title">Abschnitt einfügen</div><div class="nsm-own"><input type="text" maxlength="120" placeholder="Titel, z. B. Material oder Epoche" aria-label="Titel des Abschnitts"><button type="button" class="btn primary" data-um="ok">Einfügen</button></div>', (k, v) => { if (k === "ok" && v) { if (UEBS.free) { UEBS.free = false; uebsSave(); setFree(); } secInsert(v); } }); return; }
       const c = b.dataset.ucmd; if (!c) return;
       const a = document.activeElement, t = a && a.classList && (a.classList.contains("ueb-txt") || a.classList.contains("ueb-page")) ? a : null;
       if (!t) { say("Zuerst in den Text klicken bzw. Text markieren."); return; }
+      // Dreifachklick markiert bis an den Anfang des nächsten Absatzes: Ende zurücknehmen, sonst verschmilzt der Browser die Absätze
+      { const sl = getSelection(); if (sl.rangeCount) { const rg = sl.getRangeAt(0); if (!rg.collapsed && rg.endOffset === 0 && rg.endContainer !== rg.startContainer) { const tw = document.createTreeWalker(t, NodeFilter.SHOW_TEXT); let lastT = null; for (let n = tw.nextNode(); n; n = tw.nextNode()) { if (rg.comparePoint(n, n.length) > 0) break; if (n.length && rg.comparePoint(n, 0) >= 0) lastT = n; } if (lastT) { rg.setEnd(lastT, lastT.length); sl.removeAllRanges(); sl.addRange(rg); } } } }
       if (c === "ls") lsToggle(t);
+      else if (c.startsWith("size:")) document.execCommand("fontSize", false, c.slice(5));
       else if (c === "hl" || c === "hlx") { try { document.execCommand("styleWithCSS", false, true); } catch (err) {} document.execCommand("hiliteColor", false, c === "hl" ? HL.y : "transparent"); try { document.execCommand("styleWithCSS", false, false); } catch (err) {} }
       else document.execCommand(c, false, null);
       t.dispatchEvent(new Event("input", { bubbles: true }));
