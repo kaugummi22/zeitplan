@@ -2178,6 +2178,21 @@ main.wrap:has(#u-view-reihen:not([hidden]) .r-layout.ueb-on) { max-width: none; 
 .ueb-right .btn { padding-top: 2px; padding-bottom: 2px; font-size: 0.85rem; }
 .ueb-scroll { flex: 1; overflow: auto; min-height: 0; }
 .ueb-in { display: contents; }
+.ufl { position: fixed; z-index: 900; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 18px 50px rgba(0,0,0,.28); overflow: hidden; min-width: 0; }
+.ufl.max { left: 6px !important; top: 6px !important; width: calc(100vw - 12px) !important; height: calc(100vh - 12px) !important; }
+.ufl-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 8px 12px; border-bottom: 1px solid var(--line); cursor: move; user-select: none; touch-action: none; background: color-mix(in srgb, var(--accent) 6%, var(--surface)); }
+.ufl-t { font-weight: 700; } .ufl-t small { font-weight: 500; color: var(--muted); margin-left: 8px; }
+.ufl-head .d-modes { margin-left: 0; }
+.ufl-btns { margin-left: auto; display: flex; gap: 6px; }
+.ufl-btns .btn { padding-top: 3px; padding-bottom: 3px; }
+.ufl-kurz { display: flex; align-items: center; gap: 10px; padding: 6px 12px; border-bottom: 1px solid var(--line); }
+.ufl-kurz .lbl { white-space: nowrap; } .ufl-kurz .rtfield { flex: 1; min-height: 0; padding: 3px 8px; }
+.ufl .ufl-pane { position: static; flex: 1; height: auto; min-height: 0; border: 0; border-radius: 0; }
+.ufl-rs { position: absolute; right: 0; bottom: 0; width: 18px; height: 18px; cursor: nwse-resize; touch-action: none; background: linear-gradient(135deg, transparent 50%, color-mix(in srgb, var(--muted) 55%, transparent) 50% 60%, transparent 60% 70%, color-mix(in srgb, var(--muted) 55%, transparent) 70% 80%, transparent 80%); }
+.ufl.max .ufl-rs { display: none; }
+#uebmenu { z-index: 1000; }
+html.phone .ufl { left: 0 !important; top: 0 !important; width: 100vw !important; height: 100vh !important; border-radius: 0; }
+
 .d-modes { display: inline-flex; margin-left: 14px; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; vertical-align: middle; font-size: 0.8rem; font-weight: 600; }
 .d-modes button { border: 0; background: var(--surface); color: var(--muted); padding: 3px 10px; cursor: pointer; font: inherit; }
 .d-modes button[aria-pressed="true"] { background: var(--accent); color: #fff; }
@@ -6656,8 +6671,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   const uebHas = (r) => !!(r && r.ueb);
   const uebOn = (r) => uebHas(r) && !r.klasse && !!UEBS.open;
   const uebId = () => "u" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-  function uebData(r) {
-    const u = r.ueb || (r.ueb = {});
+  function uebData(r) { return uebNorm(r.ueb || (r.ueb = {})); }
+  function uebNorm(u) {
     if (typeof u.html !== "string") u.html = u.notesHtml && (filled(u.notesHtml) || /<(img|figure|table)\b/i.test(u.notesHtml)) ? uebSan(u.notesHtml) : "";
     if (!Array.isArray(u.items)) u.items = [];
     delete u.notesHtml; delete u.notesLh;
@@ -6709,13 +6724,13 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const f = pane.querySelector("#ueb-free"); if (f) f.setAttribute("aria-pressed", String(!!UEBS.free));
     const u = pane.querySelector("#ueb-undo"), rb = $("#r-undo"); if (u) u.disabled = !rb || rb.disabled;
   }
-  function uebMount(pane, rid) {
-    const r = U.reihen[rid]; if (!r) return;
-    const u0 = uebData(r);
+  function uebMount(pane, rid, ctx) {
+    const r = U.reihen[rid]; if (!r && !ctx) return;
+    const u0 = ctx ? uebNorm(ctx.data()) : uebData(r);
     pane.dataset.rid = rid; pane.dataset.sig = JSON.stringify([u0.html, u0.items, u0.lh || 0, u0.fs || 0, u0.cm || ""]);
     const TB = (cmd, label, title, cls) => '<button type="button" class="nb' + (cls ? " " + cls : "") + '" data-ucmd="' + cmd + '" title="' + title + '" aria-label="' + title + '">' + label + "</button>";
-    pane.innerHTML = '<div class="ueb-in"><div class="ueb-bar"><span class="ueb-name">Übersichtsseite</span><span class="ueb-tools">' +
-      '<button type="button" class="nb" id="ueb-undo" title="Letzte Änderung rückgängig machen" aria-label="Rückgängig">↶</button><span class="nsep"></span>' +
+    pane.innerHTML = '<div class="ueb-in"><div class="ueb-bar"><span class="ueb-name">' + esc(ctx ? ctx.name || "Seite" : "Übersichtsseite") + '</span><span class="ueb-tools">' +
+      '<button type="button" class="nb" id="ueb-undo"' + (ctx ? " hidden" : "") + ' title="Letzte Änderung rückgängig machen" aria-label="Rückgängig">↶</button><span class="nsep"></span>' +
       '<button type="button" class="nb nimg ueb-free" id="ueb-free" aria-pressed="false" title="Frei schreiben: irgendwo hinklicken und schreiben, Bilder frei hinlegen (wie in OneNote). Ausgeschaltet: normale Seite">✥ Frei schreiben</button><span class="nsep"></span>' +
       TB("bold", "<b>F</b>", "Fett (Strg+B)") + TB("italic", "<i>K</i>", "Kursiv (Strg+I)") + TB("underline", "<u>U</u>", "Unterstrichen (Strg+U)") + '<span class="nsep"></span>' +
       TB("size:2", '<span style="font-size:11px">A</span>', "Kleine Schrift (markierter Text)") + TB("size:3", '<span style="font-size:14px">A</span>', "Normale Schrift (markierter Text)") + TB("size:4", '<span style="font-size:17px">A</span>', "Grosse Schrift (markierter Text)") + TB("size:5", '<span style="font-size:20px">A</span>', "Sehr grosse Schrift (markierter Text)") +
@@ -6723,7 +6738,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       TB("insertUnorderedList", "•", "Aufzählung") + TB("ls", '<span class="ls">✎</span>', "Lehrerschrift (Strg+Umschalt+L)", "nls") + '<span class="nsep"></span>' +
       '<button type="button" class="nb nimg" id="ueb-sec" title="Abschnitt mit Titel einfügen (lässt sich zuklappen und samt Inhalt und freien Notizen nach oben/unten schieben)">§ Abschnitt</button>' +
       '<label class="nb nimg" title="Bild einfügen">🖼 Bild<input type="file" id="ueb-img" accept="image/*" multiple hidden></label></span>' +
-      '<span class="ueb-right"><button type="button" class="btn ghost" id="ueb-solo"></button><button type="button" class="btn ghost" id="ueb-close" title="Übersichtsseite einklappen – die Reihenliste erscheint wieder">✕ Einklappen</button></span></div>' +
+      (ctx ? "" : '<span class="ueb-right"><button type="button" class="btn ghost" id="ueb-solo"></button><button type="button" class="btn ghost" id="ueb-close" title="Übersichtsseite einklappen – die Reihenliste erscheint wieder">✕ Einklappen</button></span>') + "</div>" +
       '<div class="ueb-scroll"><div class="ueb-sheet"><div class="ueb-mline" aria-hidden="true"></div><div class="notes-ed ueb-cm" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Kommentare im Rand" data-ph="Kommentare, Stichpunkte … auf der gewünschten Höhe hineinklicken."></div><button type="button" class="ueb-tab" id="ueb-tab"></button><div class="notes-ed ueb-page" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Übersichtsseite" data-ph="Notizen zur Reihe: was alles hinein muss, Gedanken, wo welches Material ist … Screenshots mit Strg+V.">' + u0.html + '</div></div></div>' +
       '<div class="ueb-hint" id="ueb-msg"></div></div>';
     const root = pane.firstElementChild; // Ereignisse hier anhängen: das Feld selbst bleibt beim Neuaufbau bestehen
@@ -6733,7 +6748,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     let last = null, saveT = null, kText = {};
     const say = (t) => { msg.textContent = t; };
     const R = () => U.reihen[rid];
-    const U_ = () => { const rr = R(); return rr ? uebData(rr) : null; };
+    const U_ = ctx ? () => { const d = ctx.data(); return d ? uebNorm(d) : null; } : () => { const rr = R(); return rr ? uebData(rr) : null; };
     const itemOf = (el) => { const u = U_(); return u && u.items.find((q) => q.id === el.dataset.id); };
     const blocks = () => [...page.children];
     const kOf = (k) => (k ? page.querySelector(':scope > [data-k="' + k + '"]') : null);
@@ -6800,7 +6815,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     };
     const save = (now) => {
       clearTimeout(saveT);
-      const go = () => { const rr = R(); if (!rr) return; const u = uebData(rr); norm(); u.html = uebSan(page.innerHTML); pane.dataset.sig = JSON.stringify([u.html, u.items, u.lh || 0, u.fs || 0, u.cm || ""]); saveReihe(rid, 300); setTimeout(() => uebBarState(pane), 700); };
+      const go = () => { const u = U_(); if (!u) return; norm(); u.html = uebSan(page.innerHTML); pane.dataset.sig = JSON.stringify([u.html, u.items, u.lh || 0, u.fs || 0, u.cm || ""]); if (ctx) ctx.save(); else saveReihe(rid, 300); setTimeout(() => uebBarState(pane), 700); };
       if (now) go(); else saveT = setTimeout(go, 600);
     };
     const itHtml = (q) => '<div class="ueb-it ueb-' + q.t + '" data-id="' + esc(q.id) + '"><div class="ueb-grip" title="Ziehen zum Verschieben"></div><button type="button" class="ueb-x" title="Entfernen" aria-label="Entfernen">×</button>' +
@@ -6893,7 +6908,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       nsecDeco(page); place(); save(true);
       if (k === "up" || k === "down") { d.scrollIntoView({ block: "nearest" }); d.classList.add("flash"); setTimeout(() => d.classList.remove("flash"), 900); }
     });
-    const figMenu = (fg) => menu(fg, '<div class="cm-title">Bild</div><button type="button" role="menuitem" data-um="w33">Klein</button><button type="button" role="menuitem" data-um="w50">Mittel</button><button type="button" role="menuitem" data-um="w75">Gross</button><button type="button" role="menuitem" data-um="w0">Ganze Breite</button><hr><button type="button" role="menuitem" class="cm-danger" data-um="del">🗑 Entfernen</button>', (k) => {
+    const figMenu = (fg) => menu(fg, '<div class="cm-title">Bild</div><div class="nsm-own"><input type="text" maxlength="160" placeholder="Name bzw. Bildunterschrift" value="' + esc(((fg.querySelector("figcaption") || {}).textContent || "").trim()) + '" aria-label="Name des Bildes"><button type="button" class="btn primary" data-um="ok">OK</button></div><hr><button type="button" role="menuitem" data-um="w33">Klein</button><button type="button" role="menuitem" data-um="w50">Mittel</button><button type="button" role="menuitem" data-um="w75">Gross</button><button type="button" role="menuitem" data-um="w0">Ganze Breite</button><hr><button type="button" role="menuitem" class="cm-danger" data-um="del">🗑 Entfernen</button>', (k, v) => {
+      if (k === "ok") { let fc = fg.querySelector("figcaption"); if (v) { if (!fc) { fc = document.createElement("figcaption"); fg.appendChild(fc); } fc.textContent = v; } else if (fc) fc.remove(); place(); save(true); return; }
       if (k === "del") fg.remove(); else { fg.classList.remove("w25", "w33", "w50", "w75", "w100"); if (k !== "w0") fg.classList.add(k); }
       place(); save(true);
     });
@@ -7753,6 +7769,52 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const plan = hasPlan(x.plan) ? clone(x.plan) : null;
     if (x.color || x.details || filled(x.notesHtml) || (x.files && x.files.length) || plan) { r.meta[i] = { color: x.color || "", details: x.details || "", files: x.files || [] }; if (filled(x.notesHtml) || /<img/.test(x.notesHtml || "")) r.meta[i].notesHtml = x.notesHtml; if (x.notesLh) r.meta[i].notesLh = x.notesLh; if (plan) r.meta[i].plan = plan; } else delete r.meta[i];
   }
+  // Materialsammlung als eigene Seite (wie die Übersichtsseite) in einem verschiebbaren Fenster im Vordergrund;
+  // Grösse an der Ecke unten rechts ziehen, «⤢» = ganzer Bildschirm. Gespeichert in lnItems[k].page, der Haupttext auch als notesHtml (für «Als Lektionsplanung»).
+  let UFL = {}; try { UFL = JSON.parse(localStorage.getItem("zp-ufl") || "{}") || {}; } catch (e) {}
+  function openMatPage(i, id, after) {
+    const old = document.getElementById("ufl"); if (old && old._close) old._close(true);
+    const r = U.reihen[id]; if (!r) return; const k = lnIdx(i);
+    const item = () => { const rr = U.reihen[id]; return rr && rr.lnItems && rr.lnItems[k]; };
+    const m0 = item(); if (!m0) return;
+    // in «Als Lektionsplanung» geänderte Notizen übernehmen
+    if (!m0.page) m0.page = { notesHtml: m0.notesHtml != null ? m0.notesHtml : plainToHtml(m0.details || "") };
+    else if (m0.notesHtml != null && typeof m0.page.html === "string" && sanitizeNotes(m0.notesHtml) !== sanitizeNotes(m0.page.html)) m0.page.html = uebSan(m0.notesHtml);
+    dirtyU.add(id);
+    const w = document.createElement("div"); w.className = "ufl" + (UFL.max ? " max" : ""); w.id = "ufl"; w.setAttribute("role", "dialog"); w.setAttribute("aria-label", "Materialsammlung");
+    const vw = innerWidth, vh = innerHeight, W = Math.min(UFL.w || Math.round(vw * 0.72), vw - 16), H = Math.min(UFL.h || Math.round(vh * 0.82), vh - 16);
+    w.style.width = W + "px"; w.style.height = H + "px"; w.style.left = Math.max(8, Math.min(vw - W - 8, UFL.x != null ? UFL.x : Math.round((vw - W) / 2))) + "px"; w.style.top = Math.max(8, Math.min(vh - H - 8, UFL.y != null ? UFL.y : Math.round((vh - H) / 2))) + "px";
+    w.innerHTML = '<div class="ufl-head"><span class="ufl-t">' + esc(r.title || "Reihe") + "<small>" + esc(lnLabel(r, i)) + '</small></span><span class="d-modes" role="group" aria-label="Materialsammlung öffnen als"><button type="button" data-umode="m" aria-pressed="true" title="Seite für Material: Screenshots, Bilder mit Namen, Notizen, frei schreiben">Materialsammlung</button><button type="button" data-umode="l" aria-pressed="false" title="Wie eine Lektion planen: Lernziele, Lektionsplanung, Notizen («Alias-Lektion»)">Als Lektionsplanung</button></span>' +
+      '<span class="ufl-btns"><button type="button" class="btn ghost" data-ufl="max" title="Ganzer Bildschirm bzw. wieder als Fenster">⤢</button><button type="button" class="btn primary" data-ufl="close">Fertig</button></span></div>' +
+      '<div class="ufl-kurz"><span class="lbl">Kurzzusammenfassung</span><div class="rich rtfield" contenteditable="true" role="textbox" aria-label="Kurzzusammenfassung (erscheint in der Reihe)" data-ph="erscheint in der Reihe">' + sanitize(m0.html || "") + '</div></div><section class="ueb-pane ufl-pane"></section><div class="ufl-rs" title="Ziehen für die Grösse"></div>';
+    document.body.appendChild(w);
+    let t = null;
+    const save = () => { const m = item(); if (!m) return; if (m.page) { const h = sanitizeNotes(m.page.html || ""); if (filled(h) || /<(img|figure|table)\b/.test(h)) { m.notesHtml = h; m.details = notesPlain(h); } else { delete m.notesHtml; m.details = ""; } } saveReihe(id, 300); };
+    uebMount(w.querySelector(".ufl-pane"), id, { name: "Material", data: () => { const m = item(); return m ? m.page || (m.page = {}) : null; }, save });
+    const kz = w.querySelector(".ufl-kurz .rtfield");
+    kz.addEventListener("input", () => { const m = item(); if (!m) return; m.html = sanitize(kz.innerHTML); clearTimeout(t); t = setTimeout(() => saveReihe(id, 300), 500); });
+    kz.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); lineBreak(); } });
+    const keep = () => { if (w.classList.contains("max")) return; UFL.x = w.offsetLeft; UFL.y = w.offsetTop; UFL.w = w.offsetWidth; UFL.h = w.offsetHeight; try { localStorage.setItem("zp-ufl", JSON.stringify(UFL)); } catch (e) {} };
+    const fit = () => { const s = w.querySelector(".ueb-sheet"); if (s && s._place) s._place(); };
+    const close = (quiet) => { const a = document.activeElement; if (a && w.contains(a) && a.blur) a.blur(); save(); keep(); w.remove(); uFlush("r:" + id); if (!quiet) { renderU(); if (after) after(); } };
+    w._close = close;
+    // verschieben am Kopf, Grösse an der Ecke
+    const drag = (el, fn) => el.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0 || e.target.closest("button") || w.classList.contains("max")) return;
+      e.preventDefault(); el.setPointerCapture(e.pointerId); const x0 = e.clientX, y0 = e.clientY, a = { x: w.offsetLeft, y: w.offsetTop, w: w.offsetWidth, h: w.offsetHeight };
+      const mv = (ev) => { fn(a, ev.clientX - x0, ev.clientY - y0); };
+      const up = () => { el.removeEventListener("pointermove", mv); el.removeEventListener("pointerup", up); keep(); fit(); };
+      el.addEventListener("pointermove", mv); el.addEventListener("pointerup", up);
+    });
+    drag(w.querySelector(".ufl-head"), (a, dx, dy) => { w.style.left = Math.max(0, Math.min(innerWidth - 80, a.x + dx)) + "px"; w.style.top = Math.max(0, Math.min(innerHeight - 40, a.y + dy)) + "px"; });
+    drag(w.querySelector(".ufl-rs"), (a, dx, dy) => { w.style.width = Math.max(420, a.w + dx) + "px"; w.style.height = Math.max(320, a.h + dy) + "px"; fit(); });
+    w.querySelector(".ufl-head").addEventListener("click", (e) => {
+      const b = e.target.closest("button"); if (!b) return;
+      if (b.dataset.ufl === "close") { close(); return; }
+      if (b.dataset.ufl === "max") { UFL.max = !w.classList.contains("max"); w.classList.toggle("max", UFL.max); try { localStorage.setItem("zp-ufl", JSON.stringify(UFL)); } catch (err) {} setTimeout(fit, 0); return; }
+      if (b.dataset.umode === "l") { close(true); const rr = U.reihen[id]; if (!rr) return; rr.lnItems = (rr.lnItems || []).slice(); rr.lnItems[k] = { ...(rr.lnItems[k] || {}), asLesson: true }; saveReihe(id, 0); openLessonDetail(i, id, after); }
+    });
+  }
   function openLessonDetail(i, rid, after) {
     const id = rid || U.sel, r = U.reihen[id]; if (!r) return;
     if (isLN(i)) {
@@ -7761,13 +7823,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       // Materialsammlung: als Materialseite (grosse Notizen mit Screenshots) oder als Lektionsplanung («Alias-Lektion»)
       const asL = isMat && (it.asLesson === true || (it.asLesson == null && hasPlan(x.plan)));
       const modeSwitch = isMat ? { cur: asL ? "l" : "m", set: (v) => { const rr = U.reihen[id]; if (!rr) return; putLessonX(rr, i, x); const k = lnIdx(i); rr.lnItems = (rr.lnItems || []).slice(); rr.lnItems[k] = { ...(rr.lnItems[k] || {}), asLesson: v === "l" }; saveReihe(id, 0); closeModal(); setTimeout(() => openLessonDetail(i, id, after), 30); } } : null;
-      if (isMat && !asL) {
-        openDetailBox({ editDocs: true, page: true, pageText: true, modeSwitch, title: r.title || "Reihe", sub: lnLabel(r, i), x, textLabel: "Kurzzusammenfassung (erscheint in der Reihe)", pageLabel: "Material", pagePh: "Material sammeln: Screenshots mit Strg+V einfügen, ein Klick aufs Bild = Grösse, Lage und Bildunterschrift (Name) … Dazu Notizen, wo was zu finden ist.", reiheFiles: [...(r.mainFiles || []), ...(r.files || [])],
-          onPrint: () => { const rr = U.reihen[id]; if (rr) printLesson(rr, i); },
-          changed: () => { const rr = U.reihen[id]; if (rr) { putLessonX(rr, i, x); saveReihe(id, 900); } },
-          onClose: () => { uFlush("r:" + id); renderU(); if (after) after(); } });
-        return;
-      }
+      if (isMat && !asL) { openMatPage(i, id, after); return; }
       openDetailBox({ editDocs: true, modeSwitch, title: r.title || "Reihe", sub: lnLabel(r, i), x, textLabel: isMat ? "Kurzzusammenfassung" : "Kurzeintrag in der Tabelle", plan: x.plan, reiheFiles: [...(r.mainFiles || []), ...(r.files || [])],
         onPrint: () => { const rr = U.reihen[id]; if (rr) printLesson(rr, i); },
         changed: () => { const rr = U.reihen[id]; if (rr) { putLessonX(rr, i, x); saveReihe(id, 900); } },
