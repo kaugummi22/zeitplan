@@ -1523,9 +1523,13 @@ body.p-rowdrag, body.p-rowdrag * { cursor: grabbing !important; user-select: non
 .ln-row .lh { background: color-mix(in srgb, var(--c-rost) 30%, var(--bg)); }
 .ln-name { font-size: 0.8rem; color: var(--muted); }
 .rf-docs { margin-bottom: 6px; }
-.rf-main { margin-bottom: 4px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
-.rf-main > .lbl { display: block; margin-bottom: 4px; }
-.rf-mlist { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+.rf-wrap { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px 14px; margin-bottom: 6px; }
+.rf-main { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; flex: 0 1 auto; max-width: 100%; padding: 3px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.rf-main.empty { border-style: dashed; background: none; padding: 1px 10px; }
+.rf-main > .lbl { display: inline; padding: 0; }
+.rf-mlist { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
+.rf-wrap > .rf-docs { flex: 1 1 340px; margin-bottom: 0; min-width: 0; }
+.rf-wrap > .rf-docs.rf-closed { flex: 0 1 auto; padding-top: 3px; }
 .rf-mrow { gap: 2px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 3px 6px 3px 4px; }
 .rf-mrow .doc { font-size: 0.9rem; font-weight: 600; }
 .rf-mrow .btn { padding-top: 1px; padding-bottom: 1px; font-size: 0.8rem; }
@@ -1587,6 +1591,10 @@ body.p-rowdrag, body.p-rowdrag * { cursor: grabbing !important; user-select: non
 .lesson > .cell .inp { min-height: 46px; }
 .r-field > .cell { border-radius: 6px; background: var(--bg); }
 .r-field > .cell .inp { min-height: 40px; }
+.r-lf { grid-template-columns: auto minmax(0, 1fr); align-items: start; column-gap: 4px; }
+.r-lf > .lbl { padding: 5px 6px 0 0; width: 128px; line-height: 1.3; }
+.r-lf > .cell .inp { min-height: 0; padding-top: 3px; padding-bottom: 3px; }
+html.phone .r-lf { grid-template-columns: 1fr; } html.phone .r-lf > .lbl { width: auto; }
 .r-years-pick { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
 .sp td.sp-ops { white-space: nowrap; width: auto; }
 .sp td.sp-ops .btn { padding: 2px 6px; min-width: 0; }
@@ -1631,7 +1639,7 @@ body.p-rowdrag, body.p-rowdrag * { cursor: grabbing !important; user-select: non
 .rf-hrow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
 .rf-hrow > .v-inr-tog { flex-basis: auto; }
 .ueb-new { padding-top: 1px; padding-bottom: 1px; font-size: 0.85rem; }
-.ueb { margin: 2px 0 6px; display: flex; align-items: center; gap: 10px; border-left: 4px solid var(--accent); padding: 2px 8px; }
+.r-meta > .ueb { margin-left: auto; display: inline-flex; align-items: center; }
 .ueb-open { padding-top: 2px; padding-bottom: 2px; font-weight: 700; color: var(--accent); }
 main.wrap:has(#u-view-reihen:not([hidden]) .r-layout.ueb-on) { max-width: none; }
 .r-layout.ueb-on { grid-template-columns: minmax(300px, var(--uw, 50%)) 8px minmax(0, 1fr); gap: 0; }
@@ -6158,9 +6166,10 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   }
   // Leiste über den Lektionen, wenn die Übersichtsseite eingeklappt ist
   function uebHtml(r, rid) {
-    if (!uebHas(r) || r.klasse || uebOn(r)) return "";
+    if (r.klasse || uebOn(r)) return "";
+    if (!uebHas(r)) return '<span class="ueb"><button type="button" class="btn ghost ueb-new" data-uebnew title="Eine Übersichtsseite neben den Lektionen anlegen: Notizen, Bilder, Screenshots – z. B. welches Material wo zu finden ist">+ Übersichtsseite</button></span>';
     const u = uebData(r), has = filled(u.html) || /<(img|figure|table)\b/i.test(u.html) || u.items.length;
-    return '<div class="r-field ueb" data-uebrid="' + esc(rid) + '"><button type="button" class="btn ghost ueb-open" data-uebopen title="Übersichtsseite links neben der Reihe öffnen">◧ Übersichtsseite öffnen</button><span class="help">' + (has ? "" : "noch leer") + "</span></div>";
+    return '<span class="ueb" data-uebrid="' + esc(rid) + '"><button type="button" class="btn ghost ueb-open" data-uebopen title="Übersichtsseite links neben der Reihe öffnen' + (has ? "" : " (noch leer)") + '">◧ Übersichtsseite öffnen</button></span>';
   }
   function uebLayout(box, r, rid) {
     const lay = box.closest(".r-layout"); if (!lay) return;
@@ -6812,8 +6821,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   function reiheFilesHtml(r) {
     const files = r.files || [], main = r.mainFiles || [];
     let open = false; try { open = localStorage.getItem("zeitplan-rfdocs") === "1"; } catch (e) {} if (window.__rfdocs != null) open = window.__rfdocs;
-    const mainB = true ? '<div class="r-field rf-main"><span class="lbl">Hauptdokumente</span><div class="rf-mlist">' +
-      (main.length ? main.map((f) => rfRowHtml(r, f, "main")).join("") : '<span class="help">Wichtige Dokumente hierher ziehen, z. B. die PowerPoint der Reihe. Sie bleiben immer sichtbar.</span>') + "</div></div>" : "";
+    const mainB = '<div class="r-field rf-main' + (main.length ? "" : " empty") + '" title="Hauptdokumente: wichtige Dokumente hierher ziehen, z. B. die PowerPoint der Reihe. Sie bleiben immer sichtbar."><span class="lbl">Hauptdokumente</span>' +
+      (main.length ? '<div class="rf-mlist">' + main.map((f) => rfRowHtml(r, f, "main")).join("") + "</div>" : "") + "</div>";
     const head = '<button type="button" class="v-inr-tog rf-tog' + (files.length ? " has" : "") + '" data-rftog aria-expanded="' + open + '"><span class="lbl">Dokumente der ganzen Reihe' + (files.length ? " (" + files.length + ")" : "") + "</span></button>";
     const loose = files.filter((f) => f && !grpOk(r, f.grp)), single = loose.filter((f) => !f.folder), links = loose.filter((f) => f.folder), groups = r.fgroups || [];
     const gOpen = (g) => { try { return localStorage.getItem("zeitplan-rfg-" + g.id) === "1"; } catch (e) { return false; } };
@@ -6821,9 +6830,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       return '<div class="rf-grp' + (o ? " open" : "") + '" data-gid="' + esc(g.id) + '"><div class="rf-ghead"><button type="button" class="rf-gtog" data-gtog="' + esc(g.id) + '" aria-expanded="' + o + '" title="' + (o ? "Zuklappen" : "Aufklappen") + '"><span class="rf-car" aria-hidden="true">' + (o ? "▾" : "▸") + "</span>📁</button>" +
         '<input type="text" class="rf-gname" data-gname="' + esc(g.id) + '" value="' + esc(g.name || "") + '" placeholder="Name der Gruppe" aria-label="Name der Gruppe"><span class="n">' + list.length + '</span><button type="button" class="rf-pen" data-gdel="' + esc(g.id) + '" title="Gruppe auflösen – die Dokumente kommen zurück nach links">×</button></div>' +
         (o ? '<div class="rf-glist">' + (list.length ? list.map((f) => rfRowHtml(r, f, "g:" + g.id)).join("") : '<span class="help">Dokumente hierher ziehen.</span>') + "</div>" : "") + "</div>"; };
-    const uebB = r.klasse || uebHas(r) ? "" : '<button type="button" class="btn ghost ueb-new" data-uebnew title="Eine Übersichtsseite über den Lektionen anlegen: Notizen, Bilder, Screenshots – z. B. welches Material wo zu finden ist">+ Übersichtsseite</button>';
-    const hrow = '<div class="rf-hrow">' + head + uebB + "</div>";
-    const docsB = !open ? '<div class="r-field rf-docs">' + hrow + "</div>" : '<div class="r-field rf-docs">' + hrow + '<div class="rf-cols"><div class="rf-col"><span class="rf-ch">Einzeldokumente</span><div class="rf-list">' +
+    const hrow = '<div class="rf-hrow">' + head + "</div>";
+    const docsB = !open ? '<div class="r-field rf-docs rf-closed">' + hrow + "</div>" : '<div class="r-field rf-docs">' + hrow + '<div class="rf-cols"><div class="rf-col"><span class="rf-ch">Einzeldokumente</span><div class="rf-list">' +
       (single.length ? single.map((f) => rfRowHtml(r, f, "reihe")).join("") : '<span class="help">Noch keine. Hier gehören Unterlagen hin, die Sie in mehreren Lektionen brauchen.</span>') +
       '</div></div><div class="rf-col rf-colr"><span class="rf-ch">Ordner und Gruppen</span>' + (links.length ? '<div class="rf-list rf-links">' + links.map((f) => rfRowHtml(r, f, "reihe")).join("") + "</div>" : "") +
       groups.map(grpHtml).join("") + '<div class="rf-gbtns"><button type="button" class="btn ghost rf-gadd" id="rf-gadd" title="Eine Gruppe für Dokumente anlegen, z. B. «Lektionsplanungen» oder «Archiv»">+ Gruppe</button>' + (window.ZLOCAL && window.ZLOCAL.list ? '<button type="button" class="btn ghost" id="rf-addfolder" title="Einen ganzen Ordner (z. B. Bilder oder Scans) aus OneDrive verknüpfen">+ OneDrive-Ordner</button>' : "") + "</div></div></div>" + (!state.assets ? "" : '<label class="btn ghost rf-up">+ Dokument für die ganze Reihe<input type="file" id="rf-file" multiple hidden accept="application/pdf,image/*,.txt,.md,.csv,.json,.docx,.xlsx,.pptx"></label>' + '<span class="msg" id="rf-msg"></span>') + "</div>";
@@ -7152,7 +7160,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       '<datalist id="ln-list">' + LN_SUGGEST.map((s) => '<option value="' + esc(s) + '"></option>').join("") + "</datalist>" +
 
       '<label class="prio-pick">Wichtigkeit <select id="r-prio" class="prio-sel pr-' + prioOf(r) + '" aria-label="Wichtigkeit der Reihe">' + PRIOS.map(([v, l]) => '<option value="' + v + '"' + (prioOf(r) === v ? " selected" : "") + ">" + l + "</option>").join("") + "</select></label>" +
-      '<label class="lit-pick" title="Literatur: Reihe zu einem Buch oder Werk (im Jahresplan mit «Lit», unter «Reihen ▾» filterbar)"><input type="checkbox" id="r-lit"' + (r.lit ? " checked" : "") + "> Lit</label></div>" +
+      '<label class="lit-pick" title="Literatur: Reihe zu einem Buch oder Werk (im Jahresplan mit «Lit», unter «Reihen ▾» filterbar)"><input type="checkbox" id="r-lit"' + (r.lit ? " checked" : "") + "> Lit</label>" + uebHtml(r, U.sel) + "</div>" +
       (r.klasse && r.own
         ? '<div class="k-banner">Eigene Lektion dieser Klasse (nicht aus der Planung)' + (r.copiedAt ? ", angelegt am " + fmt(fromKey(r.copiedAt)) : "") + ". Name, Kurzeintrag und Lektionsplanung ändern Sie wie gewohnt – mit «+» bei der Lektion öffnen Sie sie gross. Den Tag ändern Sie beim Datum der Lektion.</div>"
         : r.klasse
@@ -7160,8 +7168,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
           (canFolders() ? (r.kfolder ? '<br>Die Dokumente sind Kopien im Klassenordner (' + esc(relPath(r.folder)) + '). Die Originale im Unterricht bleiben unverändert. Ein bearbeitetes Dokument können Sie beim Ansehen mit «Als Original übernehmen» zurück in den Unterricht geben.'
             : '<br><b>Achtung:</b> Die Dokumente dieser Kopie sind noch die Originale aus dem Unterricht – wenn Sie sie in Word bearbeiten, ändern sich die Originale. <button type="button" class="btn ghost" data-kcopyfiles="1">In den Klassenordner kopieren</button>') : "") + "</div>"
         : '<div class="r-years-pick"><span class="lbl">Schuljahr</span><div class="chips" id="r-chips">' + yearChips(r) + '</div><span id="r-homewrap">' + homePick(r) + "</span></div>") +
-      '<div class="r-field"><span class="lbl">Leitfrage oder Leitproblem</span>' + cellHtml2('data-rf="leitfrage" id="r-leitfrage" aria-label="Leitfrage"', r.leitfrage) + "</div>" +
-      reiheFilesHtml(r) + uebHtml(r, U.sel) +
+      '<div class="r-field r-lf"><span class="lbl">Leitfrage oder Leitproblem</span>' + cellHtml2('data-rf="leitfrage" id="r-leitfrage" aria-label="Leitfrage"', r.leitfrage) + "</div>" +
+      reiheFilesHtml(r) +
       '<div class="lessons" id="r-lessons">' + lessonsHtml(r) + "</div>" +
       '<div class="r-field r-subs"><span class="lbl">Unterpunkte</span><div class="subs-ed" id="r-subs">' + subsEdHtml(r) + "</div></div>" +
       '<div class="r-field"><span class="lbl">Zusätzliches, Links, Material</span>' + cellHtml2('data-rf="zusatz" id="r-zusatz" aria-label="Zusätzliches"', r.zusatz) + '<div class="links zus-links" id="r-zuslinks">' + zusLinks(r.zusatz) + "</div></div>" +
