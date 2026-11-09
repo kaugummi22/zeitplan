@@ -2174,7 +2174,8 @@ html.phone .r-lf { grid-template-columns: 1fr; } html.phone .r-lf > .lbl { width
 .rf-hrow > .v-inr-tog { flex-basis: auto; }
 .ueb-new { padding-top: 1px; padding-bottom: 1px; font-size: 0.85rem; }
 .r-meta > .ueb { margin-left: auto; display: inline-flex; align-items: center; }
-.ueb-open { padding-top: 2px; padding-bottom: 2px; font-weight: 700; color: var(--accent); }
+.ueb-open { padding-top: 2px; padding-bottom: 2px; font-weight: 400; color: var(--muted); }
+.ueb-open.has { font-weight: 700; color: var(--accent); }
 main.wrap:has(#u-view-reihen:not([hidden]) .r-layout.ueb-on) { max-width: none; }
 .r-layout.ueb-on { grid-template-columns: minmax(300px, var(--uw, 50%)) 8px minmax(0, 1fr); gap: 0; }
 .r-layout.ueb-on > .r-side { display: none; }
@@ -6701,9 +6702,9 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   // Leiste über den Lektionen, wenn die Übersichtsseite eingeklappt ist
   function uebHtml(r, rid) {
     if (r.klasse || uebOn(r)) return "";
-    if (!uebHas(r)) return '<span class="ueb"><button type="button" class="btn ghost ueb-new" data-uebnew title="Eine Übersichtsseite neben den Lektionen anlegen: Notizen, Bilder, Screenshots – z. B. welches Material wo zu finden ist">+ Übersichtsseite</button></span>';
-    const u = uebData(r), has = filled(u.html) || /<(img|figure|table)\b/i.test(u.html) || u.items.length;
-    return '<span class="ueb" data-uebrid="' + esc(rid) + '"><button type="button" class="btn ghost ueb-open" data-uebopen title="Übersichtsseite links neben der Reihe öffnen' + (has ? "" : " (noch leer)") + '">◧ Übersichtsseite öffnen</button></span>';
+    if (!uebHas(r)) return '<span class="ueb"><button type="button" class="btn ghost ueb-open" data-uebnew title="Eine Übersichtsseite neben den Lektionen anlegen: Notizen, Bilder, Screenshots – z. B. welches Material wo zu finden ist">Übersichtsseite</button></span>';
+    const u = uebData(r), has = filled(u.html) || /<(img|figure|table)\b/i.test(u.html) || u.items.length || filled(u.cm || "");
+    return '<span class="ueb" data-uebrid="' + esc(rid) + '"><button type="button" class="btn ghost ueb-open' + (has ? " has" : "") + '" data-uebopen title="Übersichtsseite links neben der Reihe öffnen' + (has ? "" : " (noch leer)") + '">Übersichtsseite</button></span>';
   }
   function uebLayout(box, r, rid) {
     const lay = box.closest(".r-layout"); if (!lay) return;
