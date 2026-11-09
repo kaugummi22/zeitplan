@@ -2268,6 +2268,12 @@ html.phone .ueb-pane { position: static; height: 70vh; }
 .ms-tag { display: block; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
 .ms-title { padding: 8px 10px; display: flex; align-items: baseline; gap: 8px; font-weight: 700; }
 .ms-title small { color: var(--muted); font-weight: 400; }
+.cell:has(> .ms-cap) { flex-direction: column; }
+.ms-cap { display: flex; align-items: baseline; gap: 8px; margin: 0; padding: 6px 8px 0; font-size: 0.85rem; font-weight: 700; }
+.ms-cap small { color: var(--muted); font-weight: 400; }
+.ms-cap .ms-matadd { margin-left: auto; font-weight: 400; }
+.ms-capdrag { cursor: grab; color: var(--muted); font-weight: 400; }
+.lesson.ms-first { border-top: 2px solid color-mix(in srgb, var(--accent) 45%, transparent); }
 .lesson.ms-l .ro-txt { padding: 6px 10px; color: color-mix(in srgb, var(--ink) 85%, transparent); }
 .lesson.ms-l .ph.ro { font-size: 0.78rem; color: var(--muted); }
 .ms-up { color: color-mix(in srgb, var(--accent) 80%, var(--ink)); cursor: pointer; border-radius: 3px; }
@@ -6303,7 +6309,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   // Feld wie bei den Terminen: Klick wählt aus, Doppelklick schreibt
   const cellHtml2 = (attrs, html, opts) => {
     const o = opts || {};
-    return '<div class="cell ucell' + (o.color ? " f-" + o.color : "") + (o.more ? " has-more" : "") + '"' + (o.cellAttrs || "") + '>' +
+    return '<div class="cell ucell' + (o.color ? " f-" + o.color : "") + (o.more ? " has-more" : "") + '"' + (o.cellAttrs || "") + '>' + (o.head || "") +
       '<div class="inp rich" tabindex="0" role="textbox" aria-multiline="true" title="Doppelklick zum Schreiben" ' + attrs + ">" + sanitize(html || "") + "</div>" +
       (o.more ? '<span class="dot" aria-hidden="true"></span>' : "") +
       (o.corner ? '<button class="exp" type="button" title="Gross öffnen" aria-label="Gross öffnen"></button>' : "") + "</div>";
@@ -7210,10 +7216,13 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       if (withMats) (ch.lnItems || []).forEach((m, k) => { if (m && m.mat && !mp.placed.has(k)) push(p, { t: "cm", c, L, k }); });
     });
     ord.forEach((c, n) => blocksOf(U.reihen[c.rid]).forEach(([i, sp]) => { const q = moved(c, i); if (q != null) push(q, { t: "cl", c, L: CH_LET(n), i, s: sp, moved: true }); }));
+    // Kein eigener Balken für die Unterreihe: ihr Name steht als Zeile über der ersten Lektion
+    Object.values(at).forEach((a) => a.forEach((it, k) => { const nx = a[k + 1]; if (it.t === "chead" && nx && nx.t === "cl" && nx.c === it.c && !nx.moved) { it.hide = true; nx.head = true; } }));
     return at;
   }
   function msItemHtml(r, it) {
     const c = it.c, ch = U.reihen[c.rid];
+    if (it.t === "chead" && it.hide) return "";
     if (it.t === "chead") {
       const mf = ch.mainFiles || [];
       return '<div class="lesson ms-head" data-crid="' + esc(c.rid) + '"><div class="lh"><div class="lh-top"><b' + (r.klasse ? "" : ' class="l-drag" draggable="true" data-cdrag="' + esc(c.rid) + '" title="Ziehen, um die ganze Unterreihe zu verschieben"') + ">" + it.L + '</b></div><span class="ms-tag">Unterreihe</span></div>' +
@@ -7224,11 +7233,15 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     if (it.t === "cm") return childMatHtml(r, it);
     const i = it.i, x = chLessonX(c, i);
     const more = !!(x.details || filled(x.notesHtml) || (x.files && x.files.length) || hasPlan(x.plan));
-    return '<div class="lesson ms-l' + (it.moved ? " ms-moved" : "") + '" data-crid="' + esc(c.rid) + '" data-clid="' + i + '"' + (it.moved ? ' data-cmoved="1"' : "") + '><div class="lh"><div class="lh-top"><b' + (r.klasse ? "" : ' class="l-drag" draggable="true" data-cldrag="' + esc(c.rid) + "|" + i + '" title="Ziehen: an eine andere Stelle, in eine andere Unterreihe oder zwischen die Lektionen der Masterreihe (dann gehört sie zur Masterreihe) · Rechtsklick (lange drücken): Menü"') + ">" + it.L + "·" + lessonLabel(i, it.s) + "</b>" +
+    const cap = it.head ? '<div class="ms-cap">' + (r.klasse ? "" : '<span class="l-drag ms-capdrag" draggable="true" data-cdrag="' + esc(c.rid) + '" title="Ziehen, um die ganze Unterreihe zu verschieben">⠿</span>') +
+      '<button type="button" class="linkbtn" data-goto="' + esc(c.rid) + '" title="Unterreihe öffnen">↳ ' + esc(ch.title || "Ohne Titel") + "</button><small>" + totalL(ch) + " L</small>" +
+      (r.klasse ? "" : '<button type="button" class="linkbtn ms-matadd" data-matadd data-mrid="' + esc(c.rid) + '" title="Eine Materialsammlung in dieser Unterreihe anlegen">+ Materialsammlung</button>') + "</div>" : "";
+    const mainDocs = it.head ? (ch.mainFiles || []).map((f) => '<button type="button" class="doc" data-open-cfile="' + esc(c.rid) + "|" + esc(f.id) + '" title="Hauptdokument der Unterreihe ansehen"><span class="tag">' + typeTag(f) + "</span><span>" + esc(f.name) + "</span></button>").join("") : "";
+    return '<div class="lesson ms-l' + (it.head ? " ms-first" : "") + (it.moved ? " ms-moved" : "") + '" data-crid="' + esc(c.rid) + '" data-clid="' + i + '"' + (it.moved ? ' data-cmoved="1"' : "") + '><div class="lh"><div class="lh-top"><b' + (r.klasse ? "" : ' class="l-drag" draggable="true" data-cldrag="' + esc(c.rid) + "|" + i + '" title="Ziehen: an eine andere Stelle, in eine andere Unterreihe oder zwischen die Lektionen der Masterreihe (dann gehört sie zur Masterreihe) · Rechtsklick (lange drücken): Menü"') + ">" + it.L + "·" + lessonLabel(i, it.s) + "</b>" +
       '<button type="button" class="lexp' + (more ? " on" : "") + '" data-clexp="' + esc(c.rid) + "|" + i + '" title="Gross öffnen – Änderungen gelten auch in der Unterreihe" aria-label="Lektion gross öffnen">+</button></div>' +
       '<div class="ph ro">' + esc(phaseOf(ch, i)) + (it.moved ? ' <span class="ms-from">aus ' + esc(ch.title || "Unterreihe") + "</span>" : "") + "</div></div>" +
-      cellHtml2('data-rf="cov.' + esc(c.rid) + "." + i + '" aria-label="' + it.L + "·" + lessonLabel(i, it.s) + '"', x.html, { color: x.color, more }) +
-      '<div class="ldocs">' + (x.files || []).map((f) => '<button type="button" class="doc" data-open-cfile="' + esc(c.rid) + "|" + esc(f.id) + "|" + i + '"><span class="tag">' + typeTag(f) + "</span><span>" + esc(f.name) + "</span></button>").join("") + "</div></div>";
+      cellHtml2('data-rf="cov.' + esc(c.rid) + "." + i + '" aria-label="' + it.L + "·" + lessonLabel(i, it.s) + '"', x.html, { color: x.color, more, head: cap }) +
+      '<div class="ldocs">' + mainDocs + (x.files || []).map((f) => '<button type="button" class="doc" data-open-cfile="' + esc(c.rid) + "|" + esc(f.id) + "|" + i + '"><span class="tag">' + typeTag(f) + "</span><span>" + esc(f.name) + "</span></button>").join("") + "</div></div>";
   }
   // Materialsammlung einer Unterreihe in der Masterreihe: wird direkt in der Unterreihe gespeichert
   function childMatHtml(r, it) {
