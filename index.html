@@ -7243,7 +7243,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   function childMatHtml(r, it) {
     const rid = it.c.rid, ch = U.reihen[rid], k = it.k, m = (ch.lnItems || [])[k] || {}, key = "ln" + k, ro = !!r.klasse;
     const more = !!(m.details || filled(m.notesHtml) || (m.files && m.files.length) || hasPlan(m.plan)), lk = m.rid && U.reihen[m.rid];
-    const slim = typeof m.slim === "boolean" ? m.slim : (m.files || []).length > 6 && !filled(m.html);
+    const slim = typeof m.slim === "boolean" ? m.slim : (m.files || []).length > 0;
     return '<div class="lesson ln-row mat-row ms-mat' + (slim ? " mat-slim" : "") + '" data-crid="' + esc(rid) + '" data-mrid="' + esc(rid) + '" data-cmat="' + k + '"><div class="lh"><div class="lh-top"><b>' + it.L + "·M" + matNo(ch, k) + "</b>" +
       '<button type="button" class="lexp' + (more ? " on" : "") + '" data-lexp="' + key + '" title="Gross öffnen: Kommentare, Notizen, Dokumente (gilt für die Unterreihe)" aria-label="Materialsammlung gross öffnen">+</button>' +
       (ro ? "" : '<button type="button" class="ln-rm" data-lnrm="' + k + '" title="Diese Materialsammlung aus der Unterreihe entfernen" aria-label="Materialsammlung entfernen">×</button>') + "</div>" +
@@ -7288,7 +7288,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const key = "ln" + k, more = !!(m.details || filled(m.notesHtml) || (m.files && m.files.length) || hasPlan(m.plan));
         const lk = m.rid && U.reihen[m.rid];
         // Notizteil klein: Dokumente nutzen die ganze Breite und stehen in Spalten (ohne eigene Wahl ab 7 Dokumenten)
-        const slim = typeof m.slim === "boolean" ? m.slim : (m.files || []).length > 6 && !filled(m.html);
+        const slim = typeof m.slim === "boolean" ? m.slim : (m.files || []).length > 0;
         return '<div class="lesson ln-row mat-row' + (slim ? " mat-slim" : "") + '" data-li="' + key + '"><div class="lh"><div class="lh-top"><b' + (' class="l-drag" draggable="true" data-mdrag="' + k + '" title="Ziehen, um die Materialsammlung zwischen die Lektionen zu verschieben"') + ">M" + matNo(r, k) + "</b>" + '<button type="button" class="lexp' + (more ? " on" : "") + '" data-lexp="' + key + '" title="Gross öffnen: Kommentare, Notizen, Dokumente" aria-label="Materialsammlung gross öffnen">+</button>' +
           '<button type="button" class="ln-rm" data-lnrm="' + k + '" title="Diese Materialsammlung entfernen" aria-label="Materialsammlung entfernen">×</button></div>' +
           '<input type="text" class="ln-name" data-lnname="' + k + '" value="' + esc(m.name || "") + '" placeholder="Name, z. B. Bilder" aria-label="Name der Materialsammlung">' +
