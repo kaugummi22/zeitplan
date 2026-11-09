@@ -1622,19 +1622,49 @@ body.p-rowdrag, body.p-rowdrag * { cursor: grabbing !important; user-select: non
 .sub-link:hover { text-decoration: underline; }
 .lit-mark { display: inline-block; font-size: 10px; font-weight: 600; line-height: 1; letter-spacing: 0.02em; color: var(--muted); border: 1px solid var(--line); border-radius: 3px; padding: 1px 3px; margin-right: 4px; vertical-align: 1px; }
 .lit-pick { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
-/* Übersichtsseite der Reihe über den Lektionen */
+/* Übersichtsseite der Reihe: freie Fläche links neben der Reihe */
 .rf-hrow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
 .rf-hrow > .v-inr-tog { flex-basis: auto; }
 .ueb-new { padding-top: 1px; padding-bottom: 1px; font-size: 0.85rem; }
-.ueb { margin: 4px 0 10px; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; background: var(--surface); padding: 6px 10px; }
-.ueb-head { display: flex; align-items: center; gap: 6px 12px; flex-wrap: wrap; }
-.ueb-tog { border: 0; background: none; font: inherit; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); padding: 2px 0; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
-.ueb-car { display: inline-block; transition: transform 0.15s; }
-.ueb.open .ueb-car { transform: rotate(90deg); }
-.ueb-ed { padding-top: 1px; padding-bottom: 1px; font-size: 0.85rem; }
-.ueb .ueb-view { min-height: 0; margin-top: 6px; max-height: 55vh; overflow: auto; border-radius: 6px; cursor: default; }
-.ueb .ueb-view:empty { padding: 8px 12px; }
-.ueb-panel .notes-ed { min-height: 55vh; }
+.ueb { margin: 2px 0 6px; display: flex; align-items: center; gap: 10px; border-left: 4px solid var(--accent); padding: 2px 8px; }
+.ueb-open { padding-top: 2px; padding-bottom: 2px; font-weight: 700; color: var(--accent); }
+main.wrap:has(#u-view-reihen:not([hidden]) .r-layout.ueb-on) { max-width: none; }
+.r-layout.ueb-on { grid-template-columns: minmax(300px, var(--uw, 50%)) 8px minmax(0, 1fr); gap: 0; }
+.r-layout.ueb-on > .r-side { display: none; }
+.r-layout.ueb-on.ueb-solo { grid-template-columns: minmax(0, 1fr); }
+.r-layout.ueb-solo > .ueb-gut, .r-layout.ueb-solo > #r-detail { display: none; }
+.ueb-gut { align-self: stretch; cursor: col-resize; position: relative; touch-action: none; }
+.ueb-gut::after { content: ""; position: absolute; left: 3px; top: 0; bottom: 0; width: 2px; background: var(--line); border-radius: 2px; }
+.ueb-gut:hover::after { background: var(--accent); }
+.ueb-pane { position: sticky; top: calc(env(safe-area-inset-top, 0px) + var(--hdr) + 8px); height: calc(100vh - var(--hdr) - 24px); display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); min-width: 0; overflow: hidden; }
+.ueb-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 6px 10px; border-bottom: 1px solid var(--line); }
+.ueb-name { font-weight: 700; color: var(--accent); }
+.ueb-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; }
+.ueb-right { margin-left: auto; display: flex; gap: 4px; }
+.ueb-right .btn { padding-top: 2px; padding-bottom: 2px; font-size: 0.85rem; }
+.ueb-scroll { flex: 1; overflow: auto; min-height: 0; }
+.ueb-canvas { position: relative; min-height: 100%; cursor: text; outline: none; background-image: radial-gradient(color-mix(in srgb, var(--muted) 22%, transparent) 1px, transparent 1px); background-size: 24px 24px; }
+.ueb-canvas.file-drop { outline: 3px dashed var(--accent); outline-offset: -6px; }
+.ueb-it { position: absolute; padding: 10px 4px 4px; border: 1px solid transparent; border-radius: 6px; cursor: auto; }
+.ueb-it:hover, .ueb-it:focus-within, .ueb-it.sel { border-color: var(--line); background: color-mix(in srgb, var(--surface) 88%, transparent); }
+.ueb-it.sel { border-color: var(--accent); }
+.ueb-grip { position: absolute; left: 0; right: 22px; top: 0; height: 10px; cursor: move; border-radius: 6px 6px 0 0; touch-action: none; }
+.ueb-it:hover .ueb-grip, .ueb-it:focus-within .ueb-grip, .ueb-it.sel .ueb-grip { background: color-mix(in srgb, var(--muted) 25%, transparent); }
+.ueb-x { position: absolute; right: 0; top: -2px; width: 20px; height: 16px; border: 0; background: none; color: var(--muted); cursor: pointer; padding: 0; line-height: 1; visibility: hidden; font-size: 15px; }
+.ueb-x:hover { color: var(--danger, #c0392b); }
+.ueb-it:hover .ueb-x, .ueb-it.sel .ueb-x { visibility: visible; }
+.ueb-rs { position: absolute; right: -4px; bottom: -4px; width: 14px; height: 14px; cursor: nwse-resize; touch-action: none; visibility: hidden; }
+.ueb-rs::after { content: ""; position: absolute; right: 4px; bottom: 4px; width: 7px; height: 7px; border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent); }
+.ueb-it:hover .ueb-rs, .ueb-it.sel .ueb-rs, .ueb-it:focus-within .ueb-rs { visibility: visible; }
+.ueb-txt { outline: none; min-height: 1.5em; line-height: 1.5; padding: 0 4px; overflow-wrap: anywhere; }
+.ueb-txt ul, .ueb-txt ol { margin: 2px 0; padding-left: 22px; }
+.ueb-txt img { max-width: 100%; height: auto; }
+.ueb-img > img { display: block; width: 100%; height: auto; border-radius: 4px; cursor: move; touch-action: none; user-select: none; }
+.ueb-hint { font-size: 0.78rem; color: var(--muted); padding: 4px 10px; border-top: 1px solid var(--line); }
+html.phone .r-layout.ueb-on { grid-template-columns: minmax(0, 1fr); }
+html.phone .ueb-gut { display: none; }
+html.phone .ueb-pane { position: static; height: 70vh; }
+@media (max-width: 760px) { .r-layout.ueb-on { grid-template-columns: minmax(0, 1fr); } .ueb-gut { display: none; } .ueb-pane { position: static; height: 70vh; } }
 .r-list .jp-kids { display: grid; margin: 2px 0 0 4px; font-size: 12px; line-height: 1.3; }
 .r-list .jp-kids > span::before { content: "↳ "; }
 .r-list button[aria-current="true"] .jp-kids .sub-link { color: inherit; }
@@ -6059,32 +6089,175 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     if (U.view === "vorlagen") { $("#u-legend").hidden = true; renderV(); return; }
     if (U.view === "jahresplan") renderJP(); else { renderRSide(); renderRDetail(); }
   }
-  // Übersichtsseite der Reihe (r.ueb): über den Lektionen auf- und zuklappbar; Zustand pro Gerät, ohne Wahl offen
-  let UEB = {}; try { UEB = JSON.parse(localStorage.getItem("zp-ueb") || "{}") || {}; } catch (e) {}
-  const uebOpen = (rid) => UEB[rid] !== false;
+  // Übersichtsseite der Reihe (r.ueb.items): freie Fläche wie in OneNote, links neben der Reihe (geteilter Bildschirm)
+  let UEBS = {}; try { UEBS = JSON.parse(localStorage.getItem("zp-uebs") || "{}") || {}; } catch (e) {}
+  const uebsSave = () => { try { localStorage.setItem("zp-uebs", JSON.stringify(UEBS)); } catch (e) {} };
   const uebHas = (r) => !!(r && r.ueb);
+  const uebOn = (r) => uebHas(r) && !r.klasse && !!UEBS.open;
+  const uebId = () => "u" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  function uebItems(r) {
+    const u = r.ueb || (r.ueb = {});
+    if (!Array.isArray(u.items)) {
+      u.items = [];
+      if (u.notesHtml && (filled(u.notesHtml) || /<(img|figure|table)\b/i.test(u.notesHtml))) u.items.push({ id: uebId(), t: "text", x: 24, y: 24, w: 460, html: u.notesHtml });
+    }
+    delete u.notesHtml; delete u.notesLh;
+    return u.items;
+  }
+  // Leiste über den Lektionen, wenn die Übersichtsseite eingeklappt ist
   function uebHtml(r, rid) {
-    if (!uebHas(r)) return "";
-    const o = uebOpen(rid), u = r.ueb, n = (u.files || []).length;
-    return '<div class="r-field ueb' + (o ? " open" : "") + '" data-uebrid="' + esc(rid) + '"><div class="ueb-head"><button type="button" class="ueb-tog" data-uebtog aria-expanded="' + o + '" title="Übersichtsseite auf- oder zuklappen (wird auf diesem Gerät gemerkt)"><span class="ueb-car" aria-hidden="true">▸</span> Übersichtsseite</button>' +
-      '<button type="button" class="btn ghost ueb-ed" data-uebed title="Notizen, Bilder und Screenshots (Strg+V) auf der Übersichtsseite bearbeiten">✎ Bearbeiten</button>' + (n ? '<span class="help">' + n + (n === 1 ? " Dokument" : " Dokumente") + "</span>" : "") + "</div>" +
-      (o ? '<div class="notes-ed ueb-view" style="line-height:' + (u.notesLh || 1.5) + '" title="Doppelklick zum Bearbeiten" data-ph="Noch leer. Doppelklick oder «✎ Bearbeiten»: Notizen, Bilder und Screenshots sammeln, z. B. wo welches Material zu finden ist.">' + sanitizeNotes(u.notesHtml || "") + "</div>" : "") + "</div>";
+    if (!uebHas(r) || r.klasse || uebOn(r)) return "";
+    const n = uebItems(r).length;
+    return '<div class="r-field ueb" data-uebrid="' + esc(rid) + '"><button type="button" class="btn ghost ueb-open" data-uebopen title="Übersichtsseite links neben der Reihe öffnen">◧ Übersichtsseite öffnen</button><span class="help">' + (n ? n + (n === 1 ? " Element" : " Elemente") : "noch leer") + "</span></div>";
   }
-  function uebFill(box) {
-    const v = box && box.querySelector(".ueb-view"), r = U.reihen[U.sel]; if (!v || !r || !r.ueb) return;
-    v.querySelectorAll("figure.nfig").forEach((f) => { f.contentEditable = "false"; });
-    nsecDeco(v); ndocFill(v, [...(r.ueb.files || []), ...(r.mainFiles || []), ...(r.files || [])]);
+  function uebLayout(box, r, rid) {
+    const lay = box.closest(".r-layout"); if (!lay) return;
+    let pane = lay.querySelector(":scope > .ueb-pane"), gut = lay.querySelector(":scope > .ueb-gut");
+    if (!pane) { pane = document.createElement("section"); pane.className = "ueb-pane"; pane.setAttribute("aria-label", "Übersichtsseite"); gut = document.createElement("div"); gut.className = "ueb-gut"; gut.title = "Ziehen, um die Breite zu ändern"; lay.insertBefore(gut, box); lay.insertBefore(pane, gut); uebGut(lay, gut); }
+    const on = !!(r && uebOn(r));
+    lay.classList.toggle("ueb-on", on); lay.classList.toggle("ueb-solo", on && !!UEBS.solo);
+    lay.style.setProperty("--uw", (UEBS.w || 50) + "%");
+    pane.hidden = gut.hidden = !on;
+    if (!on) { pane.innerHTML = ""; pane.dataset.rid = ""; pane.dataset.sig = ""; return; }
+    const sig = JSON.stringify(uebItems(r));
+    if (pane.dataset.rid === rid && pane.dataset.sig === sig && pane.querySelector(".ueb-canvas")) { uebBarState(pane); return; }
+    if (pane.dataset.rid === rid && pane.contains(document.activeElement) && document.activeElement.isContentEditable) return;
+    uebMount(pane, rid);
   }
-  function openUebersicht(rid, isNew) {
+  function uebGut(lay, gut) {
+    gut.addEventListener("pointerdown", (e) => {
+      e.preventDefault(); gut.setPointerCapture(e.pointerId); const rc = lay.getBoundingClientRect();
+      const mv = (ev) => { const w = Math.max(25, Math.min(80, Math.round(((ev.clientX - rc.left) / rc.width) * 100))); UEBS.w = w; lay.style.setProperty("--uw", w + "%"); };
+      const up = () => { gut.removeEventListener("pointermove", mv); gut.removeEventListener("pointerup", up); uebsSave(); const c = lay.querySelector(".ueb-canvas"); if (c && c._fit) c._fit(); };
+      gut.addEventListener("pointermove", mv); gut.addEventListener("pointerup", up);
+    });
+  }
+  function uebBarState(pane) {
+    const b = pane.querySelector("#ueb-solo"); if (b) { b.textContent = UEBS.solo ? "◨ Reihe zeigen" : "◨ Reihe ausblenden"; b.title = UEBS.solo ? "Die Reihe mit den Lektionen wieder rechts daneben zeigen" : "Nur die Übersichtsseite zeigen (ganze Breite)"; }
+    const u = pane.querySelector("#ueb-undo"), rb = $("#r-undo"); if (u) u.disabled = !rb || rb.disabled;
+  }
+  function uebMount(pane, rid) {
     const r = U.reihen[rid]; if (!r) return;
-    const u = r.ueb || {};
-    const x = { html: "", text: "", notesHtml: u.notesHtml || "", notesLh: u.notesLh || 0, files: (u.files || []).slice() };
-    if (isNew && !r.ueb) { r.ueb = { notesHtml: "" }; UEB[rid] = true; try { localStorage.setItem("zp-ueb", JSON.stringify(UEB)); } catch (e) {} }
-    dirtyU.add(rid);
-    const put = () => { const rr = U.reihen[rid]; if (!rr) return; rr.ueb = { notesHtml: x.notesHtml || "" }; if (x.notesLh) rr.ueb.notesLh = x.notesLh; if (x.files && x.files.length) rr.ueb.files = x.files; };
-    openDetailBox({ editDocs: true, page: true, title: r.title || "Reihe", sub: "Übersichtsseite", x, reiheFiles: [...(r.mainFiles || []), ...(r.files || [])],
-      changed: () => { put(); saveReihe(rid, 900); },
-      onClose: () => { const rr = U.reihen[rid]; if (rr && rr.ueb && !filled(rr.ueb.notesHtml) && !/<(img|figure|table)\b/i.test(rr.ueb.notesHtml || "") && !(rr.ueb.files || []).length) { delete rr.ueb; saveReihe(rid, 0); } uFlush("r:" + rid); renderU(); } });
+    const items = uebItems(r);
+    pane.dataset.rid = rid; pane.dataset.sig = JSON.stringify(items);
+    const TB = (cmd, label, title, cls) => '<button type="button" class="nb' + (cls ? " " + cls : "") + '" data-ucmd="' + cmd + '" title="' + title + '" aria-label="' + title + '">' + label + "</button>";
+    pane.innerHTML = '<div class="ueb-bar"><span class="ueb-name">Übersichtsseite</span><span class="ueb-tools">' +
+      '<button type="button" class="nb" id="ueb-undo" title="Letzte Änderung rückgängig machen" aria-label="Rückgängig">↶</button><span class="nsep"></span>' +
+      TB("bold", "<b>F</b>", "Fett (Strg+B)") + TB("italic", "<i>K</i>", "Kursiv (Strg+I)") + TB("underline", "<u>U</u>", "Unterstrichen (Strg+U)") + TB("hl", "", "Gelb markieren", "sw-y") + TB("hlx", "✕", "Markierung entfernen", "sw-x") +
+      TB("insertUnorderedList", "•", "Aufzählung") + TB("ls", '<span class="ls">✎</span>', "Lehrerschrift (Strg+Umschalt+L)", "nls") + '<span class="nsep"></span>' +
+      '<label class="nb nimg" title="Bild einfügen (an der zuletzt angeklickten Stelle)">🖼 Bild<input type="file" id="ueb-img" accept="image/*" multiple hidden></label></span>' +
+      '<span class="ueb-right"><button type="button" class="btn ghost" id="ueb-solo"></button><button type="button" class="btn ghost" id="ueb-close" title="Übersichtsseite einklappen – die Reihenliste erscheint wieder">✕ Einklappen</button></span></div>' +
+      '<div class="ueb-scroll"><div class="ueb-canvas" tabindex="-1"></div></div>' +
+      '<div class="ueb-hint" id="ueb-msg">Irgendwo hinklicken und schreiben. Screenshot: Stelle anklicken, dann Strg+V. Am grauen Rand oben ziehen = verschieben, Ecke unten rechts = Grösse.</div>';
+    uebBarState(pane);
+    const cv = pane.querySelector(".ueb-canvas"), sc = pane.querySelector(".ueb-scroll"), msg = pane.querySelector("#ueb-msg");
+    let last = { x: 24, y: 24 }, saveT = null;
+    const say = (t) => { msg.textContent = t; };
+    const R = () => U.reihen[rid];
+    const itemOf = (el) => { const rr = R(); return rr && rr.ueb && (rr.ueb.items || []).find((q) => q.id === el.dataset.id); };
+    const save = (now) => { clearTimeout(saveT); const go = () => { const rr = R(); if (!rr) return; pane.dataset.sig = JSON.stringify(rr.ueb.items); saveReihe(rid, 300); setTimeout(() => uebBarState(pane), 700); }; if (now) go(); else saveT = setTimeout(go, 500); };
+    const itHtml = (q) => '<div class="ueb-it ueb-' + q.t + '" data-id="' + esc(q.id) + '" style="left:' + q.x + "px;top:" + q.y + "px;width:" + q.w + 'px"><div class="ueb-grip" title="Ziehen zum Verschieben"></div><button type="button" class="ueb-x" title="Entfernen" aria-label="Entfernen">×</button>' +
+      (q.t === "img" ? '<img src="' + esc(q.src) + '" alt="" draggable="false">' : '<div class="ueb-txt" contenteditable="true" role="textbox" aria-multiline="true">' + sanitizeNotes(q.html || "") + "</div>") + '<div class="ueb-rs" title="Ziehen für die Grösse"></div></div>';
+    const fit = () => { let w = 0, h = 0; cv.querySelectorAll(".ueb-it").forEach((el) => { w = Math.max(w, el.offsetLeft + el.offsetWidth); h = Math.max(h, el.offsetTop + el.offsetHeight); }); cv.style.minWidth = w + 80 + "px"; cv.style.minHeight = Math.max(sc.clientHeight - 4, h + 320) + "px"; };
+    cv._fit = fit;
+    cv.innerHTML = items.map(itHtml).join("");
+    cv.querySelectorAll(".ueb-txt").forEach((t) => { nsecDeco(t); t.querySelectorAll("figure.nfig").forEach((f) => { f.contentEditable = "false"; }); });
+    setTimeout(fit, 0); cv.querySelectorAll("img").forEach((im) => im.addEventListener("load", fit));
+    const at = (e) => { const rc = cv.getBoundingClientRect(); return { x: Math.max(0, Math.round(e.clientX - rc.left)), y: Math.max(0, Math.round(e.clientY - rc.top)) }; };
+    const add = (q, focus) => { const rr = R(); if (!rr) return null; uebItems(rr).push(q); const tmp = document.createElement("div"); tmp.innerHTML = itHtml(q); const el = tmp.firstChild; cv.appendChild(el); const im = el.querySelector("img"); if (im) im.addEventListener("load", fit); fit(); if (focus) { const t = el.querySelector(".ueb-txt"); if (t) t.focus(); } return el; };
+    const remove = (el) => { const rr = R(); if (!rr) return; rr.ueb.items = rr.ueb.items.filter((q) => q.id !== el.dataset.id); el.remove(); fit(); save(true); };
+    const textOk = (t) => !!(t.textContent.trim() || t.querySelector("img, figure, table"));
+    const sel = (el) => { cv.querySelectorAll(".ueb-it.sel").forEach((x) => x !== el && x.classList.remove("sel")); if (el) el.classList.add("sel"); };
+    // Klick ins Leere: neues Textfeld an dieser Stelle
+    cv.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0) return;
+      const it = e.target.closest(".ueb-it");
+      if (it) { sel(it); last = { x: it.offsetLeft, y: it.offsetTop + it.offsetHeight + 12 }; return; }
+      if (e.target !== cv) return;
+      if (e.pointerType !== "mouse") return; // Tablet/Handy: erst beim Tippen (click), damit Wischen nicht schreibt
+      e.preventDefault(); newAt(e);
+    });
+    cv.addEventListener("click", (e) => { if (e.target === cv && e.pointerType && e.pointerType !== "mouse") newAt(e); });
+    function newAt(e) {
+      sel(null);
+      const p = at(e); last = p;
+      const a = document.activeElement; if (a && a.classList && a.classList.contains("ueb-txt")) a.blur();
+      const el = add({ id: uebId(), t: "text", x: p.x, y: Math.max(0, p.y - 10), w: Math.max(160, Math.min(420, cv.clientWidth - p.x - 16)), html: "" }, true);
+      if (el) el.classList.add("fresh");
+    }
+    cv.addEventListener("input", (e) => { const t = e.target.closest && e.target.closest(".ueb-txt"); if (!t) return; const el = t.closest(".ueb-it"), q = itemOf(el); if (!q) return; q.html = sanitizeNotes(t.innerHTML); el.classList.remove("fresh"); fit(); save(); });
+    cv.addEventListener("focusout", (e) => {
+      const t = e.target.closest && e.target.closest(".ueb-txt"); if (!t) return; const el = t.closest(".ueb-it");
+      setTimeout(() => { if (!el.isConnected || el.contains(document.activeElement)) return; if (!textOk(t)) { const rr = R(); if (rr) rr.ueb.items = rr.ueb.items.filter((q) => q.id !== el.dataset.id); el.remove(); fit(); save(true); } else save(true); }, 0);
+    });
+    cv.addEventListener("keydown", (e) => {
+      const t = e.target.closest && e.target.closest(".ueb-txt");
+      if (t && e.key === "Escape") { e.preventDefault(); t.blur(); return; }
+      if (t && e.key.toLowerCase() === "l" && e.ctrlKey && e.shiftKey) { e.preventDefault(); lsToggle(t); return; }
+      if (!t && (e.key === "Delete" || e.key === "Backspace")) { const s = cv.querySelector(".ueb-it.sel"); if (s) { e.preventDefault(); remove(s); } }
+    });
+    cv.addEventListener("click", (e) => { const x = e.target.closest(".ueb-x"); if (x) { remove(x.closest(".ueb-it")); say("Entfernt. «↶» oben links holt es zurück."); } });
+    // Verschieben (oberer Rand) und Grösse (Ecke unten rechts)
+    cv.addEventListener("pointerdown", (e) => {
+      const g = e.target.closest(".ueb-grip, .ueb-rs, .ueb-img > img"); if (!g || e.button !== 0) return;
+      const el = g.closest(".ueb-it"), q = itemOf(el); if (!q) return;
+      e.preventDefault(); e.stopPropagation(); g.setPointerCapture(e.pointerId);
+      const rs = g.classList.contains("ueb-rs"), x0 = e.clientX, y0 = e.clientY, a = { x: q.x, y: q.y, w: q.w }; let moved = false;
+      const mv = (ev) => { const dx = ev.clientX - x0, dy = ev.clientY - y0; if (Math.abs(dx) + Math.abs(dy) > 3) moved = true; if (!moved) return;
+        if (rs) { q.w = Math.max(60, Math.round(a.w + dx)); el.style.width = q.w + "px"; } else { q.x = Math.max(0, Math.round(a.x + dx)); q.y = Math.max(0, Math.round(a.y + dy)); el.style.left = q.x + "px"; el.style.top = q.y + "px"; } fit(); };
+      const up = () => { g.removeEventListener("pointermove", mv); g.removeEventListener("pointerup", up); g.removeEventListener("pointercancel", up); if (moved) save(true); };
+      g.addEventListener("pointermove", mv); g.addEventListener("pointerup", up); g.addEventListener("pointercancel", up);
+    }, true);
+    // Bilder: einfügen (Strg+V), ins Feld ziehen oder über «🖼 Bild»
+    const putImgs = async (files, p) => {
+      if (!state.assets) { say("Bilder einfügen geht nur, wenn Semper mit OneDrive verbunden ist."); return; }
+      let y = p.y;
+      for (const f of files) {
+        if (!/^image\//.test(f.type)) continue;
+        say("Bild wird gespeichert …");
+        try {
+          const up = await state.assets.upload(f, { type: f.type === "image/svg+xml" ? "image/png" : f.type });
+          const w = Math.max(120, Math.min(480, cv.clientWidth - p.x - 24));
+          const el = add({ id: uebId(), t: "img", x: p.x, y, w, src: "/_blob/" + up.id }); sel(el);
+          y += Math.round(w * 0.6) + 16; save(true); say("Bild eingefügt. Am Rand oben verschieben, an der Ecke unten rechts grösser oder kleiner ziehen.");
+        } catch (err) { console.error(err); say(err && err.code === "too_large" ? "Das Bild ist zu gross (höchstens 20 MB)." : "Das Bild konnte nicht gespeichert werden."); }
+      }
+      last = { x: p.x, y };
+    };
+    pane.addEventListener("paste", (e) => {
+      if (!pane.contains(e.target)) return;
+      const cd = e.clipboardData; if (!cd) return;
+      const imgs = [...cd.files].filter((f) => /^image\//.test(f.type));
+      const t = e.target.closest && e.target.closest(".ueb-txt");
+      if (imgs.length) {
+        e.preventDefault();
+        let p = last;
+        if (t) { const el = t.closest(".ueb-it"); if (!textOk(t)) { p = { x: el.offsetLeft, y: el.offsetTop }; const rr = R(); if (rr) rr.ueb.items = rr.ueb.items.filter((q) => q.id !== el.dataset.id); el.remove(); } else p = { x: el.offsetLeft, y: el.offsetTop + el.offsetHeight + 12 }; }
+        putImgs(imgs, p); return;
+      }
+      if (t) { const h = cd.getData("text/html"); e.preventDefault(); if (h) document.execCommand("insertHTML", false, sanitizeNotes(h)); else document.execCommand("insertText", false, cd.getData("text/plain") || ""); return; }
+      const txt = cd.getData("text/plain"); if (!txt) return;
+      e.preventDefault(); const el = add({ id: uebId(), t: "text", x: last.x, y: last.y, w: Math.max(160, Math.min(420, cv.clientWidth - last.x - 16)), html: sanitizeNotes(cd.getData("text/html") || esc(txt).replace(/\n/g, "<br>")) }); save(true); if (el) sel(el);
+    });
+    cv.addEventListener("dragover", (e) => { if ([...((e.dataTransfer && e.dataTransfer.types) || [])].includes("Files")) { e.preventDefault(); e.stopPropagation(); cv.classList.add("file-drop"); } });
+    cv.addEventListener("dragleave", (e) => { if (!cv.contains(e.relatedTarget)) cv.classList.remove("file-drop"); });
+    cv.addEventListener("drop", (e) => { cv.classList.remove("file-drop"); const fl = [...((e.dataTransfer && e.dataTransfer.files) || [])].filter((f) => /^image\//.test(f.type)); if (!fl.length) return; e.preventDefault(); e.stopPropagation(); putImgs(fl, at(e)); });
+    pane.querySelector("#ueb-img").addEventListener("change", (e) => { const fl = [...e.target.files]; e.target.value = ""; putImgs(fl, last); });
+    // Leiste
+    pane.querySelector(".ueb-bar").addEventListener("mousedown", (e) => { if (e.target.closest("[data-ucmd]")) e.preventDefault(); });
+    pane.querySelector(".ueb-bar").addEventListener("click", (e) => {
+      const b = e.target.closest("button"); if (!b) return;
+      if (b.id === "ueb-close") { UEBS.open = false; uebsSave(); renderU(); return; }
+      if (b.id === "ueb-solo") { UEBS.solo = !UEBS.solo; uebsSave(); const lay = pane.closest(".r-layout"); if (lay) lay.classList.toggle("ueb-solo", UEBS.solo); uebBarState(pane); fit(); return; }
+      if (b.id === "ueb-undo") { const rb = $("#r-undo"); if (rb && !rb.disabled) { const a = document.activeElement; if (a && a.blur) a.blur(); setTimeout(() => rb.click(), 0); } return; }
+      const c = b.dataset.ucmd; if (!c) return;
+      const a = document.activeElement, t = a && a.classList && a.classList.contains("ueb-txt") ? a : null;
+      if (!t) { say("Zuerst in ein Textfeld klicken bzw. Text markieren."); return; }
+      if (c === "ls") lsToggle(t);
+      else if (c === "hl" || c === "hlx") { try { document.execCommand("styleWithCSS", false, true); } catch (err) {} document.execCommand("hiliteColor", false, c === "hl" ? HL.y : "transparent"); try { document.execCommand("styleWithCSS", false, false); } catch (err) {} }
+      else document.execCommand(c, false, null);
+      t.dispatchEvent(new Event("input", { bubbles: true }));
+    });
   }
   // Unterpunkte einer Reihe (z. B. Wortarten: Nomen, Verb …)
   const subsOf = (r) => (Array.isArray(r.subs) ? r.subs.filter((x) => String(x || "").trim()) : []);
@@ -6112,7 +6285,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       if (hit(r.title)) where.push(["", "Titel"]);
       subsOf(r).forEach((x) => { if (hit(subLabel(x))) where.push(["", "Unterpunkt «" + subLabel(x) + "»"]); });
       if (hit(htmlToPlain(r.leitfrage || ""))) where.push(["", "Leitfrage"]);
-      if (r.ueb && hit(htmlToPlain(r.ueb.notesHtml || ""))) where.push(["", "Übersichtsseite"]);
+      if (r.ueb && hit(htmlToPlain((r.ueb.notesHtml || "") + " " + (r.ueb.items || []).map((q) => q.html || "").join(" ")))) where.push(["", "Übersichtsseite"]);
       blocksOf(r).forEach(([i, sp]) => {
         const m = (r.meta || {})[i] || {}, pl = m.plan || {};
         const txt = [phaseOf(r, i), htmlToPlain(r.lessons[i] || ""), m.details || "", htmlToPlain(m.notesHtml || ""), htmlToPlain(pl.ziele || ""), ...(pl.rows || []).flat().map((c) => htmlToPlain(c || ""))].join(" ");
@@ -6749,7 +6922,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       if (!first) { U.sel = null; box.innerHTML = '<div class="empty">Noch keine Reihe hier. Mit „+ Neue Reihe“ legen Sie eine an.</div>'; return; }
       U.sel = first[0]; r = first[1]; renderRSide();
     }
-    rSnapBase(U.sel); setTimeout(rUndoBtn, 0); setTimeout(() => uebFill(box), 0);
+    rSnapBase(U.sel); setTimeout(rUndoBtn, 0); if (!target) uebLayout(box, r, U.sel);
     box.innerHTML =
       '<div class="r-top">' + (mastersOf(U.sel).length ? '<button type="button" class="ms-up-btn" data-goto="' + mastersOf(U.sel)[0][0] + '" title="Unterreihe von: ' + esc(mastersOf(U.sel).map(([, m]) => m.title || "Reihe").join(", ")) + ' – klicken öffnet die Masterreihe">↳</button>' : "") + '<input class="r-title" id="r-title" data-rf="title" value="' + esc(r.title || "") + '" aria-label="Titel der Reihe" placeholder="Titel der Reihe">' +
       '<div class="r-tools"><button class="btn ghost" type="button" id="r-undo" disabled title="Noch nichts rückgängig zu machen">↶ Rückgängig</button>' + '<button class="btn ghost' + (r.folder ? " has-folder" : "") + '" type="button" id="r-folder" title="' + (r.folder ? "Ordnerpfad kopieren: " + esc(r.folder) : "Ordner auf dem Computer hinterlegen") + '">📁 Ordner</button>' + (window.ZLOCAL ? '<button class="btn ghost" type="button" id="r-folder-ed" title="Ordner wählen oder ändern" aria-label="Ordner wählen">✎</button>' : "") + '' + (r.klasse ? "" : r.master ? '<button class="btn ghost ms-btn" type="button" id="r-mlist" aria-haspopup="menu" title="Unterreihen dieser Masterreihe">◆ Unterreihen (' + childrenOf(r).length + ') ▾</button>' : '<button class="btn ghost" type="button" id="r-master" title="Diese Reihe zur Masterreihe machen, um Unterreihen hinzuzufügen">◆ Masterreihe</button>') + '<button class="btn ghost" type="button" id="r-print" title="Ganze Reihe als Lektionsplanung drucken">Drucken</button><button class="btn ghost" type="button" data-move="-1" title="Reihe in der Liste nach oben schieben" aria-label="Reihe nach oben">↑</button><button class="btn ghost" type="button" data-move="1" title="Reihe in der Liste nach unten schieben" aria-label="Reihe nach unten">↓</button></div></div>' +
@@ -6896,7 +7069,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     if (e.target.closest(".ucell .exp")) { e.preventDefault(); return; }
     const t = e.target.closest(".ucell .inp"); if (t && !t.isContentEditable && e.detail > 1) e.preventDefault();
   });
-  uEl.addEventListener("dblclick", (e) => { const uv = e.target.closest(".ueb-view"); if (uv && !e.target.closest("figure.ndoc")) { e.preventDefault(); const w = uv.closest("[data-uebrid]"); if (w) openUebersicht(w.dataset.uebrid); return; } const t = e.target.closest(".ucell .inp"); if (t && !t.isContentEditable) { e.preventDefault(); uStart(t, e); } });
+  uEl.addEventListener("dblclick", (e) => { const t = e.target.closest(".ucell .inp"); if (t && !t.isContentEditable) { e.preventDefault(); uStart(t, e); } });
   uEl.addEventListener("keydown", (e) => {
     const t = e.target.closest && e.target.closest(".ucell .inp");
     if (!t) {
@@ -7759,9 +7932,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const st = e.target.closest && e.target.closest("[data-subtog]");
     if (st) { e.preventDefault(); e.stopPropagation(); const id = st.dataset.subtog; UP.subOpen = { ...(UP.subOpen || {}), [id]: !subsOpen(id) }; saveUP(); renderU(); return; }
     const b = e.target.closest("button"); if (!b || !uEl.contains(b)) return;
-    if (b.dataset.uebnew != null) { if (U.sel) openUebersicht(U.sel, true); return; }
-    if (b.dataset.uebed != null) { const w = b.closest("[data-uebrid]"); if (w) openUebersicht(w.dataset.uebrid); return; }
-    if (b.dataset.uebtog != null) { const w = b.closest("[data-uebrid]"), rid = w && w.dataset.uebrid, r = rid && U.reihen[rid]; if (!r) return; UEB[rid] = !uebOpen(rid); try { localStorage.setItem("zp-ueb", JSON.stringify(UEB)); } catch (err) {} const tmp = document.createElement("div"); tmp.innerHTML = uebHtml(r, rid); const nw = tmp.firstChild; w.replaceWith(nw); uebFill(nw); return; }
+    if (b.dataset.uebnew != null) { const r = U.sel && U.reihen[U.sel]; if (!r) return; if (!r.ueb) { r.ueb = { items: [] }; saveReihe(U.sel, 0); } UEBS.open = true; uebsSave(); renderU(); return; }
+    if (b.dataset.uebopen != null) { UEBS.open = true; uebsSave(); renderU(); return; }
     if (b.dataset.matslim != null) { const id = mrOf(b), r = U.reihen[id]; if (!r) return; const k = +b.dataset.matslim, m = (r.lnItems || [])[k]; if (!m) return; const row = b.closest(".lesson"); r.lnItems = r.lnItems.slice(); r.lnItems[k] = { ...m, slim: !row.classList.contains("mat-slim") }; saveReihe(id, 0); renderLessonsOnly(U.reihen[U.sel]); return; }
     if (b.id === "u-legend") { prioFilterMenu(b); return; }
     if (b.id === "u-subs") { UP.subs = !UP.subs; UP.subOpen = {}; saveUP(); renderU(); return; }
