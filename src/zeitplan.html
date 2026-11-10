@@ -132,6 +132,8 @@ html.phone .k-vbar { flex-wrap: wrap; gap: 8px; }
 .lk-layout.side-off { grid-template-columns: 34px minmax(0, 1fr) 250px; }
 .lk-layout.docs-off { grid-template-columns: 240px minmax(0, 1fr) 34px; }
 .lk-layout.side-off.docs-off { grid-template-columns: 34px minmax(0, 1fr) 34px; }
+.lk-layout.wide { grid-template-columns: 240px minmax(0, 1fr) minmax(300px, var(--rvw, 42%)); }
+.lk-layout.wide.side-off { grid-template-columns: 34px minmax(0, 1fr) minmax(300px, var(--rvw, 42%)); }
 .lk-layout.nodocs { grid-template-columns: 240px minmax(0, 1fr); }
 .lk-layout.nodocs.side-off { grid-template-columns: 34px minmax(0, 1fr); }
 .lk-layout.nodocs .lk-docs, .lk-layout.nodocs .lk-rail.r { display: none; }
@@ -166,6 +168,25 @@ html.phone .k-vbar { flex-wrap: wrap; gap: 8px; }
 .lk-plantext .phase { color: var(--muted); font-weight: 500; } .lk-plantext .box { border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
 .lk-plantext table { width: 100%; border-collapse: collapse; font-size: 0.85rem; } .lk-plantext th, .lk-plantext td { border: 1px solid var(--line); padding: 4px 6px; vertical-align: top; text-align: left; }
 .lk-plantext .pre { white-space: pre-wrap; }
+.lk-rvsel { border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 3px 8px; font: inherit; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); cursor: pointer; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; min-width: 0; }
+.lk-rvsel:hover, .lk-rvsel:focus-visible { border-color: var(--accent); color: var(--accent); }
+.lk-docs .lk-shead { min-width: 0; } .lk-rvbtns { display: flex; gap: 4px; align-items: center; flex: none; }
+.lk-rvmenu { z-index: 3000; max-width: min(420px, 90vw); max-height: 70vh; overflow: auto; }
+.lk-rvmenu button span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lk-dvbar { display: flex; flex-wrap: wrap; gap: 4px; }
+.lk-rvdoc { min-width: 0; } .lk-rvdoc canvas.vw-page, .lk-rvdoc img.vw-img { max-width: 100%; height: auto; display: block; margin: 0 auto 8px; box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15); }
+.lk-docs .lk-planbox { display: grid; gap: 6px; align-content: start; font-size: 0.92rem; min-width: 0; }
+.lk-plantext .pph { background: var(--ink); color: var(--surface); font-weight: 700; font-size: 0.85rem; border-radius: 4px; padding: 2px 8px; margin: 14px 0 4px; }
+.lk-plantext .psec { position: relative; border-radius: 6px; padding: 2px 4px; scroll-margin-top: 8px; }
+.lk-plantext .psec h4 { margin: 6px 0 3px; font-size: 0.95rem; color: var(--accent); border-bottom: 1px solid var(--line); padding-right: 9em; }
+.lk-plantext .psec > .lk-psect { position: absolute; top: 2px; right: 2px; }
+.lk-plantext .psec.flash { animation: lkflash 1.6s ease-out; }
+@keyframes lkflash { from { background: #fff3b0; } to { background: transparent; } }
+.lk-plantext .psec-ref { color: var(--muted); font-size: 0.85rem; }
+.lk-plantext [data-sref] { color: var(--accent); cursor: pointer; text-decoration: underline dotted; }
+.lk-plantext tr:has([data-sref]) { cursor: pointer; } .lk-plantext tr.on td { background: #fff7cc; color: #111; }
+.lk-tfold { display: flex; align-items: center; gap: 4px; } .lk-tfb { border: 0; background: none; cursor: pointer; color: inherit; font: inherit; padding: 0 2px; }
+.lk-planbox.tab-off .lk-tfold + .lk-ptab, .lk-planbox.tab-off .lk-tfold + table { display: none; }
 html.lk-proj .lk-planbox { display: none !important; }
 html.lk-proj .lk-main.split > .lk-page { grid-column: 1 / -1; }
 html.mob .lk-main.split > .lk-page { grid-column: 1 / -1; grid-row: 4; }
@@ -3983,7 +4004,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const rows = p.rows.map((row, ri) => [row, ri]).filter(([row]) => row.some(filled));
       anyAb = rows.some(([, ri]) => abGet(p, ri).some((id) => sp.secs[id]));
       h += "<h3>Lektionsplanung</h3><table>" + colgroup(p, false, anyAb ? "17%" : "") + "<thead><tr>" + p.cols.map((c) => "<th>" + esc(c) + "</th>").join("") + (anyAb ? "<th>Abschnitt</th>" : "") + "</tr></thead><tbody>" +
-        rows.map(([row, ri]) => "<tr>" + p.cols.map((c, j) => "<td>" + lsOff(sanitize(row[j] || "")) + "</td>").join("") + (anyAb ? '<td class="pab-p">' + abGet(p, ri).filter((id) => sp.secs[id]).map((id) => esc(sp.secs[id].t)).join("<br>") + "</td>" : "") + "</tr>").join("") + "</tbody></table>";
+        rows.map(([row, ri]) => "<tr>" + p.cols.map((c, j) => "<td>" + lsOff(sanitize(row[j] || "")) + "</td>").join("") + (anyAb ? '<td class="pab-p">' + abGet(p, ri).filter((id) => sp.secs[id]).map((id) => '<span data-sref="' + id + '">' + esc(sp.secs[id].t) + "</span>").join("<br>") + "</td>" : "") + "</tr>").join("") + "</tbody></table>";
     }
     if (hasNotes && anyAb) {
       // Abschnitte in der Reihenfolge der Lektionsplanung, darüber die Phase als schwarzer Balken (auch schwarz-weiss gut lesbar)
@@ -3992,7 +4013,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       p.rows.forEach((row, ri) => {
         const ids = abGet(p, ri).filter((id) => sp.secs[id]); if (!ids.length) return;
         const q = labels.find((y) => y.ri === ri), lab = q ? q.label : "Zeile " + (ri + 1); h += '<div class="pph">' + esc(lab) + "</div>";
-        ids.forEach((id) => { const x = sp.secs[id]; if (done.has(id)) { h += '<div class="psec-ref">→ «' + esc(x.t) + "» siehe oben</div>"; return; } done.add(id); const same = x.t === lab || (q && q.ph && x.t === q.ph); h += '<div class="psec">' + (same ? "" : "<h4>" + esc(x.t) + "</h4>") + x.h + "</div>"; });
+        ids.forEach((id) => { const x = sp.secs[id]; if (done.has(id)) { h += '<div class="psec-ref">→ «' + esc(x.t) + "» siehe oben</div>"; return; } done.add(id); const same = x.t === lab || (q && q.ph && x.t === q.ph); h += '<div class="psec" data-sid="' + id + '">' + (same ? "" : "<h4>" + esc(x.t) + "</h4>") + x.h + "</div>"; });
       });
       const rest = sp.list.map((y) => (y.sec ? (done.has(y.sec.id) ? "" : '<div class="psec"><h4>' + esc(y.sec.t) + "</h4>" + y.sec.h + "</div>") : y.html)).filter((y) => filled(y) || /<(img|figure|table)/.test(y)).join("");
       if (rest) h += '<div class="pph" style="background:#fff;color:#000;border:1.5px solid #000">Weitere Notizen</div>' + rest;
@@ -10802,9 +10823,9 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   // ================= Unterricht: eine Seite pro Lektion (zum Zeigen, Projizieren und Weitergeben) =================
   // Gespeichert in «seiten», Schlüssel: Klasse ~ Reihen-Kopie ~ Lektion. Die Unterrichtsplanung selbst kommt hier nicht hinein.
   const LK = { kid: null, sel: null, page: null, pid: null, t: 0, showPast: false, side: true, docs: true, undo: [], redo: [], cur: null };
-  try { const o = JSON.parse(localStorage.getItem("zeitplan-lk") || "null"); if (o) { LK.kid = o.kid; LK.sel = o.sel; if (o.plan) LK.plan = true; if (o.side === false) LK.side = false; if (o.docs === false) LK.docs = false; } } catch (e) {}
+  try { const o = JSON.parse(localStorage.getItem("zeitplan-lk") || "null"); if (o) { LK.kid = o.kid; LK.sel = o.sel; if (o.plan) LK.rv = "plan"; if (typeof o.rv === "string") LK.rv = o.rv; if (o.side === false) LK.side = false; if (o.docs === false) LK.docs = false; } } catch (e) {}
   try { LK.pz = +localStorage.getItem("zeitplan-lkpz") || 1.35; } catch (e) { LK.pz = 1.35; }
-  const lkSaveSel = () => { try { localStorage.setItem("zeitplan-lk", JSON.stringify({ kid: LK.kid, sel: LK.sel, side: LK.side, docs: LK.docs, plan: !!LK.plan })); } catch (e) {} };
+  const lkSaveSel = () => { try { localStorage.setItem("zeitplan-lk", JSON.stringify({ kid: LK.kid, sel: LK.sel, side: LK.side, docs: LK.docs, rv: LK.rv || "" })); } catch (e) {} };
   const lkStat = (t) => { const el = $("#lk-status"); if (el) el.textContent = t; };
   const LK_EMO = [["💡", "Idee"], ["✏️", "Schreiben"], ["📝", "Notizen"], ["📖", "Lesen"], ["👀", "Anschauen"], ["👂", "Zuhören"], ["🗣️", "Sprechen"], ["💬", "Diskussion"], ["👤", "Einzelarbeit"], ["👥", "Partnerarbeit"], ["👨‍👩‍👧", "Gruppenarbeit"], ["🙋", "Melden"], ["❓", "Frage"], ["❗", "Wichtig"], ["⚠️", "Achtung"], ["✅", "Erledigt"], ["⭐", "Stern"], ["🎯", "Ziel"], ["🔍", "Untersuchen"], ["🧠", "Nachdenken"], ["🤔", "Überlegen"], ["⏱️", "Zeit"], ["🏠", "Hausaufgabe"], ["📚", "Bücher"], ["✂️", "Basteln"], ["🎧", "Hören"], ["🎬", "Film"], ["💻", "Computer"], ["📌", "Merken"], ["➡️", "Weiter"], ["👍", "Gut"], ["🎉", "Super"]];
   const LK_BOX = ["gelb", "apricot", "rost", "rosa", "lila", "blau", "gruen", "grau", "weiss"];
@@ -10933,7 +10954,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     return [...(m.files || []), ...(r.mainFiles || [])].filter((f) => f && !f.folder);
   }
   const lkIsProj = () => document.documentElement.classList.contains("lk-proj");
-  function lkLayout() { const L = $("#lk-layout"), P = lkIsProj(); if (!L) return; L.classList.toggle("side-off", !(P ? LK.pside : LK.side)); L.classList.toggle("docs-off", !(P ? LK.pdocs : LK.docs)); const v = $("#view-lektion"); if (v) v.style.setProperty("--pz", LK.pz || 1.35); }
+  function lkLayout() { const L = $("#lk-layout"), P = lkIsProj(); if (!L) return; L.classList.toggle("side-off", !(P ? LK.pside : LK.side)); L.classList.toggle("docs-off", !(P ? LK.pdocs : LK.docs)); L.classList.toggle("wide", !P && !!LK.rv && !!LK.docs); const v = $("#view-lektion"); if (v) v.style.setProperty("--pz", LK.pz || 1.35); }
   // Beim Öffnen der Unterrichtsseite: Klasse und Lektion, die gerade läuft oder als Nächstes kommt.
   // Eine eigene Wahl bleibt, bis die nächste Lektion beginnt.
   LK.wantAuto = true;
@@ -10971,10 +10992,53 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const r = U.reihen[x.u.rid] || {}, docs = lkDocs(x.u.rid, x.u.i), ids = new Set(docs.map((f) => f.id));
     const row = (f) => '<div class="lk-drow"><button type="button" class="doc" data-lkopen="' + esc(f.id) + '" title="Öffnen – dort können Sie es auch bearbeiten"><span class="tag">' + typeTag(f) + "</span><span>" + esc(f.name) + '</span></button>' + (lkCanPick(f) ? '<button type="button" class="btn ghost lk-ins" data-lkpick="' + esc(f.id) + '" title="' + (LK_IMG.test(extOf(f)) ? "Bild in die Seite einfügen (danach können Sie hineinschreiben)" : "Einzelne Folien bzw. Seiten als Bild in die Seite holen (danach können Sie hineinschreiben)") + '">🖼</button>' : "") + '<button type="button" class="btn ghost lk-ins" data-lkins="' + esc(f.id) + '" title="Als Verweis in die Seite einfügen">＋</button></div>';
     const more = (r.files || []).filter((f) => f && !f.folder && !ids.has(f.id));
-    return '<div class="lk-shead"><span class="lbl">Dokumente</span><button type="button" class="lk-fold" id="lk-docsfold" title="Dokumente einklappen">▸</button></div>' +
+    const all = [...docs, ...more], rv = LK.rv === "plan" ? "plan" : all.some((f) => f.id === LK.rv) ? LK.rv : "", cur = rv && rv !== "plan" ? all.find((f) => f.id === rv) : null;
+    const head = '<div class="lk-shead"><button type="button" class="lk-rvsel" id="lk-rv" title="Wählen, was hier rechts steht: die Liste der Dokumente, die Lektionsplanung oder ein einzelnes Dokument gross">' + (rv === "plan" ? "Lektionsplanung" : cur ? esc(cur.name) : "Dokumente") + ' <span aria-hidden="true">▾</span></button><span class="lk-rvbtns">' +
+      (rv === "plan" ? '<button type="button" class="btn ghost" id="lk-planedit" title="Lernziele, Ablauf und Notizen dieser Lektion bearbeiten">✎ Bearbeiten</button>' : "") +
+      '<button type="button" class="lk-fold" id="lk-docsfold" title="Rechte Seite einklappen">▸</button></span></div>';
+    if (rv === "plan") return head + '<div class="lk-planbox" id="lk-planbox"></div>';
+    if (cur) return head + '<div class="lk-dvbar"><button type="button" class="btn ghost" data-lkopen="' + esc(cur.id) + '" title="Im eigenen Fenster öffnen – dort auch bearbeiten">⤢ Öffnen</button>' + (lkCanPick(cur) ? '<button type="button" class="btn ghost" data-lkpick="' + esc(cur.id) + '" title="Einzelne Seiten bzw. das Bild in die Seite holen">🖼 In die Seite</button>' : "") + '<button type="button" class="btn ghost" data-lkins="' + esc(cur.id) + '" title="Als Verweis in die Seite einfügen">＋ Verweis</button></div><div class="ufl-dmsg msg" id="lk-rvmsg"></div><div class="lk-rvdoc" id="lk-rvdoc" data-fid="' + esc(cur.id) + '"></div>';
+    return head +
       (docs.length ? docs.map(row).join("") : '<p class="help">Diese Lektion hat keine eigenen Dokumente.</p>') +
       (more.length ? "<details><summary>Materialsammlung der Reihe (" + more.length + ")</summary><div>" + more.map(row).join("") + "</div></details>" : "") +
-      '<details class="hint"><summary title="Hilfe anzeigen">ⓘ Hilfe</summary><p class="help">Klick öffnet das Dokument; dort «Bearbeiten» oder «In Word bearbeiten». 🖼 holt einzelne Folien oder Seiten als Bild in die Seite – ein Klick auf das Bild, und Sie können hineinschreiben. ＋ setzt einen Verweis.</p></details>';
+      '<details class="hint"><summary title="Hilfe anzeigen">ⓘ Hilfe</summary><p class="help">Klick öffnet das Dokument; dort «Bearbeiten» oder «In Word bearbeiten». 🖼 holt einzelne Folien oder Seiten als Bild in die Seite – ein Klick auf das Bild, und Sie können hineinschreiben. ＋ setzt einen Verweis. Mit dem Pfeil ▾ oben wählen Sie, was hier steht: die Lektionsplanung oder ein Dokument gross.</p></details>';
+  }
+  // Rechte Seite: Pfeil-Menü «Dokumente / Lektionsplanung / einzelnes Dokument»
+  function lkRvMenu(btn) {
+    const old = document.getElementById("lk-rvmenu"); if (old) { old.remove(); return; }
+    const x = lkLessons(LK.kid).find((y) => y.key === LK.sel); if (!x) return;
+    const r = U.reihen[x.u.rid] || {}, docs = lkDocs(x.u.rid, x.u.i), ids = new Set(docs.map((f) => f.id)), more = (r.files || []).filter((f) => f && !f.folder && !ids.has(f.id));
+    const it = (v, label, tag) => '<button type="button" role="menuitemradio" aria-checked="' + ((LK.rv || "") === v) + '" data-lkrv="' + esc(v) + '">' + (tag ? '<span class="tag">' + tag + "</span>" : "") + "<span>" + label + "</span></button>";
+    const m = document.createElement("div"); m.className = "cmenu lk-rvmenu"; m.id = "lk-rvmenu"; m.setAttribute("role", "menu");
+    m.innerHTML = it("", "☰ Dokumente (Liste)") + it("plan", "📋 Lektionsplanung") +
+      (docs.length ? '<hr><div class="cm-title">Dokumente der Lektion</div>' + docs.map((f) => it(f.id, esc(f.name), typeTag(f))).join("") : "") +
+      (more.length ? '<hr><div class="cm-title">Materialsammlung der Reihe</div>' + more.map((f) => it(f.id, esc(f.name), typeTag(f))).join("") : "");
+    $("#view-lektion").appendChild(m);
+    const rc = btn.getBoundingClientRect(); m.style.top = rc.bottom + 4 + "px"; m.style.left = Math.max(8, Math.min(innerWidth - m.offsetWidth - 8, rc.left)) + "px";
+    const close = () => { m.remove(); document.removeEventListener("pointerdown", out, true); };
+    const out = (e) => { if (!m.contains(e.target) && !btn.contains(e.target)) close(); };
+    setTimeout(() => document.addEventListener("pointerdown", out, true), 0);
+    m.addEventListener("click", () => setTimeout(close, 0));
+  }
+  function lkRvSet(v) {
+    LK.rv = v || ""; LK.docs = true; lkSaveSel(); lkLayout();
+    const x = lkLessons(LK.kid).find((y) => y.key === LK.sel); if (!x) return;
+    $("#lk-docs").innerHTML = lkDocsHtml(x); lkPlanRender();
+  }
+  // Ein Dokument rechts gross: Word wie im Lektionsfenster (eigene Darstellung), sonst die übliche Vorschau
+  async function lkRvDoc(f, body, m) {
+    if (extOf(f) === "docx") {
+      body.innerHTML = '<div class="ndoc-load">📄 ' + esc(f.name) + " · lädt …</div>";
+      try {
+        if (!WD_CACHE[f.id]) WD_CACHE[f.id] = await wdRead(f);
+        const ctx = await wdLoad(WD_CACHE[f.id].bytes.slice(0)), page = await wdRender(ctx, false); if (!body.isConnected) return;
+        const sc = document.createElement("div"); sc.className = "ws-sc"; sc.appendChild(page);
+        const hold = document.createElement("div"); hold.className = "ws-hold"; hold.appendChild(sc); body.innerHTML = ""; body.appendChild(hold); wdTabs(page, ctx.defTab);
+        const fit = () => { const w = Math.max(120, body.clientWidth - 4), k = w / (page.offsetWidth || 1); sc.style.transform = "scale(" + k + ")"; hold.style.width = w + "px"; hold.style.height = Math.ceil(page.offsetHeight * k) + "px"; };
+        fit(); if (window.ResizeObserver) new ResizeObserver(fit).observe(body);
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { wdTabs(page, ctx.defTab); fit(); });
+      } catch (e) { console.error(e); body.innerHTML = '<div class="empty">Die Vorschau hat nicht geklappt. «⤢ Öffnen» zeigt das Dokument im eigenen Fenster.</div>'; }
+    } else await docPreview(f, body, m);
   }
   async function lkOpen() {
     const main = $("#lk-main"), L = $("#lk-layout"), x = lkLessons(LK.kid).find((y) => y.key === LK.sel);
@@ -11012,15 +11076,12 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     lkOpenHead(); lkUndoBtns(); lkPlanRender();
     try { document.execCommand("defaultParagraphSeparator", false, "p"); } catch (e) {}
   }
-  // Geteilter Bildschirm: rechts neben der Seite die Lektionsplanung aus der Reihe (Kurzeintrag, Lernziele, Ablauf, Notizen)
+  // Rechte Seite (Pfeil-Menü): Lektionsplanung aus der Reihe oder ein Dokument gross
   function lkPlanRender() {
-    const main = $("#lk-main"); if (!main) return;
-    const old = $("#lk-planbox"); if (old) old.remove();
     const x = LK.sel && lkLessons(LK.kid).find((y) => y.key === LK.sel), r = x && U.reihen[x.u.rid];
-    const on = !!(LK.plan && x && r && $("#lk-page"));
-    main.classList.toggle("split", on);
-    const b = $("#lk-plan"); if (b) b.setAttribute("aria-pressed", String(on));
-    if (!on) return;
+    const dv = $("#lk-rvdoc");
+    if (dv && x) { const f = lkAllDocs()[dv.dataset.fid]; if (f && !dv.firstChild) lkRvDoc(f, dv, $("#lk-rvmsg")); }
+    const box = $("#lk-planbox"); if (!box || !x || !r) return;
     const planOf = (q) => lessonPrintHtml(q, x.u.i, x.u.ln ? 1 : x.u.s || 1).replace(/^<section>|<\/section>$/g, "");
     const hasPlanHtml = (h) => /<(table|h3|div)/.test(h.replace(/^<h2>[\s\S]*?<\/h2>/, ""));
     let body = planOf(r), from = null;
@@ -11028,11 +11089,13 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const src = r.src && U.reihen[r.src];
     if (!hasPlanHtml(body) && src && !x.u.ln) { const b2 = planOf(src); if (hasPlanHtml(b2)) { body = b2; from = r.src; } }
     LK.planFrom = from;
-    const box = document.createElement("aside"); box.className = "lk-planbox"; box.id = "lk-planbox";
-    box.innerHTML = '<div class="lk-shead"><span class="lbl">Lektionsplanung</span><span><button type="button" class="btn ghost" id="lk-planedit" title="Lernziele, Ablauf und Notizen dieser Lektion bearbeiten">✎ Bearbeiten</button><button type="button" class="lk-fold" id="lk-planx" title="Planung schliessen">✕</button></span></div>' +
-      (from ? '<p class="help lk-pfrom">Aus der Reihe in der Planung (die Kopie in dieser Klasse ist für diese Lektion noch leer).</p>' : "") +
+    const fresh = box.cloneNode(false); box.replaceWith(fresh);
+    const bx = fresh;
+    bx.innerHTML = (from ? '<p class="help lk-pfrom">Aus der Reihe in der Planung (die Kopie in dieser Klasse ist für diese Lektion noch leer).</p>' : "") +
       '<div class="lk-plantext">' + (hasPlanHtml(body) ? body : body + '<p class="help">Für diese Lektion ist noch keine Planung erfasst. Mit «✎ Bearbeiten» können Sie Lernziele und Ablauf eintragen.</p>') + "</div>";
-    main.appendChild(box);
+    lkPlanWire(bx);
+  }
+  function lkPlanWire(box) {
     // Bilder aus den Notizen in die Seite übernehmen (an der Stelle, wo zuletzt der Cursor in der Seite stand)
     box.querySelectorAll(".lk-plantext img").forEach((img) => {
       const m = /^\/_blob\/([0-9a-f]{8,64})$/.exec(img.getAttribute("src") || ""); if (!m) return;
@@ -11047,10 +11110,18 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const b = document.createElement("button"); b.type = "button"; b.className = "lk-ptake"; b.dataset.taketab = "1"; b.textContent = "⇥ In die Seite"; b.title = "Diese Tabelle in die Unterrichtsseite übernehmen – dort, wo der Cursor zuletzt stand";
       host.appendChild(b);
     });
+    // Ganzer Abschnitt in die Seite; Tabelle zuklappbar; Klick auf einen Abschnitt in der Tabelle springt hin
+    box.querySelectorAll(".lk-plantext .psec").forEach((sc) => { const b = document.createElement("button"); b.type = "button"; b.className = "lk-ptake lk-psect"; b.dataset.takesec = "1"; b.textContent = "⇥ Abschnitt in die Seite"; b.title = "Den ganzen Abschnitt in die Unterrichtsseite übernehmen – dort, wo der Cursor zuletzt stand"; sc.prepend(b); });
+    const th = [...box.querySelectorAll(".lk-plantext h3")].find((h) => h.textContent.trim() === "Lektionsplanung");
+    if (th) { let tf = false; try { tf = localStorage.getItem("zp-lktab") === "1"; } catch (e) {} th.classList.add("lk-tfold"); th.innerHTML = '<button type="button" class="lk-tfb" aria-expanded="' + !tf + '" title="Tabelle auf- oder zuklappen">' + (tf ? "▸" : "▾") + "</button> Lektionsplanung"; box.classList.toggle("tab-off", tf); }
     ndocFill(box); box.querySelectorAll(".nsec").forEach((d) => { d.removeAttribute("data-c"); });
     box.addEventListener("dblclick", (e) => { const fig = e.target.closest("figure.ndoc"); if (!fig || (e.target.classList.contains("scr") && e.offsetX >= e.target.clientWidth)) return; const f = wdFindFile(fig.dataset.doc); if (f) wdEdit(f, { onSaved: () => ndocFill(box, null, f.id) }); });
     box.addEventListener("pointerdown", () => { const pg = $("#lk-page"), sl = getSelection(); if (pg && sl.rangeCount && pg.contains(sl.anchorNode)) lkKeepRange(); });
     box.addEventListener("click", (e) => {
+      const tf = e.target.closest(".lk-tfb");
+      if (tf) { const off = !box.classList.contains("tab-off"); box.classList.toggle("tab-off", off); tf.textContent = off ? "▸" : "▾"; tf.setAttribute("aria-expanded", String(!off)); try { localStorage.setItem("zp-lktab", off ? "1" : "0"); } catch (er) {} return; }
+      const sr = e.target.closest("[data-sref]") || (!e.target.closest("button, a") && e.target.closest(".lk-plantext tr") && e.target.closest(".lk-plantext tr").querySelector("[data-sref]"));
+      if (sr) { const t = box.querySelector('.psec[data-sid="' + sr.dataset.sref + '"]'); if (t) { box.querySelectorAll(".lk-plantext tr.on").forEach((y) => y.classList.remove("on")); const tr = sr.closest("tr"); if (tr) tr.classList.add("on"); t.scrollIntoView({ block: "start", behavior: "smooth" }); t.classList.remove("flash"); void t.offsetWidth; t.classList.add("flash"); } return; }
       const bt = e.target.closest("[data-taketab]");
       if (bt) { lkInsertBlocks(lkSanitize(bt.parentElement.querySelector("table").outerHTML), LK.range); LK.range = null; lkStat("Tabelle in die Seite übernommen. Unter «▦ Tabelle» lassen sich Zeilen und Spalten ändern."); return; }
       const b = e.target.closest("[data-take]"); if (!b) return;
@@ -11593,7 +11664,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         '<button type="button" class="btn ghost" data-lsv aria-pressed="' + lkLsShow() + '" title="Lehrerschrift (z. B. Lösungen) beim Zeigen ein- oder ausblenden">✎ Lehrerschrift ' + (lkLsShow() ? "an" : "aus") + "</button>" +
         '<button type="button" class="btn ghost" data-lkt="spot" title="Spotlight: alles abdunkeln, nur ein Bereich bleibt hell">🔦 Spotlight</button><button type="button" class="btn ghost" data-lkt="zoom" title="Vergrössern: Bereich aufziehen oder doppelt auf einen Absatz / ein Bild tippen">🔍 Zoom</button>' +
         lkToolsPop() + '<button type="button" class="btn ghost" id="lk-zm" data-z="-1" title="Kleiner">A−</button><button type="button" class="btn ghost" id="lk-zp" data-z="1" title="Grösser">A+</button><button type="button" class="btn ghost" id="lk-slides" title="Folie für Folie zeigen">Folien</button><button type="button" class="btn ghost" id="lk-beamer" aria-pressed="' + lkPresenting() + '" title="Zweites Fenster für den Beamer: dort erscheint Abschnitt für Abschnitt, hier sehen Sie die ganze Seite">🖥 Beamer</button><button type="button" class="btn primary" id="lk-projx" title="Projizieren beenden (Esc)">✕ Beenden</button>'
-      : '<button type="button" class="btn ghost" id="lk-plan" aria-pressed="' + !!LK.plan + '" title="Bildschirm teilen: rechts die Lektionsplanung aus der Reihe anzeigen">◫ Planung</button>' + lkToolsPop() + lkShowPop() + '<button type="button" class="btn ghost" id="lk-out" title="Als Word-Datei oder PDF speichern, oder drucken – zum Weitergeben an die Klasse">⇩ Ausgeben</button>');
+      : lkToolsPop() + lkShowPop() + '<button type="button" class="btn ghost" id="lk-out" title="Als Word-Datei oder PDF speichern, oder drucken – zum Weitergeben an die Klasse">⇩ Ausgeben</button>');
     lkToolsMark();
   }
   // ---------- Hilfsmittel beim Projizieren ----------
@@ -12513,7 +12584,9 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const fg = e.target.closest(".lk-fig"); if (fg && !b && $("#lk-page") && $("#lk-page").contains(fg)) { if (lkFigNoClick) { lkFigNoClick = 0; return; } if (lkFP && lkFP.fig === fg) return; lkInk(fg); return; }
     if (!b) return;
     if (b.id === "lk-sidefold" || b.id === "lk-sideopen") { if (lkIsProj()) LK.pside = b.id === "lk-sideopen"; else { LK.side = b.id === "lk-sideopen"; lkSaveSel(); } lkLayout(); return; }
-    if (b.id === "lk-plan" || b.id === "lk-planx") { LK.plan = b.id === "lk-plan" ? !LK.plan : false; lkSaveSel(); lkPlanRender(); return; }
+    if (b.id === "lk-rv") { lkRvMenu(b); return; }
+    if (b.dataset.lkrv != null) { lkRvSet(b.dataset.lkrv); return; }
+    if (b.dataset.takesec != null) { const sc = b.closest(".psec"); if (!sc) return; const c = sc.cloneNode(true); c.querySelectorAll(".lk-ptake").forEach((y) => y.remove()); c.querySelectorAll(".lk-ptab, .lk-pimg").forEach((y) => y.replaceWith(...y.childNodes)); c.querySelectorAll("h4").forEach((y) => { const h3 = document.createElement("h3"); h3.innerHTML = y.innerHTML; y.replaceWith(h3); }); lkInsertBlocks(lkSanitize(c.innerHTML), LK.range); LK.range = null; lkStat("Abschnitt in die Seite übernommen."); return; }
     if (b.id === "lk-planedit") { const x = lkLessons(LK.kid).find((y) => y.key === LK.sel); if (x) openLessonDetail(x.u.i, LK.planFrom || x.u.rid, lkPlanRender); return; }
     if (b.id === "lk-docsfold" || b.id === "lk-docsopen") { if (lkIsProj()) LK.pdocs = b.id === "lk-docsopen"; else { LK.docs = b.id === "lk-docsopen"; lkSaveSel(); } lkLayout(); return; }
     if (b.closest(".lk-showmenu")) lkPopsClose();
