@@ -1860,6 +1860,11 @@ table.tt-moving { opacity: 0.45; }
 .d-cm:empty::before { content: attr(data-ph); color: var(--muted); }
 .d-cmtab { position: absolute; left: -15px; top: 8px; z-index: 2; border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); background: var(--surface); color: var(--accent); font: inherit; font-size: 0.72rem; font-weight: 700; padding: 1px 4px; border-radius: 6px 0 0 6px; cursor: pointer; white-space: nowrap; }
 .d-nw.shut .d-cmtab { left: auto; right: 1px; opacity: 0.85; }
+.pmenu { min-width: 300px; padding-bottom: 8px; }
+.pm-row { display: flex; align-items: center; gap: 8px; padding: 4px 12px; font-size: 0.9rem; cursor: pointer; }
+.pm-row.dis { color: var(--muted); cursor: default; }
+.pm-help { margin: 6px 12px; font-size: 0.8rem; max-width: 300px; }
+.pm-act { display: flex; justify-content: flex-end; gap: 6px; padding: 4px 12px 0; }
 .d-cmtab:hover { opacity: 1; background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
 @media (max-width: 899px) { .d-toggles .d-side { display: none; } .d-split.on > .d-gut { display: none; } .d-split.on, .d-split.on > .d-sl, .d-split.on > .d-sr { display: grid; gap: 12px; } }
 .notes-ed mark, .notes mark { color: inherit; border-radius: 2px; padding: 0 1px; }
@@ -4419,7 +4424,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   }
 
   // ---------- Drucken: eine Datei, die sich im Browser öffnet und gleich das Druckfenster zeigt ----------
-  const PRINT_CSS = "@page{size:A4;margin:10mm 11mm}body{font-family:Arial,Helvetica,sans-serif;font-size:9.5pt;color:#111;line-height:1.3;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}h1{font-size:13pt;margin:0 0 4px}h2{font-size:11pt;margin:10px 0 4px;padding-bottom:2px;border-bottom:1.2px solid #333}h3{font-size:8.5pt;margin:6px 0 2px;text-transform:uppercase;letter-spacing:.04em;color:#444}.meta{color:#444;margin:0 0 10px}.box{border:1px solid #bbb;border-radius:4px;padding:6px 8px;margin:4px 0}table{width:100%;border-collapse:collapse;margin:4px 0;table-layout:fixed}th,td{border:1px solid #999;padding:4px 6px;vertical-align:top;text-align:left;overflow-wrap:break-word}th{background:#eee;font-size:9.5pt}.pre{white-space:pre-wrap}tr{break-inside:avoid}.notes img{max-width:100%;max-height:120mm}.notes img.w50{max-width:50%}.notes img.w33{max-width:33%}.notes img.w25{max-width:25%}.notes img.w75{max-width:75%}.notes{display:flow-root}.nfig{margin:4px 0;width:fit-content;max-width:100%;break-inside:avoid}.nfig img{display:block;max-width:100%;max-height:120mm}.nfig[class*=\" w\"] img{width:100%}.nfig.w25{width:25%}.nfig.w33{width:33%}.nfig.w50{width:50%}.nfig.w75{width:75%}.nfig.w100{width:100%}.nfig figcaption{contain:inline-size;font-size:8pt;font-style:italic;color:#555;margin-top:2px}.nfig.p-l{float:left;margin:2px 10px 6px 0}.nfig.p-r{float:right;margin:2px 0 6px 10px}.nfig.p-c{margin-left:auto;margin-right:auto}.nfig.p-c figcaption{text-align:center}.ls{font-family:'Ink Free','Segoe Print','Bradley Hand',Noteworthy,'Comic Sans MS',cursive;color:#c8402c}table caption{caption-side:bottom;text-align:left;font-size:8pt;font-style:italic;color:#555;padding-top:2px}table.tp-l{float:left;margin:2px 10px 6px 0}table.tp-r{float:right;margin:2px 0 6px 10px}table.tp-c{margin-left:auto;margin-right:auto}mark.hl-y{background:#fff1a6}mark.hl-g{background:#d3f2c4}mark.hl-b{background:#cfe4ff}mark{color:inherit}.fs-s{font-size:85%}.fs-l{font-size:125%}.fs-xl{font-size:150%}.one h1{border-bottom:1.2px solid #333;padding-bottom:2px}.lhn-1{line-height:1.15}.lhn-2{line-height:1.5}.lhn-3{line-height:1.8}.lhn-4{line-height:2.2}.al-c{text-align:center}.al-r{text-align:right}.al-j{text-align:justify}.notes ul,.notes ol{margin:2px 0;padding-left:20px}.ncols{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);margin:4px 0;break-inside:avoid}.ncol{padding:2px 8px}.ncol+.ncol{border-left:1px solid #999}.nflow{column-count:2;column-gap:8mm;column-rule:1px solid #bbb;margin:4px 0}.nflow[data-n=\"3\"]{column-count:3}.nflow li{break-inside:avoid}.nsec{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px 0 4px;font-size:8.5pt;font-weight:700;color:#555;break-after:avoid}.nsec::before,.nsec::after{content:\"\";flex:0 1 22%;border-top:1px solid #999}.nsec .nsec-tg{display:none}.phase{font-weight:400;color:#555}ul{margin:2px 0;padding-left:18px}@media screen{body{max-width:190mm;margin:20px auto;padding:0 12px}}figure.ndoc::before{content:\"📄 \" attr(data-name);display:block;color:#555;font-style:italic}" + FF_CSS;
+  const PRINT_CSS = "@page{size:A4;margin:10mm 11mm}body{font-family:Arial,Helvetica,sans-serif;font-size:9.5pt;color:#111;line-height:1.3;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}h1{font-size:13pt;margin:0 0 4px}h2{font-size:11pt;margin:10px 0 4px;padding-bottom:2px;border-bottom:1.2px solid #333}h3{font-size:8.5pt;margin:6px 0 2px;text-transform:uppercase;letter-spacing:.04em;color:#444}.meta{color:#444;margin:0 0 10px}.box{border:1px solid #bbb;border-radius:4px;padding:6px 8px;margin:4px 0}table{width:100%;border-collapse:collapse;margin:4px 0;table-layout:fixed}th,td{border:1px solid #999;padding:4px 6px;vertical-align:top;text-align:left;overflow-wrap:break-word}th{background:#eee;font-size:9.5pt}.pre{white-space:pre-wrap}tr{break-inside:avoid}.notes img{max-width:100%;max-height:120mm}.notes img.w50{max-width:50%}.notes img.w33{max-width:33%}.notes img.w25{max-width:25%}.notes img.w75{max-width:75%}.notes{display:flow-root}.nfig{margin:4px 0;width:fit-content;max-width:100%;break-inside:avoid}.nfig img{display:block;max-width:100%;max-height:120mm}.nfig[class*=\" w\"] img{width:100%}.nfig.w25{width:25%}.nfig.w33{width:33%}.nfig.w50{width:50%}.nfig.w75{width:75%}.nfig.w100{width:100%}.nfig figcaption{contain:inline-size;font-size:8pt;font-style:italic;color:#555;margin-top:2px}.nfig.p-l{float:left;margin:2px 10px 6px 0}.nfig.p-r{float:right;margin:2px 0 6px 10px}.nfig.p-c{margin-left:auto;margin-right:auto}.nfig.p-c figcaption{text-align:center}.ls{font-family:'Ink Free','Segoe Print','Bradley Hand',Noteworthy,'Comic Sans MS',cursive;color:#c8402c}table caption{caption-side:bottom;text-align:left;font-size:8pt;font-style:italic;color:#555;padding-top:2px}table.tp-l{float:left;margin:2px 10px 6px 0}table.tp-r{float:right;margin:2px 0 6px 10px}table.tp-c{margin-left:auto;margin-right:auto}mark.hl-y{background:#fff1a6}mark.hl-g{background:#d3f2c4}mark.hl-b{background:#cfe4ff}mark{color:inherit}.fs-s{font-size:85%}.fs-l{font-size:125%}.fs-xl{font-size:150%}.one h1{border-bottom:1.2px solid #333;padding-bottom:2px}.lhn-1{line-height:1.15}.lhn-2{line-height:1.5}.lhn-3{line-height:1.8}.lhn-4{line-height:2.2}.al-c{text-align:center}.al-r{text-align:right}.al-j{text-align:justify}.notes ul,.notes ol{margin:2px 0;padding-left:20px}.ncols{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);margin:4px 0;break-inside:avoid}.ncol{padding:2px 8px}.ncol+.ncol{border-left:1px solid #999}.nflow{column-count:2;column-gap:8mm;column-rule:1px solid #bbb;margin:4px 0}.nflow[data-n=\"3\"]{column-count:3}.nflow li{break-inside:avoid}.nsec{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px 0 4px;font-size:8.5pt;font-weight:700;color:#555;break-after:avoid}.nsec::before,.nsec::after{content:\"\";flex:0 1 22%;border-top:1px solid #999}.nsec .nsec-tg{display:none}.phase{font-weight:400;color:#555}ul{margin:2px 0;padding-left:18px}@media screen{body{max-width:190mm;margin:20px auto;padding:0 12px}}figure.ndoc::before{content:\"📄 \" attr(data-name);display:block;color:#555;font-style:italic}.ls{font-style:italic}.nend{display:none}.pph{background:#000;color:#fff;font-weight:700;font-size:9.5pt;padding:2px 7px;margin:12px 0 2px;break-after:avoid}.psec{margin:0 0 6px}.psec h4{margin:6px 0 3px;font-size:10pt;border-bottom:1px solid #000;padding-bottom:1px;break-after:avoid}.psec-ref{color:#444;font-style:italic;margin:2px 0 6px}.pcm{font-size:8.5pt;color:#222;border-left:2px solid #000;padding:2px 0 2px 7px;margin:4px 0}.pcut{position:relative;overflow:hidden;margin:4px auto;outline:1px solid #888;outline-offset:0;break-inside:avoid;background:#fff}.pcut-in{transform-origin:0 0}.pcut-n{font-size:7.5pt;color:#444;font-style:italic;margin:-2px 0 6px}.psheet{break-before:page}.psheet h3{margin:0 0 4px}.psheet img{max-width:100%;display:block;margin:0 auto 6px;border:1px solid #888}td.pab-p{font-size:8.5pt}" + FF_CSS;
   const safeName = (t) => String(t || "Planung").replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, " ").trim().slice(0, 120);
   async function inlineImgs(body) {
     const ids = [...new Set([...body.matchAll(/src="\/_blob\/([0-9a-f]+)"/g)].map((m) => m[1]))];
@@ -4428,9 +4433,55 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     }
     return body;
   }
-  async function printDoc(title, body) {
+  // Word-Seiten für den Ausdruck: dieselbe Darstellung wie in Semper, mit eingebetteten Bildern
+  const toDataUrl = (b) => new Promise((res) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(b); });
+  const wdPrintCss = () => [...document.styleSheets].flatMap((sh) => { try { return [...sh.cssRules]; } catch (e) { return []; } }).filter((r) => r.selectorText && /\.wd-page/.test(r.selectorText) && !/wdRoot|ndoc|ws-sc|wd-lock/.test(r.selectorText)).map((r) => r.cssText).join("") + ".wd-page{box-shadow:none!important;margin:0!important}.wd-pb{display:none!important}";
+  async function wdPageHtml(f) {
+    if (!WD_CACHE[f.id]) WD_CACHE[f.id] = await wdRead(f);
+    const ctx = await wdLoad(WD_CACHE[f.id].bytes.slice(0)), page = await wdRender(ctx, false);
+    const host = document.createElement("div"); host.style.cssText = "position:fixed;left:-99999px;top:0;"; host.appendChild(page); document.body.appendChild(host);
+    wdTabs(page, ctx.defTab); if (document.fonts && document.fonts.ready) await document.fonts.ready; wdTabs(page, ctx.defTab);
+    for (const im of page.querySelectorAll("img")) { if (/^blob:/.test(im.src)) { try { im.src = await toDataUrl(await (await fetch(im.src)).blob()); } catch (e) {} } }
+    const out = { html: page.outerHTML, pw: page.offsetWidth || 794, ph: page.offsetHeight || 1123 }; host.remove(); return out;
+  }
+  const PW = 700; // Breite der Druckspalte in CSS-Pixeln (A4 mit Rand)
+  async function printDocs(body, sheets) {
+    const t = document.createElement("template"); t.innerHTML = body;
+    const cache = {};
+    const pageOf = async (id, f) => { if (!cache[id]) cache[id] = wdPageHtml(f); return cache[id]; };
+    for (const fig of t.content.querySelectorAll("figure.ndoc")) {
+      const f = wdFindFile(fig.getAttribute("data-doc")); if (!f) continue;
+      try {
+        const pg = await pageOf(f.id, f), wm = /\bw(25|33|50|75|100)\b/.exec(fig.className), W = Math.round(PW * (wm ? +wm[1] : 50) / 100), k = W / pg.pw;
+        const ch = +fig.getAttribute("data-ch") || 0, top = ch ? (+fig.getAttribute("data-ct") || 0) * pg.pw / 1000 : 0, h = ch ? ch * pg.pw / 1000 : Math.min(pg.ph, pg.pw * 1.414);
+        const d = document.createElement("div"); d.className = "pcut"; d.style.cssText = "width:" + W + "px;height:" + Math.ceil(h * k) + "px";
+        d.innerHTML = '<div class="pcut-in" style="width:' + pg.pw + "px;transform:translateY(" + (-top * k).toFixed(1) + "px) scale(" + k.toFixed(4) + ')">' + pg.html + "</div>";
+        const n = document.createElement("div"); n.className = "pcut-n"; n.textContent = (ch ? "Ausschnitt aus «" : "«") + String(f.name).replace(/\.[^.]+$/, "") + "»";
+        fig.replaceWith(d, n);
+      } catch (e) { console.error(e); }
+    }
+    let tail = "";
+    for (const f of sheets || []) {
+      try {
+        const ext = extOf(f);
+        if (ext === "docx") { const pg = await pageOf(f.id, f), k = PW / pg.pw; tail += '<section class="psheet"><div class="pcut" style="width:' + PW + "px;height:" + Math.ceil(pg.ph * k) + 'px;border:0"><div class="pcut-in" style="width:' + pg.pw + "px;transform:scale(" + k.toFixed(4) + ')">' + pg.html + "</div></div></section>"; }
+        else if (ext === "pdf") {
+          await loadScript(LIBS.pdf); await loadScript(LIBS.pdfWorker); const lib = window.pdfjsLib; lib.GlobalWorkerOptions.workerSrc = LIBS.pdfWorker;
+          const pdf = await lib.getDocument({ data: (await fileBytes(f)).slice(0) }).promise; let h = '<section class="psheet">';
+          for (let i = 1; i <= Math.min(pdf.numPages, 20); i++) { const pg = await pdf.getPage(i), v1 = pg.getViewport({ scale: 1 }), vp = pg.getViewport({ scale: 1400 / v1.width }); const c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height; await pg.render({ canvasContext: c.getContext("2d"), viewport: vp }).promise; h += '<img src="' + c.toDataURL("image/jpeg", 0.85) + '" alt="">'; }
+          tail += h + "</section>";
+        } else if (/^(png|jpe?g|gif|webp)$/.test(ext)) tail += '<section class="psheet"><img src="' + await toDataUrl(new Blob([await fileBytes(f)], { type: f.type || "image/" + ext })) + '" alt=""></section>';
+      } catch (e) { console.error(e); tail += '<section class="psheet"><p>«' + esc(f.name) + "» konnte nicht gedruckt werden.</p></section>"; }
+    }
+    const hasWd = !!t.content.querySelector(".pcut") || /pcut/.test(tail);
+    const box = document.createElement("div"); box.appendChild(t.content.cloneNode(true));
+    return { body: box.innerHTML + tail, css: hasWd ? wdPrintCss() : "" };
+  }
+  async function printDoc(title, body, sheets) {
+    let extra = "";
+    if (/<figure class="nfig ndoc/.test(body) || (sheets && sheets.length)) { uStatus("Ausdruck wird vorbereitet …"); const o = await printDocs(body, sheets); body = o.body; extra = o.css; }
     body = await inlineImgs(body);
-    const html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><title>' + esc(title) + "</title><style>" + PRINT_CSS + "</style></head><body>" + body +
+    const html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><title>' + esc(title) + "</title><style>" + PRINT_CSS + extra + "</style></head><body>" + body +
       '<script>window.addEventListener("load",function(){setTimeout(function(){window.print()},300)})<\/script></body></html>';
     if (!state.downloads) { uStatus("Drucken ist in dieser Ansicht nicht möglich.", true); return; }
     try {
@@ -4438,18 +4489,51 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       uStatus("Gespeichert. Öffnen Sie die Datei, dann erscheint das Druckfenster.");
     } catch (e) { uStatus(e && e.code === "declined" ? "Nicht gespeichert." : "Drucken hat nicht geklappt.", !(e && e.code === "declined")); }
   }
-  function lessonPrintHtml(r, i, s) {
+  // Notizen in Abschnitte zerlegen: { secs: {id: {t, h}}, list: [{sec | html}] in der Reihenfolge der Notizen }
+  function notesSplit(html, ls) {
+    const t = document.createElement("template"); t.innerHTML = sanitizeNotes(html || "");
+    if (ls === false) t.content.querySelectorAll(".ls").forEach((x) => { x.textContent = "\u00a0".repeat(Math.min(30, x.textContent.length)); x.className = "ls-x"; });
+    const secs = {}, list = []; let cur = null;
+    const out = (n) => { const d = document.createElement("div"); d.appendChild(n.cloneNode(true)); return d.innerHTML; };
+    [...t.content.childNodes].forEach((k) => {
+      if (k.nodeType === 1 && k.classList.contains("nsec")) { cur = { id: k.getAttribute("data-id") || "", t: k.textContent.trim(), h: "" }; if (cur.id) secs[cur.id] = cur; list.push({ sec: cur }); return; }
+      if (k.nodeType === 1 && k.classList.contains("nend")) { cur = null; return; }
+      if (cur) cur.h += out(k); else { const last = list[list.length - 1]; if (last && last.html != null) last.html += out(k); else list.push({ html: out(k) }); }
+    });
+    return { secs, list };
+  }
+  function lessonPrintHtml(r, i, s, o) {
+    o = { ziele: true, cm: false, ls: true, ...(o || {}) };
     const m = metaOf(r, i), p = m.plan;
     let h = "<section><h2>" + (isLN(i) ? lnLabel(r, i) : esc(lname(r, i, s)) + (phaseOf(r, i) ? ' <span class="phase">· ' + esc(phaseOf(r, i)) + "</span>" : "")) + "</h2>";
-    if (filled(htmlOf(r, i))) h += '<div class="box">' + sanitize(htmlOf(r, i)) + "</div>";
-    if (p && filled(p.ziele)) h += "<h3>Lernziele</h3><div>" + sanitize(p.ziele) + "</div>";
+    const lsOff = (x) => (o.ls ? x : x.replace(/<span class="ls">([\s\S]*?)<\/span>/g, (a, b) => '<span class="ls-x">' + "&nbsp;".repeat(Math.min(30, htmlToPlain(b).length)) + "</span>"));
+    if (o.ziele && filled(htmlOf(r, i))) h += '<div class="box">' + lsOff(sanitize(htmlOf(r, i))) + "</div>";
+    if (o.ziele && p && filled(p.ziele)) h += "<h3>Lernziele</h3><div>" + lsOff(sanitize(p.ziele)) + "</div>";
+    const hasNotes = m.notesHtml && (filled(m.notesHtml) || /<(img|figure)/.test(m.notesHtml));
+    const sp = hasNotes ? notesSplit(m.notesHtml, o.ls) : { secs: {}, list: [] };
+    let anyAb = false;
     if (p && (p.rows || []).some((row) => row.some(filled))) {
       ensurePlan(p);
-      h += "<h3>Lektionsplanung</h3><table>" + colgroup(p, false) + "<thead><tr>" + p.cols.map((c) => "<th>" + esc(c) + "</th>").join("") + "</tr></thead><tbody>" +
-        p.rows.filter((row) => row.some(filled)).map((row) => "<tr>" + p.cols.map((c, j) => "<td>" + sanitize(row[j] || "") + "</td>").join("") + "</tr>").join("") + "</tbody></table>";
+      const rows = p.rows.map((row, ri) => [row, ri]).filter(([row]) => row.some(filled));
+      anyAb = rows.some(([, ri]) => abGet(p, ri).some((id) => sp.secs[id]));
+      h += "<h3>Lektionsplanung</h3><table>" + colgroup(p, false, anyAb ? "17%" : "") + "<thead><tr>" + p.cols.map((c) => "<th>" + esc(c) + "</th>").join("") + (anyAb ? "<th>Abschnitt</th>" : "") + "</tr></thead><tbody>" +
+        rows.map(([row, ri]) => "<tr>" + p.cols.map((c, j) => "<td>" + lsOff(sanitize(row[j] || "")) + "</td>").join("") + (anyAb ? '<td class="pab-p">' + abGet(p, ri).filter((id) => sp.secs[id]).map((id) => esc(sp.secs[id].t)).join("<br>") + "</td>" : "") + "</tr>").join("") + "</tbody></table>";
     }
-    if (m.notesHtml && (filled(m.notesHtml) || /<img/.test(m.notesHtml))) h += '<h3>Notizen</h3><div class="notes" style="line-height:' + (m.notesLh || 1.4) + '">' + sanitizeNotes(m.notesHtml) + "</div>";
+    if (hasNotes && anyAb) {
+      // Abschnitte in der Reihenfolge der Lektionsplanung, darüber die Phase als schwarzer Balken (auch schwarz-weiss gut lesbar)
+      const done = new Set(), labels = planPhases(p);
+      h += '<div class="notes" style="line-height:' + (m.notesLh || 1.4) + '">';
+      p.rows.forEach((row, ri) => {
+        const ids = abGet(p, ri).filter((id) => sp.secs[id]); if (!ids.length) return;
+        const q = labels.find((y) => y.ri === ri), lab = q ? q.label : "Zeile " + (ri + 1); h += '<div class="pph">' + esc(lab) + "</div>";
+        ids.forEach((id) => { const x = sp.secs[id]; if (done.has(id)) { h += '<div class="psec-ref">→ «' + esc(x.t) + "» siehe oben</div>"; return; } done.add(id); const same = x.t === lab || (q && q.ph && x.t === q.ph); h += '<div class="psec">' + (same ? "" : "<h4>" + esc(x.t) + "</h4>") + x.h + "</div>"; });
+      });
+      const rest = sp.list.map((y) => (y.sec ? (done.has(y.sec.id) ? "" : '<div class="psec"><h4>' + esc(y.sec.t) + "</h4>" + y.sec.h + "</div>") : y.html)).filter((y) => filled(y) || /<(img|figure|table)/.test(y)).join("");
+      if (rest) h += '<div class="pph" style="background:#fff;color:#000;border:1.5px solid #000">Weitere Notizen</div>' + rest;
+      h += "</div>";
+    } else if (hasNotes) h += '<h3>Notizen</h3><div class="notes" style="line-height:' + (m.notesLh || 1.4) + '">' + lsOff(sanitizeNotes(m.notesHtml)) + "</div>";
     else if (m.details) h += '<h3>Notizen</h3><div class="pre notes">' + esc(m.details) + "</div>";
+    if (o.cm && filled(m.notesCm || "")) h += '<h3>Kommentare</h3><div class="pcm">' + sanitize(m.notesCm).replace(/^(\s*<br\s*\/?>\s*)+/i, "").replace(/(<br\s*\/?>\s*){2,}/gi, "<br>") + "</div>";
     return h + "</section>";
   }
   function reihePrintHead(r) {
@@ -4457,10 +4541,10 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       (r.lektionen ? " · " + r.lektionen + " Lektionen" : "") + (r.ln ? " · Leistungsnachweis: " + esc(r.ln) : "") + "</p>" +
       (filled(r.leitfrage) ? "<h3>Leitfrage</h3><div class=\"box\">" + sanitize(r.leitfrage) + "</div>" : "");
   }
-  function printLesson(r, i) {
+  function printLesson(r, i, o) {
     const s = isLN(i) ? 1 : Number((r.spans || {})[i]) || 1;
-    const body = lessonPrintHtml(r, i, s).replace(/^<section><h2>/, '<section class="one"><h1>' + esc(r.title || "Reihe") + ' <span class="phase">· ').replace(/<\/h2>/, "</span></h1>");
-    printDoc((r.title || "Reihe") + " – " + (isLN(i) ? "Leistungsnachweis" : lname(r, i, s)), body);
+    const body = lessonPrintHtml(r, i, s, o).replace(/^<section><h2>/, '<section class="one"><h1>' + esc(r.title || "Reihe") + ' <span class="phase">· ').replace(/<\/h2>/, "</span></h1>");
+    printDoc((r.title || "Reihe") + " – " + (isLN(i) ? "Leistungsnachweis" : lname(r, i, s)), body, (o && o.sheets) || []);
   }
   function printReihe(r, sel) {
     const want = (k) => !sel || sel.keys.has(String(k)), head = !sel || sel.head;
@@ -5841,6 +5925,29 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       unfold: (d) => { const l = (d.dataset.docs || "").split(" ").filter((fid) => files().some((f) => f.id === fid)); if (l.length && on() && !l.includes(cur)) { cur = l[0]; render(); } },
     };
   }
+  // Vor dem Drucken: was mitkommt (pro Gerät gemerkt). Ohne Wahl: Lernziele, Tabelle, Notizen mit eingefügten Ausschnitten, Lehrerschrift; Kommentare und ganze Arbeitsblätter nur auf Wunsch
+  function printMenu(btn, x, opt) {
+    const old = document.getElementById("pmenu"); if (old) { old.remove(); return; }
+    let po = { ziele: true, ls: true, cm: false, sheets: false }; try { po = { ...po, ...(JSON.parse(localStorage.getItem("zp-popt") || "{}") || {}) }; } catch (e) {}
+    const fl = [...(x.files || [])], has = filled(x.notesCm || "");
+    const m = document.createElement("div"); m.className = "cmenu pmenu"; m.id = "pmenu"; m.style.zIndex = "3000";
+    const cb = (k, l, dis) => '<label class="pm-row' + (dis ? " dis" : "") + '"><input type="checkbox" data-po="' + k + '"' + (po[k] && !dis ? " checked" : "") + (dis ? " disabled" : "") + "> " + l + "</label>";
+    m.innerHTML = '<div class="cm-title">Was mitdrucken?</div>' + '<label class="pm-row dis"><input type="checkbox" checked disabled> Lektionsplanung (immer ganz oben)</label><label class="pm-row dis"><input type="checkbox" checked disabled> Notizen mit eingefügten Ausschnitten</label>' +
+      cb("ziele", "Kurzeintrag und Lernziele") + cb("ls", "Lehrerschrift (Lösungen)") + cb("cm", "Kommentare" + (has ? "" : " (keine)"), !has) + cb("sheets", "Ganze Arbeitsblätter am Schluss" + (fl.length ? " (" + fl.length + ")" : " (keine)"), !fl.length) +
+      '<p class="help pm-help">Der Ausdruck ist schwarz-weiss lesbar: Phasen als schwarze Balken, Lehrerschrift kursiv.</p><div class="pm-act"><button type="button" class="btn" data-pm="x">Abbrechen</button><button type="button" class="btn primary" data-pm="go">Drucken</button></div>';
+    document.body.appendChild(m);
+    const r = btn.getBoundingClientRect(); m.style.left = Math.max(8, Math.min(innerWidth - m.offsetWidth - 8, r.left)) + "px"; m.style.top = Math.max(8, r.top - m.offsetHeight - 6) + "px";
+    const close = () => { m.remove(); document.removeEventListener("pointerdown", out, true); };
+    const out = (e) => { if (!m.contains(e.target) && e.target !== btn) close(); };
+    setTimeout(() => document.addEventListener("pointerdown", out, true), 0);
+    m.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-pm]"); if (!b) return;
+      if (b.dataset.pm === "x") { close(); return; }
+      m.querySelectorAll("[data-po]").forEach((c) => { if (!c.disabled) po[c.dataset.po] = c.checked; });
+      try { localStorage.setItem("zp-popt", JSON.stringify(po)); } catch (er) {}
+      close(); opt.onPrint({ ziele: po.ziele, ls: po.ls, cm: po.cm && has, sheets: po.sheets ? fl : [] });
+    });
+  }
   function openDetailBox(opt) {
     PAB = null; CUT = null;
     const x = opt.x, conv = !!opt.todo && tdpFromOld(x, 1); // altes einzelnes Kästchen → To-do-Zeilen
@@ -5962,7 +6069,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
             row.querySelector(".pc").onclick = () => { f.value = ""; t.value = ""; up(); };
           });
         }
-        if (opt.onPrint) $("#d-print").onclick = () => { opt.changed(); opt.onPrint(); };
+        if (opt.onPrint) $("#d-print").onclick = (e) => { opt.changed(); if (opt.plan) printMenu(e.currentTarget, x, opt); else opt.onPrint(); };
         const changed = () => opt.changed();
         tText.addEventListener("input", () => { x.html = sanitize(tText.innerHTML); x.text = htmlToPlain(x.html); changed(); });
         root.querySelectorAll(".d-part").forEach((el) => el.addEventListener("input", () => { const sf = sfx(+el.dataset.dp); x["html" + sf] = sanitize(el.innerHTML); x["text" + sf] = htmlToPlain(x["html" + sf]); changed(); }));
@@ -8665,7 +8772,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const modeSwitch = isMat ? { cur: asL ? "l" : "m", set: (v) => { const rr = U.reihen[id]; if (!rr) return; putLessonX(rr, i, x); const k = lnIdx(i); rr.lnItems = (rr.lnItems || []).slice(); rr.lnItems[k] = { ...(rr.lnItems[k] || {}), asLesson: v === "l" }; saveReihe(id, 0); closeModal(); setTimeout(() => openLessonDetail(i, id, after), 30); } } : null;
       if (isMat && !asL) { openMatPage(i, id, after); return; }
       openDetailBox({ editDocs: true, modeSwitch, title: r.title || "Reihe", sub: lnLabel(r, i), x, textLabel: isMat ? "Kurzzusammenfassung" : "Kurzeintrag in der Tabelle", plan: x.plan, reiheFiles: [...(r.mainFiles || []), ...(r.files || [])],
-        onPrint: () => { const rr = U.reihen[id]; if (rr) printLesson(rr, i); },
+        onPrint: (o) => { const rr = U.reihen[id]; if (rr) printLesson(rr, i, o); },
         changed: () => { const rr = U.reihen[id]; if (rr) { putLessonX(rr, i, x); saveReihe(id, 900); } },
         onClose: () => { uFlush("r:" + id); renderU(); if (after) after(); } });
       return;
@@ -8676,7 +8783,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     openDetailBox({
       editDocs: true,
       title: r.title || "Reihe", sub: r.own ? "Eigene Lektion · " + ((K.klassen[r.klasse] || {}).name || "Klasse") : lname(r, i, s) + (phaseOf(r, i) ? " · " + phaseOf(r, i) : ""), x, textLabel: r.own ? "Kurznotiz (Kurzeintrag)" : "Kurzeintrag in der Tabelle", plan: x.plan, reiheFiles: [...(r.mainFiles || []), ...(r.files || [])],
-      onPrint: () => { const rr = U.reihen[id]; if (rr) printLesson(rr, i); },
+      onPrint: (o) => { const rr = U.reihen[id]; if (rr) printLesson(rr, i, o); },
       changed: () => { const rr = U.reihen[id]; if (rr) { putLessonX(rr, i, x); saveReihe(id, 900); } },
       onClose: () => { uFlush("r:" + id); renderU(); if (after) after(); },
     });
