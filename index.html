@@ -1796,6 +1796,71 @@ table.tt-moving { opacity: 0.45; }
 .d-split:not(.on) { display: grid; gap: 12px; }
 .d-split:not(.on) > .d-sl, .d-split:not(.on) > .d-sr { display: grid; gap: 12px; }
 .d-split:not(.on) > .d-gut { display: none; }
+/* Lektionsfenster: Arbeitsblatt rechts, Spalte «Abschnitt», Kommentarecke (10.11.2026) */
+.panel.wide.wsp { width: min(1760px, 100%); }
+.d-toggles .d-wsb::before { content: "◨ "; }
+.d-toggles .d-wsb[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.d-gut2, .d-ws { display: none; }
+@media (min-width: 900px) {
+  .d-split.ws:not(.on) { display: grid; grid-template-columns: minmax(0, 1fr) 14px minmax(0, var(--wsw, 40%)); align-items: start; }
+  .d-split.ws:not(.on) > .d-sl { grid-column: 1 / -1; }
+  .d-split.on.ws { grid-template-columns: minmax(0, calc(var(--dl, 55) * (100% - var(--wsw, 40%)) / 100)) 14px minmax(0, 1fr) 14px minmax(0, var(--wsw, 40%)); }
+  .d-split.on.ws .ptable { min-width: 0; }
+  .d-split.on.ws .ptable col.pab-col { width: 8em !important; }
+  .d-split.ws > .d-gut2 { display: block; align-self: stretch; cursor: col-resize; position: relative; touch-action: none; }
+  .d-split.ws > .d-gut2::before { content: ""; position: absolute; top: 0; bottom: 0; left: 6px; width: 2px; border-radius: 2px; background: var(--line); }
+  .d-split.ws > .d-gut2:hover::before, .d-split.ws > .d-gut2.active::before { background: var(--accent); }
+  .d-split.ws > .d-ws { display: flex; flex-direction: column; position: sticky; top: 0; height: calc(100vh - 5vh - 28px); min-height: 360px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); overflow: hidden; min-width: 0; }
+  .d-split.ws .notes-ed { min-height: 62vh; }
+}
+@media (max-width: 899px) { .d-toggles .d-wsb { display: none; } }
+.ws-bar { flex-wrap: wrap; }
+.ws-bar .ufl-dsel { flex: 1 1 140px; min-width: 0; }
+.ws-bar .btn[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+.ws-body { position: relative; }
+.ws-hold { position: relative; overflow: hidden; margin: 0 auto; background: #fff; box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15); }
+.ws-sc { transform-origin: 0 0; width: max-content; }
+.ws-sc .wd-page { box-shadow: none; margin: 0; }
+.ws-body.cutting .ws-hold, .ws-body.cutting canvas, .ws-body.cutting img { cursor: crosshair; user-select: none; }
+.ws-band { position: absolute; z-index: 3; border: 2px solid var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); border-radius: 3px; display: flex; align-items: flex-start; justify-content: flex-end; gap: 6px; padding: 4px; cursor: grab; box-sizing: border-box; }
+.ws-band .ws-bh { margin-right: auto; background: var(--accent); color: #fff; font-size: 0.8rem; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+.ws-band .btn { padding: 2px 8px; font-size: 0.8rem; }
+.ptable th.pab-h { font-size: 0.85em; color: var(--accent); }
+.ptable td.pab { background: color-mix(in srgb, var(--accent) 4%, transparent); }
+.pab-w { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; padding: 2px; }
+.pab-c { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 1px 8px 1px 6px; font: inherit; font-size: 0.8rem; font-weight: 600; color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; gap: 4px; max-width: 100%; text-align: left; }
+.pab-c::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--sc); flex: none; }
+.pab-c:hover { border-color: var(--accent); color: var(--accent); }
+.pab-add { border: 1px dashed var(--line); background: none; border-radius: 999px; color: var(--accent); font: inherit; font-weight: 700; padding: 0 7px; cursor: pointer; }
+.pab-add:hover { background: var(--accent-soft); }
+.nsec.nsec-c .nsec-t::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--sc); margin-right: 6px; vertical-align: 0; }
+.notes-ed .nsec .nsec-t { white-space: nowrap; }
+.nsec .nsec-x { display: inline-flex; gap: 4px; align-items: center; flex-wrap: wrap; font-weight: 500; letter-spacing: 0; }
+.nsec-ph, .nsec-dc { white-space: nowrap; }
+.nsec-ph { background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 0 7px; font-size: 0.92em; }
+.nsec-dc { border: 0; background: #fbf0d0; color: #6b4e0a; border-radius: 999px; padding: 0 8px; font: inherit; font-size: 0.92em; cursor: pointer; }
+.nsec-dc:hover { background: #f5e1a8; }
+.nend { height: 0; margin: 10px 30% 8px; border-top: 1.5px dashed color-mix(in srgb, var(--ink) 22%, transparent); cursor: pointer; clear: both; padding: 3px 0 0; }
+.nend:hover { border-top-color: var(--accent); }
+.nsec-off .notes-ed .nend { display: none; }
+.nmark-pop { position: fixed; z-index: 3000; }
+.nmark-pop button { border: 0; background: var(--accent); color: #fff; font: inherit; font-size: 0.82rem; font-weight: 700; padding: 4px 10px; border-radius: 8px; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2); cursor: pointer; }
+.nfig.ndoc.ndoc-chg .ndoc-v { outline: 3px solid #e0a800; }
+.ndoc-badge { margin-top: 4px; background: #fff4cc; border: 1px solid #e0a800; color: #5a4300; border-radius: 6px; padding: 4px 8px; font-size: 0.82rem; cursor: default; }
+.ndoc-badge button { margin-left: 6px; border: 1px solid #c79500; background: #fff; color: #5a4300; border-radius: 6px; font: inherit; font-weight: 700; padding: 1px 8px; cursor: pointer; }
+.d-nw { display: grid; grid-template-columns: minmax(0, 1fr) 13em; }
+.d-nw.shut { grid-template-columns: minmax(0, 1fr) 0px; }
+.d-nw > .notes-ed { border-radius: 0 0 0 6px; }
+.d-nw.shut > .notes-ed { border-radius: 0 0 6px 6px; }
+.d-cmw { position: relative; min-width: 0; border: 1px solid var(--line); border-left: 3px solid color-mix(in srgb, var(--accent) 60%, transparent); border-radius: 0 0 6px 0; background: var(--bg); }
+.d-nw.shut .d-cmw { border: 0; background: none; }
+.d-nw.shut .d-cm { display: none; }
+.d-cm { height: 100%; box-sizing: border-box; padding: 10px 8px; outline: none; font-size: 0.86em; color: var(--ink); overflow-wrap: anywhere; cursor: text; }
+.d-cm:focus { background: color-mix(in srgb, var(--accent) 4%, transparent); }
+.d-cm:empty::before { content: attr(data-ph); color: var(--muted); }
+.d-cmtab { position: absolute; left: -15px; top: 8px; z-index: 2; border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); background: var(--surface); color: var(--accent); font: inherit; font-size: 0.72rem; font-weight: 700; padding: 1px 4px; border-radius: 6px 0 0 6px; cursor: pointer; white-space: nowrap; }
+.d-nw.shut .d-cmtab { left: auto; right: 1px; opacity: 0.85; }
+.d-cmtab:hover { opacity: 1; background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
 @media (max-width: 899px) { .d-toggles .d-side { display: none; } .d-split.on > .d-gut { display: none; } .d-split.on, .d-split.on > .d-sl, .d-split.on > .d-sr { display: grid; gap: 12px; } }
 .notes-ed mark, .notes mark { color: inherit; border-radius: 2px; padding: 0 1px; }
 mark.hl-y { background: #fff1a6; } mark.hl-g { background: #d3f2c4; } mark.hl-b { background: #cfe4ff; }
@@ -3030,7 +3095,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         if (tag === "FIGURE" && n.classList.contains("ndoc")) {
           // Word-Dokument: nur der Verweis wird gespeichert, die Vorschau entsteht beim Anzeigen
           const id = n.getAttribute("data-doc") || "", c = n.className || "", w = /\bw(25|33|50|75|100)\b/.exec(c), ps = /\bp-([lrc])\b/.exec(c), fc = n.querySelector(":scope > figcaption"), cap = fc ? fc.textContent.replace(/[\u00a0\u200b]/g, " ").trim() : "";
-          if (/^[\w-]{1,80}$/.test(id)) out += '<figure class="nfig ndoc' + (w ? " w" + w[1] : "") + (ps ? " p-" + ps[1] : "") + '" data-doc="' + id + '" data-name="' + esc((n.getAttribute("data-name") || "").slice(0, 200)) + '"' + (/^\d{1,6}$/.test(n.getAttribute("data-ch") || "") && +n.getAttribute("data-ch") > 0 ? ' data-ct="' + (/^\d{1,6}$/.test(n.getAttribute("data-ct") || "") ? n.getAttribute("data-ct") : "0") + '" data-ch="' + n.getAttribute("data-ch") + '"' : "") + '>' + (cap ? "<figcaption>" + esc(cap) + "</figcaption>" : "") + "</figure>";
+          if (/^[\w-]{1,80}$/.test(id)) out += '<figure class="nfig ndoc' + (w ? " w" + w[1] : "") + (ps ? " p-" + ps[1] : "") + '" data-doc="' + id + '" data-name="' + esc((n.getAttribute("data-name") || "").slice(0, 200)) + '"' + (/^\d{1,6}$/.test(n.getAttribute("data-ch") || "") && +n.getAttribute("data-ch") > 0 ? ' data-ct="' + (/^\d{1,6}$/.test(n.getAttribute("data-ct") || "") ? n.getAttribute("data-ct") : "0") + '" data-ch="' + n.getAttribute("data-ch") + '"' : "") + (/^[a-z0-9]{1,16}$/.test(n.getAttribute("data-v") || "") ? ' data-v="' + n.getAttribute("data-v") + '"' : "") + '>' + (cap ? "<figcaption>" + esc(cap) + "</figcaption>" : "") + "</figure>";
           continue;
         }
         if (tag === "FIGURE") { const im = n.querySelector("img"), src = (im && im.getAttribute("src")) || ""; if (/^\/_blob\/[0-9a-f]{8,64}$/.test(src)) { const c = n.className || "", w = /\bw(25|33|50|75|100)\b/.exec(c), ps = /\bp-([lrc])\b/.exec(c), fc = n.querySelector("figcaption"), cap = fc ? fc.textContent.replace(/[\u00a0\u200b]/g, " ").trim() : ""; out += '<figure class="nfig' + (w ? " w" + w[1] : "") + (ps ? " p-" + ps[1] : "") + '"><img src="' + src + '" alt="">' + (cap ? "<figcaption>" + esc(cap) + "</figcaption>" : "") + "</figure>"; } continue; }
@@ -3049,8 +3114,11 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         if (tag === "DIV" && n.classList.contains("nsec")) {
           // Abschnitt (Trennstrich mit Titel, z. B. «10' · Einstieg»); data-c = zugeklappt
           const tt = (n.querySelector(".nsec-t") || n).textContent.replace(/[\u00a0\u200b]/g, " ").replace(/\s+/g, " ").trim().slice(0, 120);
-          out += '<div class="nsec"' + (n.getAttribute("data-c") === "1" ? ' data-c="1"' : "") + ">" + esc(tt || "Abschnitt") + "</div>"; continue;
+          const sid = n.getAttribute("data-id") || "", sdocs = (n.getAttribute("data-docs") || "").split(/\s+/).filter((d) => /^[\w-]{1,80}$/.test(d)).slice(0, 12).join(" ");
+          out += '<div class="nsec"' + (n.getAttribute("data-c") === "1" ? ' data-c="1"' : "") + (/^[a-z0-9]{3,16}$/.test(sid) ? ' data-id="' + sid + '"' : "") + (sdocs ? ' data-docs="' + sdocs + '"' : "") + ">" + esc(tt || "Abschnitt") + "</div>"; continue;
         }
+        // Ende eines Abschnitts (der Text danach gehört zu keinem Abschnitt mehr)
+        if (tag === "DIV" && n.classList.contains("nend")) { out += '<div class="nend"></div>'; continue; }
         if (/^(DIV|P|SECTION|ARTICLE|BLOCKQUOTE)$/.test(tag) && !/\b(ncols|ncol|nsec|nflow|al-[crj])\b/.test(n.className || "") && !n.closest("td, th") && [...n.children].some((c) => /^(DIV|P|TABLE|FIGURE|UL|OL|H[1-6]|BLOCKQUOTE|SECTION|ARTICLE)$/.test(c.tagName))) {
           // Hülle um mehrere Absätze, Tabellen, Bilder (z. B. beim Einfügen aus Word): auflösen, damit jeder Teil für sich steht
           // (sonst landet ein Abschnitt oder eine Spalte vor der ganzen Hülle statt bei der gewünschten Zeile)
@@ -4233,12 +4301,28 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     if (!Array.isArray(p.widths) || p.widths.length !== p.cols.length) p.widths = p.cols.length === DEF_W.length ? DEF_W.slice() : p.cols.map(() => +(100 / p.cols.length).toFixed(1));
     return p;
   }
-  const colgroup = (p, extra) => "<colgroup>" + p.widths.map((w) => '<col style="width:' + w + '%">').join("") + (extra ? '<col style="width:62px">' : "") + "</colgroup>";
+  const colgroup = (p, extra, ab) => "<colgroup>" + p.widths.map((w) => '<col style="width:' + w + '%">').join("") + (ab ? '<col class="pab-col" style="width:' + ab + '">' : "") + (extra ? '<col style="width:62px">' : "") + "</colgroup>";
+  // Spalte «Abschnitt»: welche Abschnitte der Notizen zu einer Zeile gehören. Gespeichert als Kennungen hinter der letzten Spalte (row[cols.length]),
+  // so wandern sie beim Verschieben, Einfügen und Löschen von Zeilen und Spalten von selbst mit
+  const abGet = (p, ri) => { const row = (p.rows || [])[ri]; return row && typeof row[p.cols.length] === "string" ? row[p.cols.length].split(/[\s,]+/).filter((v) => /^[a-z0-9]{3,16}$/.test(v)) : []; };
+  const abSet = (p, ri, ids) => { const row = p.rows[ri]; if (!row) return; while (row.length < p.cols.length) row.push(""); const v = [...new Set(ids)].join(" "); if (v) row[p.cols.length] = v; else row.length = p.cols.length; };
+  const abOf = (p, id) => (p.rows || []).map((r, ri) => (abGet(p, ri).includes(id) ? ri : -1)).filter((ri) => ri >= 0);
+  const SEC_COL = ["#d9826b", "#d4a03a", "#7fa886", "#7f9cc0", "#a68cc4", "#c7869a", "#6fa8a8", "#b39b6b"];
+  let PAB = null;
+  let CUT = null; // Ausschnitt, der gerade aus dem Arbeitsblatt in die Notizen gezogen wird
+  const secId = () => (Math.random().toString(36).slice(2) + "0000000").slice(0, 7);
+  const fnv = (str) => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }; // im offenen Lektionsfenster: { secs() → [{id, t}], col(id) }
+  function abCell(p, ri) {
+    if (!PAB) return "";
+    const all = PAB.secs(), ids = abGet(p, ri);
+    return '<td class="pab"><div class="pab-w">' + ids.map((id) => { const q = all.find((y) => y.id === id); return q ? '<button type="button" class="pab-c" data-pabgo="' + id + '" data-pabri="' + ri + '" style="--sc:' + PAB.col(id) + '" title="Klick: in den Notizen zu diesem Abschnitt springen. Rechtsklick: von dieser Zeile lösen">' + esc(q.t) + "</button>" : ""; }).join("") +
+      '<button type="button" class="pab-add" data-pabadd="' + ri + '" title="Abschnitt aus den Notizen dieser Zeile zuordnen bzw. neu anlegen" aria-label="Abschnitt zuordnen">＋</button></div></td>';
+  }
   function planTableInner(p) {
-    return colgroup(p, true) + "<thead><tr>" + p.cols.map((c, j) => '<th><div class="pcell" contenteditable="true" data-pc="' + j + '" aria-label="Spaltentitel">' + esc(c) + "</div>" +
-      (j < p.cols.length - 1 ? '<span class="crz" data-crz="' + j + '" title="Ziehen, um die Spalte breiter oder schmaler zu machen"></span>' : "") + "</th>").join("") + '<th class="rm"></th></tr></thead><tbody>' +
-      p.rows.map((row, ri) => "<tr>" + p.cols.map((c, j) => '<td><div class="rich pcell" contenteditable="true" data-pr="' + ri + '" data-pj="' + j + '" aria-label="' + esc(c) + '">' + sanitize(row[j] || "") + "</div></td>").join("") +
-        '<td class="rm"><button type="button" class="psec" data-psec="' + ri + '" title="Abschnitt in den Notizen zu dieser Zeile: hinspringen bzw. anlegen" aria-label="Abschnitt in den Notizen">§</button><span class="pgrip" data-pgrip="' + ri + '" title="Ziehen, um die Zeile nach oben oder unten zu verschieben" aria-label="Zeile verschieben">⠿</span><button type="button" class="btn ghost danger" data-prm="' + ri + '" title="Zeile löschen" aria-label="Zeile löschen">×</button></td></tr>').join("") + "</tbody>";
+    return colgroup(p, true, PAB ? "11em" : "") + "<thead><tr>" + p.cols.map((c, j) => '<th><div class="pcell" contenteditable="true" data-pc="' + j + '" aria-label="Spaltentitel">' + esc(c) + "</div>" +
+      (j < p.cols.length - 1 ? '<span class="crz" data-crz="' + j + '" title="Ziehen, um die Spalte breiter oder schmaler zu machen"></span>' : "") + "</th>").join("") + (PAB ? '<th class="pab-h" title="Abschnitte aus den Notizen, die zu dieser Phase gehören. Text in den Notizen markieren und «§ Als Abschnitt» wählen, dann hier mit ＋ zuordnen">§ Abschnitt</th>' : "") + '<th class="rm"></th></tr></thead><tbody>' +
+      p.rows.map((row, ri) => "<tr>" + p.cols.map((c, j) => '<td><div class="rich pcell" contenteditable="true" data-pr="' + ri + '" data-pj="' + j + '" aria-label="' + esc(c) + '">' + sanitize(row[j] || "") + "</div></td>").join("") + abCell(p, ri) +
+        '<td class="rm">' + (PAB ? "" : '<button type="button" class="psec" data-psec="' + ri + '" title="Abschnitt in den Notizen zu dieser Zeile: hinspringen bzw. anlegen" aria-label="Abschnitt in den Notizen">§</button>') + '<span class="pgrip" data-pgrip="' + ri + '" title="Ziehen, um die Zeile nach oben oder unten zu verschieben" aria-label="Zeile verschieben">⠿</span><button type="button" class="btn ghost danger" data-prm="' + ri + '" title="Zeile löschen" aria-label="Zeile löschen">×</button></td></tr>').join("") + "</tbody>";
   }
   function planHtml(p) {
     ensurePlan(p);
@@ -4284,7 +4368,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     });
     // Rechtsklick (Tablet: lange drücken) auf eine Zelle oder einen Spaltentitel: Spalten und Zeilen verschieben, einfügen, löschen
     const planMenu = (cx, cy, cell) => {
-      const th = cell.closest("th"), td = cell.closest("td"); if ((th || td).classList.contains("rm")) return;
+      const th = cell.closest("th"), td = cell.closest("td"); if (/\b(rm|pab|pab-h)\b/.test((th || td).className)) return;
       const tr = cell.closest("tr"), j = [...tr.children].indexOf(th || td), ri = td ? [...tr.parentElement.children].indexOf(tr) : -1, n = p.cols.length;
       const items = [];
       if (j > 0) items.push(["cl", "◀ Spalte nach links"]); if (j < n - 1) items.push(["cr", "Spalte nach rechts ▶"]);
@@ -5241,9 +5325,23 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       if (!d.querySelector(".nsec-t")) { const t = d.textContent.trim(); d.innerHTML = '<button type="button" class="nsec-tg" tabindex="-1" title="Abschnitt zu- bzw. aufklappen" aria-label="Abschnitt zu- bzw. aufklappen"></button><span class="nsec-t" title="Titel ändern, entfernen …"></span>'; d.lastChild.textContent = t || "Abschnitt"; }
       d.contentEditable = "false";
     });
+    box.querySelectorAll(":scope > .nend").forEach((d) => { d.contentEditable = "false"; d.title = "Ende des Abschnitts darüber (Klick: entfernen …)"; });
+    // Zusatzangaben im Lektionsfenster: Phase aus der Lektionsplanung und zugeordnete Arbeitsblätter (werden nicht gespeichert)
+    const info = box._secInfo ? box._secInfo() : null;
+    box.querySelectorAll(":scope > .nsec").forEach((d) => {
+      d.querySelectorAll(".nsec-x").forEach((e) => e.remove());
+      if (!info) return;
+      const id = d.dataset.id || "", tt = (d.querySelector(".nsec-t") || d).textContent.trim(), ph = (info.ph[id] || []).filter((t) => t !== tt && !tt.endsWith(t) && !t.endsWith(" · " + tt)), dc = (d.dataset.docs || "").split(" ").filter(Boolean), c = info.col[id];
+      d.style.setProperty("--sc", c || "transparent"); d.classList.toggle("nsec-c", !!c);
+      if (!ph.length && !dc.length) return;
+      const x = document.createElement("span"); x.className = "nsec-x"; x.contentEditable = "false";
+      x.innerHTML = ph.map((t) => '<span class="nsec-ph" title="Gehört in der Lektionsplanung zu dieser Zeile">' + esc(t) + "</span>").join("") +
+        dc.map((fid) => { const f = info.doc(fid); return '<button type="button" class="nsec-dc" data-secdoc="' + esc(fid) + '" title="Zugeordnetes Arbeitsblatt rechts öffnen">📄 ' + esc(f ? String(f.name).replace(/\.[^.]+$/, "") : "Dokument fehlt") + "</button>"; }).join("");
+      d.appendChild(x);
+    });
     let hid = false, cur = null, im = 0, tx = false;
     const sum = () => { if (!cur) return; const t = cur.querySelector(".nsec-t"), n = im ? (im === 1 ? "1 Bild" : im + " Bilder") + (tx ? " · Text" : "") : tx ? "Text" : ""; if (t) { if (n) t.dataset.n = n; else delete t.dataset.n; } cur.classList.toggle("has", !!n); };
-    [...box.children].forEach((k) => { if (k.classList.contains("nsec")) { sum(); cur = k; im = 0; tx = false; hid = !off && k.dataset.c === "1"; return; } k.classList.toggle("nsec-hid", hid); if (cur) { im += k.matches("img, figure") ? 1 : k.querySelectorAll("img").length ? Math.max(1, k.querySelectorAll("figure").length || k.querySelectorAll("img").length) : 0; if (k.textContent.replace(/[\u00a0\u200b\s]/g, "")) tx = true; } });
+    [...box.children].forEach((k) => { if (k.classList.contains("nsec")) { sum(); cur = k; im = 0; tx = false; hid = !off && k.dataset.c === "1"; return; } if (k.classList.contains("nend")) { sum(); cur = null; hid = false; return; } k.classList.toggle("nsec-hid", hid); if (cur) { im += k.matches("img, figure") ? 1 : k.querySelectorAll("img").length ? Math.max(1, k.querySelectorAll("figure").length || k.querySelectorAll("img").length) : 0; if (k.textContent.replace(/[\u00a0\u200b\s]/g, "")) tx = true; } });
     sum();
   }
   async function ndocFill(box, files, force) {
@@ -5259,6 +5357,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       try {
         if (!WD_CACHE[id] || force === id) WD_CACHE[id] = await wdRead(f);
         const ctx = await wdLoad(WD_CACHE[id].bytes.slice(0)), page = await wdRender(ctx, false);
+        let vh = ""; try { const dx = ctx.zip.file("word/document.xml"); if (dx) vh = fnv(await dx.async("string")); } catch (e) {}
         const sc = document.createElement("div"); sc.className = "ndoc-sc"; sc.appendChild(page);
         const sp = document.createElement("div"); sp.className = "ndoc-sp"; sp.appendChild(sc);
         v.innerHTML = ""; v.appendChild(sp);
@@ -5291,7 +5390,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
           if (!v.classList.contains("scr")) return; const k = v.clientWidth / (page.offsetWidth || 1); if (!k) return;
           fig.dataset.ct = String(Math.round((v.scrollTop / k) * 1000 / (page.offsetWidth || 1)));
         });
-        fit(); fig._wd = { page, v, fit }; if (window.ResizeObserver) { const ro = new ResizeObserver(fit); ro.observe(v); }
+        fit(); fig._wd = { page, v, fit }; if (window.ResizeObserver) { const ro = new ResizeObserver(fit); ro.observe(v); } if (vh && box._ndocSeen) box._ndocSeen(fig, vh);
         if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { wdTabs(page, ctx.defTab); fit(); });
       } catch (e) { console.error(e); v.innerHTML = '<div class="ndoc-load">📄 ' + esc(fig.dataset.name || "Word-Dokument") + " – Vorschau geht nicht (" + esc(e.message || e) + ")</div>"; }
     }
@@ -5537,6 +5636,9 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   // Lektion: Lektionsplanung links, Notizen rechts (Wahl und Breite pro Gerät)
   const dSide = () => { try { return localStorage.getItem("zeitplan-dside") === "1"; } catch (e) { return false; } };
   const pFold = () => { try { return localStorage.getItem("zp-pfold") === "1"; } catch (e) { return false; } };
+  const dWs = () => { try { return localStorage.getItem("zp-dws") !== "0"; } catch (e) { return true; } };
+  const dWsW = () => { let v = 40; try { v = +localStorage.getItem("zp-dwsw") || 40; } catch (e) {} return Math.max(22, Math.min(65, v)); };
+  const dCm = (has) => { try { const v = localStorage.getItem("zp-dcm"); return v == null ? !!has : v === "1"; } catch (e) { return !!has; } };
   const dSideW = () => { let v = 55; try { v = +localStorage.getItem("zeitplan-dsidew") || 55; } catch (e) {} return Math.max(25, Math.min(75, v)); };
   function bindSide(root) {
     const b = root.querySelector("#d-side"), sp = root.querySelector("#d-split"), g = root.querySelector("#d-gut"), pn = root.querySelector(".panel");
@@ -5555,7 +5657,192 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       g.addEventListener("pointermove", move); g.addEventListener("pointerup", up); g.addEventListener("pointercancel", up);
     });
   }
+  // Lektionsfenster: Spalte «Abschnitt», Kommentarecke und Arbeitsblatt rechts (Ausschnitte in die Notizen ziehen)
+  function lessonExtras(root, opt, x, ned, changed) {
+    const p = opt.plan, sp = root.querySelector("#d-split"), dp = root.querySelector("#d-ws"), wsb = root.querySelector("#d-wsb"), pn = root.querySelector(".panel"), msg = root.querySelector("#d-nmsg");
+    const files = () => { const seen = new Set(); return [...(x.files || []), ...(opt.reiheFiles || [])].filter((f) => f && f.id && !seen.has(f.id) && seen.add(f.id)); };
+    const tbl = () => root.querySelector("#p-table");
+    // --- Spalte «Abschnitt» ---
+    const redraw = () => { const tb = tbl(); if (!tb) return; if (tb.contains(document.activeElement) && document.activeElement.isContentEditable) { tb._abLater = true; return; } tb.innerHTML = planTableInner(p); };
+    root.addEventListener("focusout", (e) => { const tb = tbl(); if (tb && tb._abLater && tb.contains(e.target)) { tb._abLater = false; setTimeout(() => { if (!tb.contains(document.activeElement)) tb.innerHTML = planTableInner(p); }, 0); } });
+    ned._secInfo = () => {
+      const ph = {}, col = {}, labels = planPhases(p), all = ned._secs();
+      (p.rows || []).forEach((row, ri) => abGet(p, ri).forEach((id) => { const q = labels.find((y) => y.ri === ri); (ph[id] = ph[id] || []).push(q ? q.label : "Zeile " + (ri + 1)); }));
+      all.forEach((q, i) => { if (ph[q.id]) col[q.id] = SEC_COL[i % SEC_COL.length]; });
+      return { ph, col, doc: (fid) => files().find((f) => f.id === fid) };
+    };
+    const deco = () => { nsecDeco(ned); };
+    let dt = 0; const decoSoon = () => { clearTimeout(dt); dt = setTimeout(deco, 300); };
+    root.addEventListener("input", (e) => { if (e.target.closest && e.target.closest("#p-table")) decoSoon(); });
+    deco();
+    const setAb = (ri, ids) => { abSet(p, ri, ids); HIST.brk = true; redraw(); deco(); changed(); };
+    root.addEventListener("click", (e) => {
+      const go = e.target.closest && e.target.closest("[data-pabgo]");
+      if (go) { e.preventDefault(); ned._secGo(go.dataset.pabgo); return; }
+      const add = e.target.closest && e.target.closest("[data-pabadd]"); if (!add) return;
+      e.preventDefault(); const ri = +add.dataset.pabadd, mine = abGet(p, ri), all = ned._secs(), labels = planPhases(p), q = labels.find((y) => y.ri === ri);
+      const items = all.filter((s) => !mine.includes(s.id)).map((s) => { const at = abOf(p, s.id).map((r) => { const l = labels.find((y) => y.ri === r); return l ? l.ph || l.label : "Zeile " + (r + 1); }); return ["a:" + s.id, "§ " + s.t + (at.length ? "  (auch bei " + at.join(", ") + ")" : "")]; });
+      const nt = q ? q.label : "Zeile " + (ri + 1);
+      if (items.length) items.push("-");
+      items.push(["new", "＋ Neuer Abschnitt «" + nt + "» in den Notizen"]);
+      const r = add.getBoundingClientRect();
+      cellMenu(r.left, r.bottom + 4, all.length ? "Abschnitt zuordnen" : "Noch keine Abschnitte – Text in den Notizen markieren und «§ Als Abschnitt» wählen", items, (op) => {
+        if (op === "new") { const d = ned._secNew(nt); if (d) setAb(ri, [...abGet(p, ri), d.dataset.id]); return; }
+        if (op.startsWith("a:")) setAb(ri, [...abGet(p, ri), op.slice(2)]);
+      });
+    });
+    root.addEventListener("contextmenu", (e) => {
+      const c = e.target.closest && e.target.closest(".pab-c"); if (!c) return;
+      e.preventDefault(); e.stopPropagation(); const ri = +c.dataset.pabri, id = c.dataset.pabgo;
+      cellMenu(e.clientX, e.clientY, "Abschnitt «" + c.textContent + "»", [["go", "In den Notizen zeigen"], "-", ["rm", "Von dieser Zeile lösen …", 1]], (op) => {
+        if (op === "go") ned._secGo(id);
+        else if (op === "rm" && confirm("Abschnitt «" + c.textContent + "» von dieser Zeile lösen? Der Text in den Notizen bleibt.")) setAb(ri, abGet(p, ri).filter((v) => v !== id));
+      });
+    }, true);
+    // --- Kommentarecke (wie bei den Materialsammlungen) ---
+    const cm = root.querySelector("#d-cm"), nw = root.querySelector(".d-nw"), tab = root.querySelector("#d-cmtab");
+    if (cm && nw && tab) {
+      cm.style.lineHeight = ned.style.lineHeight || "1.5";
+      const cmSave = () => { const h = sanitize(cm.innerHTML).replace(/(<br\s*\/?>\s*)+$/i, ""); if (filled(h)) x.notesCm = h; else delete x.notesCm; changed(); };
+      let ct = 0; cm.addEventListener("input", () => { clearTimeout(ct); ct = setTimeout(cmSave, 300); });
+      cm.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); lineBreak(); } });
+      cm.addEventListener("blur", () => { clearTimeout(ct); const h = cm.innerHTML, t = h.replace(/(<br\s*\/?>\s*)+$/i, ""); if (t !== h) cm.innerHTML = t; cmSave(); });
+      // Klick unter den letzten Kommentar: leere Zeilen bis zur Klickhöhe, damit der Kommentar neben dem passenden Text steht
+      cm.addEventListener("mousedown", (e) => {
+        if (e.target !== cm) return;
+        const rg = document.createRange(); rg.selectNodeContents(cm); const rr = rg.getBoundingClientRect(), cr = cm.getBoundingClientRect();
+        const bottom = cm.textContent.trim() || cm.querySelector("br") ? rr.bottom : cr.top + parseFloat(getComputedStyle(cm).paddingTop || 0);
+        const lh = parseFloat(getComputedStyle(cm).lineHeight) || 20, n = Math.floor((e.clientY - bottom) / lh);
+        if (n < 1) return;
+        e.preventDefault(); cm.focus();
+        if (cm.innerHTML && !/<br\s*\/?>$/i.test(cm.innerHTML)) cm.insertAdjacentHTML("beforeend", "<br>");
+        cm.insertAdjacentHTML("beforeend", "<br>".repeat(n));
+        const r2 = document.createRange(); r2.selectNodeContents(cm); r2.collapse(false); const sl = getSelection(); sl.removeAllRanges(); sl.addRange(r2);
+      });
+      tab.addEventListener("click", () => {
+        const on = nw.classList.toggle("shut"); try { localStorage.setItem("zp-dcm", on ? "0" : "1"); } catch (e) {}
+        tab.textContent = on ? "◂ Kommentare" + (filled(x.notesCm || "") ? " ●" : "") : "▸"; if (!on) cm.focus();
+      });
+    }
+    // --- Arbeitsblatt rechts ---
+    let cur = null, cutting = false, band = null;
+    const extW = (f) => extOf(f);
+    const on = () => sp.classList.contains("ws");
+    const narrow = () => innerWidth < 1700;
+    const set = (v) => {
+      if (v && !files().length) v = false;
+      sp.classList.toggle("ws", v); pn.classList.toggle("wsp", v); if (wsb) wsb.setAttribute("aria-pressed", String(v));
+      try { localStorage.setItem("zp-dws", v ? "1" : "0"); } catch (e) {}
+      // wenig Platz: Tabelle wieder oben (eingeklappt lässt sie sich wegklappen), damit Notizen und Arbeitsblatt Platz haben
+      if (v && narrow() && sp.classList.contains("on")) { const sb = root.querySelector("#d-side"); if (sb) sb.click(); }
+      if (v) render();
+    };
+    if (wsb) wsb.addEventListener("click", () => set(!on()));
+    { const sb = root.querySelector("#d-side"); if (sb) sb.addEventListener("click", () => { if (sb.getAttribute("aria-pressed") === "true" && narrow() && on()) set(false); }); }
+    const short = (n) => String(n || "").replace(/\.[^.]+$/, "");
+    function render() {
+      const fs = files(); if (!fs.length) { dp.innerHTML = '<div class="empty">Keine Dokumente.</div>'; return; }
+      if (!cur || !fs.some((f) => f.id === cur)) { let last = null; try { last = localStorage.getItem("zp-dwsdoc"); } catch (e) {} cur = fs.some((f) => f.id === last) ? last : fs[0].id; }
+      const own = (x.files || []).map((f) => f.id), opt1 = (f) => '<option value="' + esc(f.id) + '"' + (f.id === cur ? " selected" : "") + ">" + esc(short(f.name)) + "</option>";
+      const a = fs.filter((f) => own.includes(f.id)), b = fs.filter((f) => !own.includes(f.id));
+      const f = fs.find((y) => y.id === cur);
+      dp.innerHTML = '<div class="ufl-dbar ws-bar"><select class="ufl-dsel" aria-label="Dokument wählen">' + (a.length ? '<optgroup label="Dokumente der Lektion">' + a.map(opt1).join("") + "</optgroup>" : "") + (b.length ? '<optgroup label="Dokumente der Reihe">' + b.map(opt1).join("") + "</optgroup>" : "") + "</select>" +
+        '<button type="button" class="btn ghost" data-wnav="-1" title="Vorheriges Dokument" aria-label="Vorheriges Dokument">‹</button><button type="button" class="btn ghost" data-wnav="1" title="Nächstes Dokument" aria-label="Nächstes Dokument">›</button>' +
+        '<button type="button" class="btn ghost" data-wpin title="Dieses Arbeitsblatt einem oder mehreren Abschnitten der Notizen zuordnen">📌 Abschnitt ▾</button>' +
+        '<button type="button" class="btn ghost" data-wcut aria-pressed="' + cutting + '" title="Ausschnitt wählen: Rahmen über das Blatt ziehen, dann in die Notizen ziehen">✂ Ausschnitt</button>' +
+        ('<button type="button" class="btn ghost" data-wedit title="Word-Datei hier bearbeiten; gespeichert wird in dieselbe Datei"' + (/^docx$/.test(extW(f)) && window.ZLOCAL && window.ZLOCAL.readEx ? "" : " hidden") + ">✎</button>") +
+        '<button type="button" class="btn ghost" data-wbig title="Gross ansehen">⤢</button><button type="button" class="btn ghost" data-wclose title="Arbeitsblatt ausblenden" aria-label="Arbeitsblatt ausblenden">✕</button></div>' +
+        '<div class="ufl-dmsg msg"></div><div class="ufl-dbody ws-body' + (cutting ? " cutting" : "") + '"></div>';
+      try { localStorage.setItem("zp-dwsdoc", cur); } catch (e) {}
+      show(f);
+    }
+    async function show(f) {
+      const body = dp.querySelector(".ws-body"), m = dp.querySelector(".ufl-dmsg"); band = null;
+      if (/^docx$/.test(extW(f))) {
+        body.innerHTML = '<div class="ndoc-load">📄 ' + esc(f.name) + " · lädt …</div>";
+        try {
+          if (!WD_CACHE[f.id]) WD_CACHE[f.id] = await wdRead(f);
+          const ctx = await wdLoad(WD_CACHE[f.id].bytes.slice(0)), page = await wdRender(ctx, false); if (!body.isConnected) return;
+          const sc = document.createElement("div"); sc.className = "ws-sc"; sc.appendChild(page);
+          const hold = document.createElement("div"); hold.className = "ws-hold"; hold.appendChild(sc); body.innerHTML = ""; body.appendChild(hold); wdTabs(page, ctx.defTab);
+          const fit = () => { const w = Math.max(120, body.clientWidth - 28), k = w / (page.offsetWidth || 1); sc.style.transform = "scale(" + k + ")"; hold.style.width = w + "px"; hold.style.height = Math.ceil(page.offsetHeight * k) + "px"; hold._k = k; hold._pw = page.offsetWidth || 1; };
+          fit(); if (window.ResizeObserver) new ResizeObserver(fit).observe(body);
+          if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { wdTabs(page, ctx.defTab); fit(); });
+          if (m) m.textContent = WD_CACHE[f.id].where === "app" && f.path ? "" : "";
+        } catch (e) { console.error(e); body.innerHTML = '<div class="empty">Die Vorschau hat nicht geklappt.</div>'; }
+      } else await docPreview(f, body, m);
+    }
+    dp.addEventListener("change", (e) => { if (e.target.classList.contains("ufl-dsel")) { cur = e.target.value; render(); } });
+    dp.addEventListener("click", (e) => {
+      const b = e.target.closest("button"); if (!b) return; const fs = files(), f = fs.find((y) => y.id === cur);
+      if (b.dataset.wnav) { const j = fs.findIndex((y) => y.id === cur), n = j + +b.dataset.wnav; if (n >= 0 && n < fs.length) { cur = fs[n].id; render(); } return; }
+      if (b.dataset.wclose != null) { set(false); return; }
+      if (b.dataset.wbig != null) { if (f) openViewer(f); return; }
+      if (b.dataset.wedit != null) { if (f) wdEdit(f, { host: dp.querySelector(".ws-body"), onSaved: () => { ned._ndocAck = f.id; ndocFill(ned, files(), f.id); }, onClose: () => { delete WD_CACHE[f.id]; render(); } }); return; }
+      if (b.dataset.wcut != null) { cutting = !cutting; b.setAttribute("aria-pressed", String(cutting)); dp.querySelector(".ws-body").classList.toggle("cutting", cutting); if (!cutting) dropBand(); else { const mm = dp.querySelector(".ufl-dmsg"); if (mm) mm.textContent = "Rahmen über den gewünschten Teil ziehen, dann den Ausschnitt in die Notizen ziehen (oder «⇥ Einfügen»)."; } return; }
+      if (b.dataset.wpin != null) {
+        const all = ned._secs(); const r = b.getBoundingClientRect();
+        if (!all.length) { cellMenu(r.left, r.bottom + 4, "Noch keine Abschnitte", [["x", "Text in den Notizen markieren und «§ Als Abschnitt» wählen"]], () => {}); return; }
+        cellMenu(r.left, r.bottom + 4, "«" + short(f && f.name) + "» gehört zu …", all.map((q) => { const d = ned._secEl(q.id), has = (d.dataset.docs || "").split(" ").includes(cur); return ["s:" + q.id, (has ? "☑ " : "☐ ") + q.t]; }), (op) => {
+          const d = ned._secEl(op.slice(2)); if (!d) return; const l = (d.dataset.docs || "").split(" ").filter(Boolean), i = l.indexOf(cur);
+          if (i >= 0) l.splice(i, 1); else l.push(cur);
+          if (l.length) d.dataset.docs = l.join(" "); else delete d.dataset.docs;
+          HIST.brk = true; nsecDeco(ned); ned._save();
+          if (msg) msg.textContent = i >= 0 ? "Zuordnung gelöst." : "Zugeordnet: Beim Aufklappen des Abschnitts öffnet sich das Blatt hier rechts.";
+        });
+        return;
+      }
+      if (b.dataset.wins != null && band) { const c = band._cut; dropBand(); if (c.blob) ned._insImg(c.blob); else ned._insCut(c); return; }
+      if (b.dataset.wbx != null) { dropBand(); return; }
+    });
+    // Ausschnitt ziehen: senkrechter Bereich über die ganze Breite
+    const dropBand = () => { if (band) { band.remove(); band = null; } };
+    dp.addEventListener("pointerdown", (e) => {
+      if (!cutting || e.button !== 0) return; const body = e.target.closest && e.target.closest(".ws-body"); if (!body || (e.target.closest && e.target.closest(".ws-band"))) return;
+      const hold = e.target.closest(".ws-hold"), cv = !hold && e.target.closest("canvas, img"); const el = hold || cv; if (!el) return;
+      e.preventDefault(); dropBand();
+      const br = body.getBoundingClientRect(), er = el.getBoundingClientRect(), y0 = Math.max(er.top, Math.min(er.bottom, e.clientY));
+      band = document.createElement("div"); band.className = "ws-band"; body.appendChild(band);
+      const place = (y1) => { const a = Math.min(y0, y1), z = Math.max(y0, y1); Object.assign(band.style, { left: er.left - br.left + body.scrollLeft + "px", width: er.width + "px", top: a - br.top + body.scrollTop + "px", height: Math.max(4, z - a) + "px" }); band._a = a - er.top; band._z = z - er.top; };
+      place(y0);
+      const mv = (ev) => place(Math.max(er.top, Math.min(er.bottom, ev.clientY)));
+      const up = async () => {
+        document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up);
+        if (!band) return; if (band._z - band._a < 12) { dropBand(); return; }
+        const f = files().find((y) => y.id === cur);
+        if (hold) { const k = hold._k || 1, pw = hold._pw || 1; band._cut = { doc: f.id, name: f.name, ct: Math.round((band._a / k) * 1000 / pw), ch: Math.round(((band._z - band._a) / k) * 1000 / pw) }; }
+        else {
+          const nw = cv.tagName === "IMG" ? cv.naturalWidth : cv.width, nh = cv.tagName === "IMG" ? cv.naturalHeight : cv.height, s = nh / er.height;
+          const c2 = document.createElement("canvas"); c2.width = nw; c2.height = Math.max(1, Math.round((band._z - band._a) * s));
+          c2.getContext("2d").drawImage(cv, 0, Math.round(band._a * s), nw, c2.height, 0, 0, nw, c2.height);
+          band._cut = { blob: await new Promise((res) => c2.toBlob(res, "image/png")) };
+        }
+        band.draggable = true;
+        band.innerHTML = '<span class="ws-bh">⠿ In die Notizen ziehen</span><button type="button" class="btn primary" data-wins title="An der letzten Stelle der Schreibmarke in den Notizen einfügen">⇥ Einfügen</button><button type="button" class="btn ghost" data-wbx title="Rahmen entfernen" aria-label="Rahmen entfernen">×</button>';
+      };
+      document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up);
+    });
+    dp.addEventListener("dragstart", (e) => {
+      const b = e.target.closest && e.target.closest(".ws-band"); if (!b || !b._cut) return;
+      CUT = b._cut; try { e.dataTransfer.effectAllowed = "copy"; e.dataTransfer.setData("text/x-zp-cut", "1"); } catch (err) {}
+    });
+    dp.addEventListener("dragend", () => { setTimeout(() => { CUT = null; }, 0); });
+    // Breite des Arbeitsblatts ziehen
+    { const g = root.querySelector("#d-gut2"); if (g) g.addEventListener("pointerdown", (e) => {
+      e.preventDefault(); try { g.setPointerCapture(e.pointerId); } catch (err) {} g.classList.add("active"); document.body.classList.add("col-resizing");
+      const r = sp.getBoundingClientRect(); let v = dWsW();
+      const move = (ev) => { v = Math.round(Math.max(22, Math.min(65, (r.right - ev.clientX) / r.width * 100))); sp.style.setProperty("--wsw", v + "%"); };
+      const up = () => { g.removeEventListener("pointermove", move); g.removeEventListener("pointerup", up); g.classList.remove("active"); document.body.classList.remove("col-resizing"); try { localStorage.setItem("zp-dwsw", String(v)); } catch (err) {} };
+      g.addEventListener("pointermove", move); g.addEventListener("pointerup", up); }); }
+    if (on()) { pn.classList.add("wsp"); render(); }
+    return {
+      secs: () => { redraw(); deco(); },
+      open: (fid) => { if (!files().some((f) => f.id === fid)) { if (msg) msg.textContent = "Dieses Dokument gehört nicht mehr zur Lektion oder Reihe."; return; } cur = fid; if (!on()) set(true); else render(); },
+      unfold: (d) => { const l = (d.dataset.docs || "").split(" ").filter((fid) => files().some((f) => f.id === fid)); if (l.length && on() && !l.includes(cur)) { cur = l[0]; render(); } },
+    };
+  }
   function openDetailBox(opt) {
+    PAB = null; CUT = null;
     const x = opt.x, conv = !!opt.todo && tdpFromOld(x, 1); // altes einzelnes Kästchen → To-do-Zeilen
     x.files = Array.isArray(x.files) ? x.files : [];
     const textF = '<div class="field"><label for="d-text">' + esc(opt.textLabel || "Eintrag in der Liste") + (x.split ? " (erster Teil)" : "") + '</label><div class="rich rtfield" contenteditable="true" role="textbox" aria-multiline="true" id="d-text">' + tdpDeco(richOf(x, 1)) + "</div></div>" +
@@ -5567,13 +5854,13 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       NB("hl", "y", "", "Gelb markieren", "sw-y") + NB("hl", "g", "", "Grün markieren", "sw-g") + NB("hl", "b", "", "Blau markieren", "sw-b") + NB("hl", "", "✕", "Markierung entfernen", "sw-x") + '<span class="nsep"></span>' +
       NB("size", "2", '<span style="font-size:11px">A</span>', "Kleine Schrift") + NB("size", "3", '<span style="font-size:14px">A</span>', "Normale Schrift") + NB("size", "4", '<span style="font-size:17px">A</span>', "Grosse Schrift") + NB("size", "5", '<span style="font-size:20px">A</span>', "Sehr grosse Schrift") + '<span class="nsep"></span>' +
       NB("justifyLeft", "", '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 3h12M2 6.5h8M2 10h12M2 13.5h8"/></svg>', "Linksbündig") + NB("justifyCenter", "", '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 3h12M4 6.5h8M2 10h12M4 13.5h8"/></svg>', "Zentriert") + NB("justifyRight", "", '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 3h12M6 6.5h8M2 10h12M6 13.5h8"/></svg>', "Rechtsbündig") + NB("justifyFull", "", '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 3h12M2 6.5h12M2 10h12M2 13.5h12"/></svg>', "Blocksatz") + '<span class="nsep"></span>' + NB("insertUnorderedList", "", '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="3" cy="4" r="1" fill="currentColor"/><circle cx="3" cy="8" r="1" fill="currentColor"/><circle cx="3" cy="12" r="1" fill="currentColor"/><path d="M6 4h8M6 8h8M6 12h8"/></svg>', "Aufzählung") + NB("insertOrderedList", "", '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 4h8M6 8h8M6 12h8"/><text x="0.5" y="5.5" font-size="5" fill="currentColor" stroke="none">1</text><text x="0.5" y="9.5" font-size="5" fill="currentColor" stroke="none">2</text><text x="0.5" y="13.5" font-size="5" fill="currentColor" stroke="none">3</text></svg>', "Nummerierte Liste") + '<span class="nsep"></span>' +
-      '<label class="nlh" title="Spalten einfügen, z. B. Fragen links, Antworten rechts">Spalten <select id="d-ncols"><option value="">–</option><option value="2">2 Spalten</option><option value="3">3 Spalten</option><option value="t">Aufgabe | Notizen</option><option value="0">Spalten aufheben</option></select></label>' + '<button type="button" class="nb nimg" id="d-nsec" aria-haspopup="menu" title="Abschnitt einfügen: Trennstrich mit Titel, z. B. eine Phase aus der Lektionsplanung; lässt sich zuklappen">§ Abschnitt</button><button type="button" class="nb nimg" id="d-ntask" title="Seite teilen: markierte Aufgabe links, rechts Lösungen und Notizen schreiben (Linie dazwischen lässt sich ziehen)">◧ Aufgabe | Notizen</button><button type="button" class="nb" id="d-neye" aria-pressed="true" title="Abschnitte (Trennstriche und § in der Lektionsplanung) zeigen oder ausblenden">👁</button>' + '<span class="nsep"></span>' +
+      '<label class="nlh" title="Spalten einfügen, z. B. Fragen links, Antworten rechts">Spalten <select id="d-ncols"><option value="">–</option><option value="2">2 Spalten</option><option value="3">3 Spalten</option><option value="t">Aufgabe | Notizen</option><option value="0">Spalten aufheben</option></select></label>' + '<button type="button" class="nb nimg" id="d-nsec" aria-haspopup="menu" title="Abschnitt einfügen: Trennstrich mit Titel, z. B. eine Phase aus der Lektionsplanung; lässt sich zuklappen">§ Abschnitt</button><button type="button" class="nb nimg" id="d-nmark" title="Markierten Text zu einem Abschnitt machen (erste Zeile wird zum Titel). Danach in der Lektionsplanung mit ＋ einer Zeile zuordnen">§ Als Abschnitt</button><button type="button" class="nb nimg" id="d-ntask" title="Seite teilen: markierte Aufgabe links, rechts Lösungen und Notizen schreiben (Linie dazwischen lässt sich ziehen)">◧ Aufgabe | Notizen</button><button type="button" class="nb" id="d-neye" aria-pressed="true" title="Abschnitte (Trennstriche und § in der Lektionsplanung) zeigen oder ausblenden">👁</button>' + '<span class="nsep"></span>' +
       '<span class="ntab-w"><button type="button" class="nb nimg" id="d-ntabb" aria-expanded="false" title="Tabelle einfügen: Grösse im Raster wählen oder Spalten und Zeilen eingeben">▦ Tabelle</button><div class="ntab-pop" id="d-ntabp" hidden><div class="ntab-grid">' + Array.from({ length: 64 }, (_, k) => '<button type="button" class="ntab-c" data-r="' + (Math.floor(k / 8) + 1) + '" data-c="' + (k % 8 + 1) + '"></button>').join("") + '</div><div class="ntab-lbl">Grösse im Raster wählen</div><div class="ntab-num"><label>Spalten <input type="number" id="d-ntc" min="1" max="20" value="3"></label><label>Zeilen <input type="number" id="d-ntr" min="1" max="60" value="3"></label><button type="button" class="btn primary" id="d-ntok">Einfügen</button></div></div></span>' + '<span class="nsep"></span>' +
       '<span class="nlh">Zeilenabstand <button type="button" class="nb" id="d-nlh" aria-haspopup="menu" title="Zeilenabstand für die markierten Zeilen. Rechtsklick auf einen Abstand im Menü: als Standard für diese Notizen">' + nlhName(x.notesLh) + " ▾</button></span>" + '<span class="nsep"></span>' +
       '<label class="nb nimg" title="Bild oder Screenshot einfügen (auch mit Strg+V)">🖼 Bild<input type="file" id="d-nimg" accept="image/*" multiple hidden></label>' +
       '<button type="button" class="nb nimg" id="d-nword" aria-haspopup="menu" title="Word-Dokument (Arbeitsblatt) in die Notizen einfügen – grösser/kleiner wie ein Bild, Doppelklick = direkt bearbeiten und in dieselbe Datei speichern">📄 Word</button><input type="file" id="d-nwordf" accept=".docx" hidden><span class="msg" id="d-nmsg"></span></div>' +
       '<div class="notes-ed" style="line-height:' + (x.notesLh || 1.5) + '" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Notizen" id="d-notes" data-ph="Fragen, Hinweise, Tafelbild, Lösungen … Screenshots mit Strg+V einfügen.">' + sanitizeNotes(x.notesHtml || "") + '</div><div class="links" id="d-links">' + linkify(x.notesHtml ? notesLinkText(x.notesHtml) : x.details || "") + "</div></div>";
-    const notesF = opt.plan || opt.page ? notesRich : '<div class="field"><label for="d-details">' + (opt.plan ? "Notizen, Querverweise, Links" : "Details, Querverweise, Links") + '</label><textarea id="d-details" placeholder="' + (opt.plan ? "Fragen, Hinweise, Tafelbild, Querverweise … Links (https://…) werden unten anklickbar." : "Alles, was nicht in die Liste muss. Links (https://…) werden unten anklickbar.") + '">' + esc(x.details) + '</textarea><div class="links" id="d-links">' + linkify(x.details || "") + "</div></div>";
+    let notesF = opt.plan || opt.page ? notesRich : '<div class="field"><label for="d-details">' + (opt.plan ? "Notizen, Querverweise, Links" : "Details, Querverweise, Links") + '</label><textarea id="d-details" placeholder="' + (opt.plan ? "Fragen, Hinweise, Tafelbild, Querverweise … Links (https://…) werden unten anklickbar." : "Alles, was nicht in die Liste muss. Links (https://…) werden unten anklickbar.") + '">' + esc(x.details) + '</textarea><div class="links" id="d-links">' + linkify(x.details || "") + "</div></div>";
     const rfl = (opt.reiheFiles || []);
     const rdocsF = rfl.length ? '<div class="field"><span class="lbl">Dokumente der ganzen Reihe</span><div class="d-rfiles">' + rfl.map((f) => '<button type="button" class="doc" data-open-rfile="' + esc(f.id) + '"><span class="tag">' + typeTag(f) + "</span><span>" + esc(f.name) + "</span></button>" + (f.link ? '<a class="btn ghost od-link" href="' + esc(f.link) + '" target="_blank" rel="noopener">↗ OneDrive</a>' : "")).join("") + "</div></div>" : "";
     const docsF = '<div class="field"><span class="lbl">Dokumente</span>' + (false ? '<div class="d-rfiles"><span class="help">Aus der ganzen Reihe:</span> ' + rfl.map((f) => '<button type="button" class="doc" data-open-rfile="' + esc(f.id) + '"><span class="tag">' + typeTag(f) + "</span><span>" + esc(f.name) + "</span></button>" + (f.link ? '<a class="btn ghost od-link" href="' + esc(f.link) + '" target="_blank" rel="noopener">↗ OneDrive</a>' : "")).join("") + "</div>" : "") + '<div class="files" id="d-files"></div>' +
@@ -5589,13 +5876,19 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const secs = [["ziele", "Lernziele", '<div class="field"><span class="lbl">Lernziele</span><div class="rich rtfield" contenteditable="true" role="textbox" aria-multiline="true" id="p-ziele" data-ph="Die Lernenden können …">' + sanitize(opt.plan.ziele || "") + "</div></div>", filled(opt.plan.ziele)],
         ["kurz", "Kurzeintrag", textF, filled(richOf(x, 1))], ["farbe", "Farbe", colorF, !!x.color], ["docs", "Dokumente" + (x.files.length ? " (" + x.files.length + ")" : ""), docsF, x.files.length > 0]].concat(rfl.length ? [["rdocs", "Dokumente der Reihe (" + rfl.length + ")", rdocsF, true]] : []);
       const side = dSide();
+      // Arbeitsblatt rechts (Dokumente der Lektion und der Reihe), Spalte «Abschnitt», Kommentarecke
+      const wsHas = [...x.files, ...rfl].length > 0, wsOn = wsHas && dWs() && !(side && innerWidth < 1700);
+      PAB = { secs: () => { const nd = document.getElementById("d-notes"); if (nd && nd._secs) return nd._secs(); const t = document.createElement("template"); t.innerHTML = x.notesHtml || ""; return [...t.content.children].filter((d) => d.classList.contains("nsec") && d.getAttribute("data-id")).map((d) => ({ id: d.getAttribute("data-id"), t: d.textContent.trim() })); },
+        col: (id) => { const i = PAB.secs().findIndex((q) => q.id === id); return i < 0 ? "transparent" : SEC_COL[i % SEC_COL.length]; } };
+      const cmHas = filled(x.notesCm || ""), cmOn = dCm(cmHas);
+      notesF = notesF.replace('<div class="notes-ed"', '<div class="d-nw' + (cmOn ? "" : " shut") + '"><div class="notes-ed"').replace('</div><div class="links" id="d-links">', '</div><div class="d-cmw"><button type="button" class="d-cmtab" id="d-cmtab" title="Kommentare ein- bzw. ausblenden (für die Vorbereitung; werden nur auf Wunsch gedruckt)">' + (cmOn ? "▸" : "◂ Kommentare" + (cmHas ? " ●" : "")) + '</button><div class="d-cm" id="d-cm" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Kommentare" data-ph="Kommentare, Ideen für die Vorbereitung … (dort klicken, wo der Kommentar hin soll)">' + sanitize(x.notesCm || "") + '</div></div></div><div class="links" id="d-links">');
       body = '<div class="d-toggles" role="group" aria-label="Weitere Angaben">' + secs.map(([k, l, , has]) => '<button type="button" class="d-tog' + (has ? " has" : "") + '" data-dtog="' + k + '" aria-expanded="' + !!openSet[k] + '">' + esc(l) + "</button>").join("") +
         '<span class="d-ur"><button type="button" id="d-undo" disabled title="Rückgängig (Strg+Z): Lektionsplanung, Lernziele, Kurzeintrag und Notizen">↶ Rückgängig</button><button type="button" id="d-redo" disabled title="Wiederholen (Strg+Y)" aria-label="Wiederholen">↷</button></span>' +
-        '<button type="button" class="d-tog d-side" id="d-side" aria-pressed="' + side + '" title="Lektionsplanung links und Notizen rechts nebeneinander zeigen (wird auf diesem Gerät gemerkt)">Nebeneinander</button></div>' +
+        '<button type="button" class="d-tog d-side" id="d-side" aria-pressed="' + side + '" title="Lektionsplanung links neben den Notizen statt oben (wird auf diesem Gerät gemerkt)">Tabelle links</button><button type="button" class="d-tog d-wsb" id="d-wsb" aria-pressed="' + wsOn + '"' + (wsHas ? "" : " hidden") + ' title="Arbeitsblatt bzw. Dokument rechts neben den Notizen zeigen (wird auf diesem Gerät gemerkt)">Arbeitsblatt</button></div>' +
         secs.map(([k, , h]) => '<div class="d-sec" data-dsec="' + k + '"' + (openSet[k] ? "" : " hidden") + ">" + h + "</div>").join("") +
-        '<div class="d-split' + (side ? " on" : "") + '" id="d-split" style="--dl:' + dSideW() + '"><div class="d-sl"><div class="field' + (pFold() ? " pfold" : "") + '" id="d-pfield"><button type="button" class="lbl d-pfold" id="d-pfold" aria-expanded="' + !pFold() + '" title="Lektionsplanung zu- bzw. aufklappen (wird auf diesem Gerät gemerkt)">Lektionsplanung</button><div class="ptable-wrap"><table class="ptable" id="p-table">' + planTableInner(opt.plan) + "</table></div>" +
+        '<div class="d-split' + (side ? " on" : "") + (wsOn ? " ws" : "") + '" id="d-split" style="--dl:' + dSideW() + ";--wsw:" + dWsW() + '%"><div class="d-sl"><div class="field' + (pFold() ? " pfold" : "") + '" id="d-pfield"><button type="button" class="lbl d-pfold" id="d-pfold" aria-expanded="' + !pFold() + '" title="Lektionsplanung zu- bzw. aufklappen (wird auf diesem Gerät gemerkt)">Lektionsplanung</button><div class="ptable-wrap"><table class="ptable" id="p-table">' + planTableInner(opt.plan) + "</table></div>" +
         '<div class="ptools"><button class="btn ghost" type="button" id="p-addrow">+ Zeile</button><span class="msg">Spaltentitel lassen sich anklicken und umbenennen. Die Trennlinie zwischen zwei Titeln ziehen, um die Breite zu ändern. Zeilen am Griff ⠿ rechts nach oben oder unten ziehen. Rechtsklick (Tablet: lange drücken auf den Titel): Spalten und Zeilen verschieben, einfügen, löschen.</span></div></div></div>' +
-        '<div class="d-gut" id="d-gut" title="Ziehen, um die Breite der beiden Seiten zu ändern" aria-hidden="true"></div><div class="d-sr">' + notesF + "</div></div>" + actionsF;
+        '<div class="d-gut" id="d-gut" title="Ziehen, um die Breite der beiden Seiten zu ändern" aria-hidden="true"></div><div class="d-sr">' + notesF + '</div><div class="d-gut2" id="d-gut2" title="Ziehen, um die Breite des Arbeitsblatts zu ändern" aria-hidden="true"></div><section class="d-ws" id="d-ws" aria-label="Arbeitsblatt"></section></div>' + actionsF;
     } else body = textF + (opt.todo ? '<div class="field d-todof"><button type="button" class="btn ghost tdb" id="d-tdb" title="Die Zeile mit der Schreibmarke bekommt ein Kästchen zum Abhaken (oder verliert es). Enter = nächstes To-do, Enter in einem leeren To-do = fertig.">'+'<span class="tdq"></span> To-do</button></div>' : "") + (opt.time ? '<div class="field d-timef"><span class="lbl">Zeit (freiwillig)</span><div class="d-time"><input type="time" id="d-from" value="' + esc(x.from || "") + '" aria-label="von"><span>bis</span><input type="time" id="d-to" value="' + esc(x.to || "") + '" aria-label="bis"><button type="button" class="btn ghost" id="d-tclr" title="Zeit entfernen">×</button>' + (x.split ? '<span class="msg">(erster Teil)</span>' : "") + "</div>" +
       (x.split ? Array.from({ length: (x.nparts || 2) - 1 }, (_, k) => { const n = k + 2; return '<div class="d-time" data-ptime="' + n + '"><input type="time" class="pf" value="' + esc(x["from" + n] || "") + '" aria-label="Teil ' + n + ' von"><span>bis</span><input type="time" class="pt" value="' + esc(x["to" + n] || "") + '" aria-label="Teil ' + n + ' bis"><button type="button" class="btn ghost pc" title="Zeit entfernen">×</button><span class="msg">(Teil ' + n + ")</span></div>"; }).join("") : "") + '</div>' : "") + colorF + notesF + docsF + actionsF;
     openModal(
@@ -5607,18 +5900,19 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         // Rückgängig/Wiederholen für die ganze Lektion (Planung, Lernziele, Kurzeintrag, Notizen)
         if (opt.plan) {
           const H = { undo: [], redo: [], cur: "", t: 0, busy: false }, oc = opt.changed;
-          const snap = () => JSON.stringify({ p: opt.plan, x: { html: x.html || "", text: x.text || "", color: x.color || "", notesHtml: x.notesHtml || "", notesLh: x.notesLh || 0 } });
+          const snap = () => JSON.stringify({ p: opt.plan, x: { html: x.html || "", text: x.text || "", color: x.color || "", notesHtml: x.notesHtml || "", notesLh: x.notesLh || 0, notesCm: x.notesCm || "" } });
           const btns = () => { root.querySelectorAll("#d-undo, #d-nundo").forEach((b) => { b.disabled = !H.undo.length; }); root.querySelectorAll("#d-redo, #d-nredo").forEach((b) => { b.disabled = !H.redo.length; }); };
           const rec = () => { if (H.busy) return; const sn = snap(); if (sn === H.cur) return; const now = Date.now(); const brk = HIST.brk; HIST.brk = false; if (brk || now - H.t > 1000 || !H.undo.length) { H.undo.push(H.cur); if (H.undo.length > 200) H.undo.shift(); } H.cur = sn; H.t = brk ? 0 : now; H.redo = []; btns(); };
           const apply = (sn) => {
             const o = JSON.parse(sn); H.busy = true;
             Object.keys(opt.plan).forEach((k) => delete opt.plan[k]); Object.assign(opt.plan, o.p);
-            Object.assign(x, o.x); if (!x.notesLh) delete x.notesLh; if (x.notesHtml) x.details = notesPlain(x.notesHtml);
+            Object.assign(x, o.x); if (!x.notesLh) delete x.notesLh; if (!x.notesCm) delete x.notesCm; if (x.notesHtml) x.details = notesPlain(x.notesHtml);
+            { const cm = root.querySelector("#d-cm"); if (cm) cm.innerHTML = sanitize(x.notesCm || ""); }
             const tb = root.querySelector("#p-table"); if (tb) tb.innerHTML = planTableInner(opt.plan);
             const z = root.querySelector("#p-ziele"); if (z) z.innerHTML = sanitize(opt.plan.ziele || "");
             const t1 = root.querySelector("#d-text"); if (t1) t1.innerHTML = tdpDeco(richOf(x, 1));
             const nd = root.querySelector("#d-notes");
-            if (nd) { nd.innerHTML = sanitizeNotes(x.notesHtml || ""); nd.querySelectorAll("figure.nfig").forEach((f) => { f.contentEditable = "false"; }); nsecDeco(nd); ndocFill(nd, [...(x.files || []), ...(opt.reiheFiles || [])]); nd.style.lineHeight = String(x.notesLh || 1.5); const lh = root.querySelector("#d-nlh"); if (lh) lh.textContent = nlhName(x.notesLh) + " ▾"; const dl = root.querySelector("#d-links"); if (dl) dl.innerHTML = linkify(notesLinkText(x.notesHtml || "")); }
+            if (nd) { nd.innerHTML = sanitizeNotes(x.notesHtml || ""); nd.querySelectorAll("figure.nfig").forEach((f) => { f.contentEditable = "false"; }); nsecDeco(nd); if (tb && PAB) tb.innerHTML = planTableInner(opt.plan); ndocFill(nd, [...(x.files || []), ...(opt.reiheFiles || [])]); nd.style.lineHeight = String(x.notesLh || 1.5); const lh = root.querySelector("#d-nlh"); if (lh) lh.textContent = nlhName(x.notesLh) + " ▾"; const dl = root.querySelector("#d-links"); if (dl) dl.innerHTML = linkify(notesLinkText(x.notesHtml || "")); }
             ttHide(); oc(); H.busy = false; H.t = 0; btns();
           };
           const step = (dir) => {
@@ -5675,7 +5969,10 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         root.querySelectorAll(".rtfield").forEach((f) => f.addEventListener("keydown", (ev) => { if (ev.key === "Enter") { ev.preventDefault(); lineBreak(); } }));
         if (tDet) tDet.addEventListener("input", () => { x.details = tDet.value; $("#d-links").innerHTML = linkify(x.details); changed(); });
         const ned = $("#d-notes");
-        if (ned) bindNotes(root, ned, x, changed, { reiheFiles: opt.reiheFiles || [], addFiles: (fl) => addFiles(fl), drawFiles: () => drawFiles(), phases: opt.plan ? () => planPhases(opt.plan) : null });
+        let WS = null;
+        if (ned) bindNotes(root, ned, x, changed, { reiheFiles: opt.reiheFiles || [], addFiles: (fl) => addFiles(fl), drawFiles: () => drawFiles(), phases: opt.plan ? () => planPhases(opt.plan) : null,
+          onSecs: opt.plan ? () => { if (WS) WS.secs(); } : null, openDoc: (fid) => { if (WS) WS.open(fid); }, onUnfold: (d) => { if (WS) WS.unfold(d); } });
+        if (opt.plan && ned) WS = lessonExtras(root, opt, x, ned, () => opt.changed());
         root.querySelectorAll("[data-dtog]").forEach((b) => b.addEventListener("click", () => {
           const k = b.dataset.dtog, open = b.getAttribute("aria-expanded") !== "true";
           b.setAttribute("aria-expanded", String(open)); root.querySelector('[data-dsec="' + k + '"]').hidden = !open;
@@ -5764,7 +6061,9 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   }
   function bindNotes(root, ned, x, changed, nopt) {
     nopt = nopt || {};
-    const save = () => { x.notesHtml = sanitizeNotes(ned.innerHTML); x.details = notesPlain(x.notesHtml); $("#d-links").innerHTML = linkify(notesLinkText(x.notesHtml)); changed(); };
+    let secSig = null;
+    const save = () => { x.notesHtml = sanitizeNotes(ned.innerHTML); x.details = notesPlain(x.notesHtml); $("#d-links").innerHTML = linkify(notesLinkText(x.notesHtml)); changed();
+      if (nopt.onSecs) { const sg = [...ned.querySelectorAll(":scope > .nsec")].map((d) => d.dataset.id + "=" + (d.querySelector(".nsec-t") || d).textContent.trim()).join("|"); if (secSig !== null && sg !== secSig) nopt.onSecs(); secSig = sg; } };
     let t = null; ned.addEventListener("input", () => { clearTimeout(t); t = setTimeout(save, 250); });
     ned.addEventListener("blur", () => { clearTimeout(t); save(); });
     const msg = $("#d-nmsg");
@@ -5853,7 +6152,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const openDoc = (fig) => {
       const f = wdFindFile(fig.dataset.doc, docFiles());
       if (!f) { $("#d-nmsg").textContent = "Das Dokument wurde nicht gefunden (vielleicht aus den Dokumenten entfernt)."; return; }
-      wdEdit(f, { onSaved: () => { ndocFill(ned, docFiles(), f.id); if (nopt.drawFiles) nopt.drawFiles(); changed(); } });
+      wdEdit(f, { onSaved: () => { ned._ndocAck = f.id; ndocFill(ned, docFiles(), f.id); if (nopt.drawFiles) nopt.drawFiles(); changed(); } });
     };
     const addDocx = async (files) => {
       if (!nopt.addFiles) return;
@@ -5913,7 +6212,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       if (a === ned) { const k = ned.childNodes; return k[sl.anchorOffset] || k[sl.anchorOffset - 1] || null; } // Schreibmarke zwischen zwei Absätzen
       return topOf(a);
     };
-    const nsecMk = (title) => { const d = document.createElement("div"); d.className = "nsec"; d.textContent = title; return d; };
+    const nsecMk = (title) => { const d = document.createElement("div"); d.className = "nsec"; d.dataset.id = secId(); d.textContent = title; return d; };
     const putCaret = (el) => { const rg = document.createRange(); rg.selectNodeContents(el); rg.collapse(true); const sl = getSelection(); sl.removeAllRanges(); sl.addRange(rg); };
     // wo die Schreibmarke zuletzt in den Notizen stand (das Menü oder die Lektionsplanung nehmen ihr den Platz weg)
     let lastTop = null, lastAnc = null;
@@ -5961,7 +6260,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       document.addEventListener("pointerdown", out, true); document.addEventListener("keydown", key, true);
       const setT = (t) => { HIST.brk = true; d.querySelector(".nsec-t").textContent = t; save(); };
       // ein Abschnitt = Trennstrich bis zum nächsten Trennstrich
-      const span = (x) => { const a = [x]; let n = x.nextElementSibling; while (n && !n.classList.contains("nsec")) { a.push(n); n = n.nextElementSibling; } return a; };
+      const span = (x) => { const a = [x]; let n = x.nextElementSibling; while (n && !n.classList.contains("nsec")) { a.push(n); if (n.classList.contains("nend")) break; n = n.nextElementSibling; } return a; };
       m.addEventListener("click", (e) => {
         const b = e.target.closest("button"); if (!b) return;
         if (b.dataset.sp != null) { const q = ph[+b.dataset.sp]; close(); if (d) setT(q.label); else nsecInsert(q.label, !at, at); return; }
@@ -5969,7 +6268,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         if (k === "own") { const v = m.querySelector("#nsm-in").value.replace(/\s+/g, " ").trim(); if (!v) { m.querySelector("#nsm-in").focus(); return; } close(); if (d) setT(v); else nsecInsert(v, !at, at); return; }
         close(); HIST.brk = true;
         if (k === "fold") { if (d.dataset.c === "1") delete d.dataset.c; else d.dataset.c = "1"; nsecDeco(ned); save(); return; }
-        if (k === "del") { d.remove(); nsecDeco(ned); save(); return; }
+        if (k === "del") { if (!confirm("Trennstrich «" + cur + "» entfernen? Der Text darunter bleibt stehen.")) return; const ne = span(d).pop(); if (ne && ne.classList.contains("nend")) ne.remove(); d.remove(); nsecDeco(ned); save(); if (nopt.onSecs) nopt.onSecs(); return; }
         if (k === "up" || k === "down") {
           const mine = span(d);
           if (k === "up") { let p = d.previousElementSibling; while (p && !p.classList.contains("nsec")) p = p.previousElementSibling; if (!p) return; mine.forEach((n) => p.before(n)); }
@@ -5987,9 +6286,12 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     eyeHost.classList.toggle("nsec-off", !nsecOn()); eye.setAttribute("aria-pressed", String(nsecOn())); nsecDeco(ned);
     eye.addEventListener("click", () => nsecShow(eyeHost.classList.contains("nsec-off")));
     ned.addEventListener("click", (e) => {
+      const ne = e.target.closest && e.target.closest(".nend");
+      if (ne && ned.contains(ne)) { e.preventDefault(); e.stopPropagation(); if (confirm("Ende-Linie entfernen? Der Text darunter gehört dann wieder zum Abschnitt darüber.")) { HIST.brk = true; ne.remove(); nsecDeco(ned); save(); } return; }
       const d = e.target.closest && e.target.closest(".nsec"); if (!d || !ned.contains(d)) return;
       e.preventDefault(); e.stopPropagation();
-      if (e.target.closest(".nsec-tg")) { HIST.brk = true; if (d.dataset.c === "1") delete d.dataset.c; else d.dataset.c = "1"; nsecDeco(ned); save(); return; }
+      const sdc = e.target.closest(".nsec-dc"); if (sdc) { if (nopt.openDoc) nopt.openDoc(sdc.dataset.secdoc); return; }
+      if (e.target.closest(".nsec-tg")) { HIST.brk = true; const op = d.dataset.c === "1"; if (op) delete d.dataset.c; else d.dataset.c = "1"; nsecDeco(ned); save(); if (op && nopt.onUnfold) nopt.onUnfold(d); return; }
       nsecMenu(d.querySelector(".nsec-t") || d, d);
     }, true);
     ned.addEventListener("mousedown", (e) => { if (e.target.closest && e.target.closest(".nsec") && ned.contains(e.target)) e.preventDefault(); }, true);
@@ -6382,6 +6684,121 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       else document.execCommand(c);
       save();
     });
+    // ----- Abschnitte mit Kennung: Spalte «Abschnitt» der Lektionsplanung, zugeordnete Arbeitsblätter -----
+    { let n = 0; ned.querySelectorAll(":scope > .nsec").forEach((d) => { if (!/^[a-z0-9]{3,16}$/.test(d.dataset.id || "")) { d.dataset.id = secId(); n++; } }); if (n && nopt.phases) setTimeout(save, 0); }
+    const secTitle = (d) => (d.querySelector(".nsec-t") || d).textContent.replace(/\s+/g, " ").trim();
+    ned._secs = () => [...ned.querySelectorAll(":scope > .nsec")].map((d) => ({ id: d.dataset.id, t: secTitle(d) || "Abschnitt" }));
+    ned._secEl = (id) => [...ned.querySelectorAll(":scope > .nsec")].find((d) => d.dataset.id === id) || null;
+    ned._secGo = (id) => {
+      const d = ned._secEl(id); if (!d) return;
+      if (!nsecOn()) nsecShow(true);
+      if (d.dataset.c === "1") { delete d.dataset.c; nsecDeco(ned); save(); }
+      d.scrollIntoView({ block: "center", behavior: "smooth" }); d.classList.add("flash"); setTimeout(() => d.classList.remove("flash"), 1400);
+      const nx = d.nextElementSibling; if (nx && !nx.classList.contains("nsec") && !nx.classList.contains("nend")) { ned.focus(); putCaret(nx); }
+      if (nopt.onUnfold) nopt.onUnfold(d);
+    };
+    ned._secNew = (title) => { const d = nsecInsert(title, true); if (nopt.onSecs) nopt.onSecs(); return d; };
+    ned._save = save; ned._deco = () => nsecDeco(ned); ned._lastTop = () => (lastTop && lastTop.isConnected ? lastTop : null);
+    // markierten Text zu einem Abschnitt machen
+    const markSec = () => {
+      const sl = getSelection();
+      if (!sl.rangeCount || sl.isCollapsed || !ned.contains(sl.anchorNode) || !ned.contains(sl.focusNode)) { $("#d-nmsg").textContent = "Zuerst Text in den Notizen markieren, dann «§ Als Abschnitt»."; return null; }
+      const all = sl.toString().replace(/\s+/g, " ").trim();
+      flatTop();
+      const rg = sl.getRangeAt(0);
+      const nodeAt = (c, o, end) => c === ned ? ned.childNodes[end ? Math.max(0, o - 1) : Math.min(o, ned.childNodes.length - 1)] : c;
+      let a = topOf(nodeAt(rg.startContainer, rg.startOffset, false)), b = topOf(nodeAt(rg.endContainer, rg.endOffset, true));
+      if (!a || !b) return null;
+      if (b !== a) { const t = document.createRange(); t.selectNodeContents(b); t.collapse(true); if (rg.compareBoundaryPoints(Range.END_TO_END, t) <= 0 && b.previousSibling) b = topOf(b.previousSibling) || b; }
+      const wrap = (n) => { if (n.nodeType === 1) return n; const w = document.createElement("div"); n.before(w); w.appendChild(n); return w; };
+      a = wrap(a); b = wrap(b);
+      while (a && a !== b && a.classList && (a.classList.contains("nsec") || a.classList.contains("nend"))) a = a.nextElementSibling;
+      while (b && b !== a && b.classList && (b.classList.contains("nsec") || b.classList.contains("nend"))) b = b.previousElementSibling;
+      if (!a || !b || a.classList.contains("nsec") || a.classList.contains("nend")) { $("#d-nmsg").textContent = "Bitte Text markieren (nicht nur einen Trennstrich)."; return null; }
+      HIST.brk = true;
+      const first = (a.textContent || "").replace(/\s+/g, " ").trim();
+      let title, dropFirst = false;
+      if (a !== b && first && first.length <= 80 && a.tagName === "DIV" && !a.querySelector("img, figure, table")) { title = first; dropFirst = true; }
+      else { const w = all.split(" "); title = w.slice(0, 6).join(" ").slice(0, 60) + (w.length > 6 ? " …" : ""); }
+      const d = nsecMk(title || "Abschnitt"); a.before(d);
+      const nx = b.nextElementSibling;
+      if (nx && !nx.classList.contains("nsec") && !nx.classList.contains("nend")) { const e = document.createElement("div"); e.className = "nend"; b.after(e); }
+      if (dropFirst) a.remove();
+      sl.removeAllRanges(); markPop(false); nsecShow(true); save();
+      $("#d-nmsg").textContent = "Abschnitt «" + title + "» angelegt. Klick auf den Titel: umbenennen. In der Lektionsplanung mit ＋ einer Zeile zuordnen.";
+      if (nopt.onSecs) nopt.onSecs();
+      if (!dropFirst) setTimeout(() => nsecMenu(d.querySelector(".nsec-t") || d, d), 0);
+      return d;
+    };
+    const mk = $("#d-nmark"); if (mk) { mk.addEventListener("mousedown", (e) => e.preventDefault()); mk.addEventListener("click", markSec); }
+    // kleiner Knopf direkt beim markierten Text
+    let mpop = null;
+    const markPop = (on) => {
+      if (!on) { if (mpop) { mpop.remove(); mpop = null; } return; }
+      const sl = getSelection(); if (!sl.rangeCount) return; const r = sl.getRangeAt(0).getBoundingClientRect(); if (!r.width && !r.height) return;
+      if (!mpop) { mpop = document.createElement("div"); mpop.className = "nmark-pop"; mpop.innerHTML = '<button type="button" title="Markierten Text zu einem Abschnitt machen">§ Als Abschnitt</button>'; mpop.addEventListener("mousedown", (e) => e.preventDefault()); mpop.firstChild.addEventListener("click", markSec); document.body.appendChild(mpop); }
+      mpop.style.left = Math.max(8, Math.min(innerWidth - 140, r.right - 60)) + "px"; mpop.style.top = Math.min(innerHeight - 40, r.bottom + 6) + "px";
+    };
+    if (nopt.phases) {
+      const chk = () => { if (!ned.isConnected) { markPop(false); return; } const sl = getSelection(); if (sl.rangeCount && !sl.isCollapsed && ned.contains(sl.anchorNode) && ned.contains(sl.focusNode) && sl.toString().trim()) markPop(true); else markPop(false); };
+      ned.addEventListener("mouseup", () => setTimeout(chk, 0)); ned.addEventListener("keyup", (e) => { if (e.shiftKey) chk(); });
+      document.addEventListener("selectionchange", () => { if (mpop) { const sl = getSelection(); if (!sl.rangeCount || sl.isCollapsed || !ned.contains(sl.anchorNode)) markPop(false); } });
+      ned.addEventListener("scroll", () => markPop(false));
+      const ov = ned.closest(".overlay"); if (ov) ov.addEventListener("scroll", () => markPop(false));
+    }
+    // ----- Ausschnitt aus einem Arbeitsblatt hineinziehen (rechts im Lektionsfenster) -----
+    const cutRef = (y) => [...ned.children].filter((k) => !(k.dataset && k.dataset.fill && !k.textContent.trim())).find((k) => { const r = k.getBoundingClientRect(); return r.top + r.height / 2 > y; }) || null;
+    const placeBlock = (el, ref) => {
+      if (ref === undefined) { const t = ned._lastTop(); ref = t ? t.nextElementSibling : null; if (!t) ref = null; }
+      if (ref && ref.parentElement === ned) ref.before(el); else ned.appendChild(el);
+      if (!el.nextElementSibling) { const d = document.createElement("div"); d.innerHTML = "<br>"; el.after(d); }
+    };
+    ned._insCut = (o, ref) => {
+      HIST.brk = true; ned._ndocAck = null;
+      const fig = document.createElement("figure"); fig.className = "nfig ndoc w100 p-c"; fig.contentEditable = "false";
+      fig.dataset.doc = o.doc; fig.dataset.name = o.name; fig.dataset.ct = String(o.ct); fig.dataset.ch = String(o.ch);
+      placeBlock(fig, ref); ndocFill(ned, docFiles()); save(); fig.scrollIntoView({ block: "nearest" });
+      $("#d-nmsg").textContent = "Ausschnitt eingefügt. Ändert sich das Arbeitsblatt später, zeigt Semper es hier an.";
+    };
+    ned._insImg = async (blob, ref) => {
+      if (!state.assets) { $("#d-nmsg").textContent = "Bilder einfügen geht hier nicht."; return; }
+      $("#d-nmsg").textContent = "Ausschnitt wird gespeichert …";
+      try {
+        const r = await state.assets.upload(blob, { type: "image/png" });
+        HIST.brk = true; const fig = document.createElement("figure"); fig.className = "nfig w75 p-c"; fig.contentEditable = "false"; fig.innerHTML = '<img src="/_blob/' + r.id + '" alt="">';
+        placeBlock(fig, ref); figLock(); save(); fig.scrollIntoView({ block: "nearest" }); $("#d-nmsg").textContent = "Ausschnitt als Bild eingefügt.";
+      } catch (e) { console.error(e); $("#d-nmsg").textContent = "Der Ausschnitt konnte nicht gespeichert werden."; }
+    };
+    let cutInd = null;
+    const cutEnd = () => { if (cutInd) { cutInd.remove(); cutInd = null; } };
+    ned.addEventListener("dragover", (e) => {
+      if (!CUT) return; e.preventDefault(); e.stopPropagation(); try { e.dataTransfer.dropEffect = "copy"; } catch (err) {}
+      if (!cutInd) { cutInd = document.createElement("div"); cutInd.className = "tt-drop"; document.body.appendChild(cutInd); }
+      const ref = cutRef(e.clientY), br = ned.getBoundingClientRect(), y = ref ? ref.getBoundingClientRect().top - 2 : (ned.lastElementChild ? ned.lastElementChild.getBoundingClientRect().bottom + 2 : br.top + 4);
+      Object.assign(cutInd.style, { left: br.left + "px", top: y + "px", width: br.width + "px", height: "3px" });
+    }, true);
+    ned.addEventListener("dragleave", (e) => { if (!ned.contains(e.relatedTarget)) cutEnd(); });
+    ned.addEventListener("drop", (e) => {
+      if (!CUT) return; e.preventDefault(); e.stopPropagation(); cutEnd();
+      const o = CUT, ref = cutRef(e.clientY); CUT = null;
+      if (o.blob) ned._insImg(o.blob, ref); else ned._insCut(o, ref);
+    }, true);
+    document.addEventListener("dragend", cutEnd);
+    // Arbeitsblatt geändert? (Vergleich mit dem Stand beim Einfügen)
+    ned._ndocSeen = (fig, h) => {
+      const b0 = fig.querySelector(".ndoc-badge"); if (b0) b0.remove();
+      if (!fig.dataset.v || ned._ndocAck === fig.dataset.doc) { if (fig.dataset.v !== h) { fig.dataset.v = h; clearTimeout(ned._vt); ned._vt = setTimeout(save, 400); } fig.classList.remove("ndoc-chg"); return; }
+      const chg = fig.dataset.v !== h; fig.classList.toggle("ndoc-chg", chg); if (!chg) return;
+      const b = document.createElement("div"); b.className = "ndoc-badge"; b.contentEditable = "false";
+      b.innerHTML = '⚠ Das Arbeitsblatt «' + esc(String(fig.dataset.name || "").replace(/\.[^.]+$/, "")) + '» wurde seit dem Einfügen geändert. Bitte Ausschnitt prüfen. <button type="button" data-ndseen>✓ Gesehen</button>';
+      b.querySelector("button").dataset.h = h; fig.appendChild(b);
+      $("#d-nmsg").textContent = "Achtung: Ein Arbeitsblatt in den Notizen wurde inzwischen geändert (gelb markiert).";
+    };
+    ned.addEventListener("click", (e) => {
+      const b = e.target.closest && e.target.closest("[data-ndseen]"); if (!b || !ned.contains(b)) return;
+      e.preventDefault(); e.stopPropagation(); const fig = b.closest("figure"); fig.dataset.v = b.dataset.h; fig.classList.remove("ndoc-chg"); b.parentElement.remove(); HIST.brk = true; save();
+    }, true);
+    ned.addEventListener("mousedown", (e) => { if (e.target.closest && e.target.closest(".ndoc-badge")) e.stopPropagation(); }, true);
   }
   function openDetail(key, slot, part) {
     const label = SLOTS.find(([s]) => s === slot)[1];
@@ -6533,7 +6950,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   const chBase = (ch, i) => strHash(JSON.stringify([(ch.lessons || [])[i] || "", (ch.meta || {})[i] || {}]));
   function chLessonX(c, i) {
     const ch = U.reihen[c.rid] || {}, m = (ch.meta || {})[i] || {};
-    return { html: (ch.lessons || [])[i] || "", color: m.color || "", details: m.details || "", notesHtml: m.notesHtml != null ? m.notesHtml : plainToHtml(m.details || ""), notesLh: m.notesLh || 0, plan: m.plan ? clone(m.plan) : {}, files: (m.files || []).slice() };
+    return { html: (ch.lessons || [])[i] || "", color: m.color || "", details: m.details || "", notesHtml: m.notesHtml != null ? m.notesHtml : plainToHtml(m.details || ""), notesLh: m.notesLh || 0, notesCm: m.notesCm || "", plan: m.plan ? clone(m.plan) : {}, files: (m.files || []).slice() };
   }
   function putChOv(mid, rid, i, x, delay) {
     const ch = U.reihen[rid]; if (!ch) return;
@@ -8139,20 +8556,20 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   }
   function lessonX(r, i) {
     const m = metaOf(r, i);
-    return { html: htmlOf(r, i), text: htmlToPlain(r.lessons[i] || ""), color: m.color || "", details: m.details || "", notesHtml: m.notesHtml != null ? m.notesHtml : plainToHtml(m.details || ""), notesLh: m.notesLh || 0, files: Array.isArray(m.files) ? m.files.slice() : [], plan: m.plan ? clone(m.plan) : {} };
+    return { html: htmlOf(r, i), text: htmlToPlain(r.lessons[i] || ""), color: m.color || "", details: m.details || "", notesHtml: m.notesHtml != null ? m.notesHtml : plainToHtml(m.details || ""), notesLh: m.notesLh || 0, notesCm: m.notesCm || "", files: Array.isArray(m.files) ? m.files.slice() : [], plan: m.plan ? clone(m.plan) : {} };
   }
   function putLessonX(r, i, x) {
     if (isLN(i)) {
       const plan = hasPlan(x.plan) ? clone(x.plan) : null;
       const o = { html: x.html || "", color: x.color || "", details: x.details || "", files: x.files || [] };
-      if (filled(x.notesHtml) || /<img/.test(x.notesHtml || "")) o.notesHtml = x.notesHtml; if (x.notesLh) o.notesLh = x.notesLh; if (plan) o.plan = plan;
-      r.lnItems = (r.lnItems || []).slice(); const k = lnIdx(i), prev = r.lnItems[k] || {}; o.name = prev.name || ""; const keep = { ...prev }; ["html", "text", "color", "details", "files", "notesHtml", "notesLh", "plan"].forEach((q) => delete keep[q]); r.lnItems[k] = { ...keep, ...o }; return;
+      if (filled(x.notesHtml) || /<img/.test(x.notesHtml || "")) o.notesHtml = x.notesHtml; if (x.notesLh) o.notesLh = x.notesLh; if (filled(x.notesCm || "")) o.notesCm = x.notesCm; if (plan) o.plan = plan;
+      r.lnItems = (r.lnItems || []).slice(); const k = lnIdx(i), prev = r.lnItems[k] || {}; o.name = prev.name || ""; const keep = { ...prev }; ["html", "text", "color", "details", "files", "notesHtml", "notesLh", "notesCm", "plan"].forEach((q) => delete keep[q]); r.lnItems[k] = { ...keep, ...o }; return;
     }
     r.lessons = (r.lessons || []).slice(); while (r.lessons.length <= i) r.lessons.push("");
     r.lessons[i] = x.html || "";
     r.meta = { ...(r.meta || {}) };
     const plan = hasPlan(x.plan) ? clone(x.plan) : null;
-    if (x.color || x.details || filled(x.notesHtml) || (x.files && x.files.length) || plan) { r.meta[i] = { color: x.color || "", details: x.details || "", files: x.files || [] }; if (filled(x.notesHtml) || /<img/.test(x.notesHtml || "")) r.meta[i].notesHtml = x.notesHtml; if (x.notesLh) r.meta[i].notesLh = x.notesLh; if (plan) r.meta[i].plan = plan; } else delete r.meta[i];
+    if (x.color || x.details || filled(x.notesHtml) || filled(x.notesCm || "") || (x.files && x.files.length) || plan) { r.meta[i] = { color: x.color || "", details: x.details || "", files: x.files || [] }; if (filled(x.notesHtml) || /<img/.test(x.notesHtml || "")) r.meta[i].notesHtml = x.notesHtml; if (x.notesLh) r.meta[i].notesLh = x.notesLh; if (filled(x.notesCm || "")) r.meta[i].notesCm = x.notesCm; if (plan) r.meta[i].plan = plan; } else delete r.meta[i];
   }
   // Materialsammlung als eigene Seite (wie die Übersichtsseite) in einem verschiebbaren Fenster im Vordergrund;
   // Grösse an der Ecke unten rechts ziehen, «⤢» = ganzer Bildschirm. Gespeichert in lnItems[k].page, der Haupttext auch als notesHtml (für «Als Lektionsplanung»).
