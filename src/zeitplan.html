@@ -212,7 +212,17 @@ html.mob .lk-main.split > .lk-planbox { grid-column: 1 / -1; position: static; m
 .ffmenu button { font-size: 15px; }
 .fmtbar .fm-ff { width: auto; padding: 0 8px; font-size: 13px; font-family: inherit; }
 .ls-act { background: #fde8e3 !important; box-shadow: inset 0 0 0 1.5px #c8402c; border-radius: 5px; }
-html:not(.ls-on).lk-proj .lk-page .ls, .ls-x { visibility: hidden; }
+html:not(.ls-on).lk-proj .lk-page .ls:not(.lk-sp .ls), .ls-x { visibility: hidden; }
+/* Abdecken (wie Spoiler): Sie sehen den Text durch den dunklen Balken, beim Zeigen ist er schwarz; Klick deckt auf */
+.lk-sp { background: #26282c; color: #f3f3f3; border-radius: 3px; padding: 0 3px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.lk-sp .ls { color: #ffab9c; }
+.lk-sp.open { background: none; color: inherit; outline: 1.5px dashed #9aa3ad; outline-offset: 1px; }
+.lk-sp.open .ls { color: #c8402c; }
+html.lk-presenting .lk-page .lk-sp, html.lk-proj .lk-page .lk-sp, .lk-slide .lk-sp { cursor: pointer; }
+html.lk-proj .lk-page .lk-sp:not(.open), .lk-slide .lk-sp:not(.open) { background: #111; color: transparent !important; outline: 0; }
+html.lk-proj .lk-page .lk-sp:not(.open) *, .lk-slide .lk-sp:not(.open) * { color: transparent !important; visibility: visible; }
+.lk-slide .lk-sp.open { outline: 0; }
+@media print { .lk-sp { background: none; color: inherit; border-bottom: 1.5px solid #000; } }
 .nb.nls { font-family: inherit; font-size: 0.85rem; }
 .lk-page .lk-note { background: color-mix(in srgb, #e0b000 14%, transparent); border-left: 3px dashed #c99a00; padding-left: 8px; font-style: italic; color: color-mix(in srgb, var(--ink) 75%, transparent); }
 .lk-page :not(li).lk-note::before { content: "🔒 "; font-style: normal; font-size: 0.8em; }
@@ -1272,6 +1282,9 @@ table:is(.ntab, .lk-tab) caption { caption-side: bottom; text-align: left; font-
 table.tt-moving { opacity: 0.45; }
 .notes-ed table.ntab th, .notes table.ntab th { background: var(--accent-soft); font-weight: 700; }
 .lk-ptake { position: absolute; top: 6px; right: 6px; white-space: nowrap; font: inherit; font-size: 0.75rem; font-weight: 600; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--accent); padding: 3px 9px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+body:not(.lk-take) .lk-plantext .lk-ptake { display: none; }
+body:not(.lk-take) .lk-plantext .lk-ptab { padding-top: 0; }
+#lk-taketg[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
 .lk-ptake:hover { background: var(--accent); color: var(--surface); border-color: var(--accent); }
 .lk-figpop input.nf-cap { width: 100%; font: inherit; font-size: 0.85rem; border: 1px solid var(--line); border-radius: 6px; padding: 5px 7px; background: var(--bg); color: var(--ink); }
 .lk-fpg.four { grid-template-columns: repeat(5, 1fr); }
@@ -1344,6 +1357,12 @@ table.tt-moving { opacity: 0.45; }
 .nsec-ph { background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 0 7px; font-size: 0.92em; }
 .nsec-dc { border: 0; background: #fbf0d0; color: #6b4e0a; border-radius: 999px; padding: 0 8px; font: inherit; font-size: 0.92em; cursor: pointer; }
 .nsec-dc:hover { background: #f5e1a8; }
+.nsec-nph { border: 1px dashed var(--accent); background: none; color: var(--accent); border-radius: 999px; padding: 0 8px; font: inherit; font-size: 0.92em; cursor: pointer; white-space: nowrap; }
+.nsec-nph:hover { background: var(--accent-soft); }
+.notes-ed .nsec .nsec-t { cursor: text; border-radius: 4px; }
+.notes-ed .nsec[data-c="1"] .nsec-t { cursor: grab; }
+.notes-ed .nsec .nsec-t.editing { cursor: text; outline: 2px solid var(--accent); background: var(--surface); color: var(--ink); user-select: text; -webkit-user-select: text; }
+.notes-ed .nsec.nsec-drag { opacity: 0.45; }
 .nend { height: 0; margin: 10px 30% 8px; border-top: 1.5px dashed color-mix(in srgb, var(--ink) 22%, transparent); cursor: pointer; clear: both; padding: 3px 0 0; }
 .nend:hover { border-top-color: var(--accent); }
 .nsec-off .notes-ed .nend { display: none; }
@@ -1396,7 +1415,8 @@ table.tt-moving { opacity: 0.45; }
 @media (min-width: 900px) {
   .d-split.rail { display: grid; grid-template-columns: 34px minmax(0, 1fr); column-gap: 10px; align-items: start; position: relative; }
   .d-split.rail.ws { grid-template-columns: 34px minmax(0, 1fr) 14px minmax(0, var(--wsw, 40%)); }
-  .d-split.rail > .d-rail { flex-direction: column; writing-mode: vertical-rl; position: sticky; top: 0; min-height: 220px; align-self: start; }
+  .d-split.rail > .d-rail { flex-direction: row; justify-content: flex-start; align-items: center; gap: 8px; writing-mode: vertical-rl; position: sticky; top: 0; min-height: 220px; align-self: start; width: 34px; box-sizing: border-box; padding: 10px 0; }
+  .d-split.rail > .d-rail .d-rhint { white-space: normal; max-height: 260px; }
   .d-split.rail > .d-rail .d-rarr { writing-mode: horizontal-tb; }
   .d-split.rail.peek > .d-sl { display: grid; position: absolute; z-index: 30; left: 42px; top: 0; width: min(1100px, calc(100% - 60px)); background: var(--surface); border: 1px solid var(--accent); border-radius: 10px; padding: 10px 12px; box-shadow: 0 14px 40px rgba(0, 0, 0, 0.22); }
   .d-split.rail.peek:not(.pin) > .d-sl .d-pbtns { display: none; }
@@ -4999,7 +5019,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     if (!box) return;
     const off = !!(box.closest && box.closest(".nsec-off"));
     box.querySelectorAll(":scope > .nsec").forEach((d) => {
-      if (!d.querySelector(".nsec-t")) { const t = d.textContent.trim(); d.innerHTML = '<button type="button" class="nsec-tg" tabindex="-1" title="Abschnitt zu- bzw. aufklappen" aria-label="Abschnitt zu- bzw. aufklappen"></button><span class="nsec-t" title="Titel ändern, entfernen …"></span>'; d.lastChild.textContent = t || "Abschnitt"; }
+      if (!d.querySelector(".nsec-t")) { const t = d.textContent.trim(); d.innerHTML = '<button type="button" class="nsec-tg" tabindex="-1" title="Abschnitt zu- bzw. aufklappen" aria-label="Abschnitt zu- bzw. aufklappen"></button><span class="nsec-t" title="Klick: Titel ändern · eingeklappt ziehen: Abschnitt verschieben · Rechtsklick: Titel entfernen"></span>'; d.lastChild.textContent = t || "Abschnitt"; }
       d.contentEditable = "false";
     });
     box.querySelectorAll(":scope > .nend").forEach((d) => { d.contentEditable = "false"; d.title = "Ende des Abschnitts darüber (Klick: entfernen …)"; });
@@ -5010,9 +5030,10 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       if (!info) return;
       const id = d.dataset.id || "", tt = (d.querySelector(".nsec-t") || d).textContent.trim(), ph = (info.ph[id] || []).filter((t) => t !== tt && !tt.endsWith(t) && !t.endsWith(" · " + tt)), dc = (d.dataset.docs || "").split(" ").filter(Boolean), c = info.col[id];
       d.style.setProperty("--sc", c || "transparent"); d.classList.toggle("nsec-c", !!c); d.classList.add("nsec-L");
-      if (!ph.length && !dc.length) return;
+      const noPh = !(info.ph[id] || []).length && info.canPh;
+      if (!ph.length && !dc.length && !noPh) return;
       const x = document.createElement("span"); x.className = "nsec-x"; x.contentEditable = "false";
-      x.innerHTML = ph.map((t) => '<span class="nsec-ph" title="Gehört in der Lektionsplanung zu dieser Zeile">' + esc(t) + "</span>").join("") +
+      x.innerHTML = (noPh ? '<button type="button" class="nsec-nph" data-secph="1" title="Diesem Abschnitt eine Phase (Zeile) der Lektionsplanung zuordnen">＋ Phase</button>' : "") + ph.map((t) => '<span class="nsec-ph" title="Gehört in der Lektionsplanung zu dieser Zeile">' + esc(t) + "</span>").join("") +
         dc.map((fid) => { const f = info.doc(fid); return '<button type="button" class="nsec-dc" data-secdoc="' + esc(fid) + '" title="Zugeordnetes Arbeitsblatt rechts öffnen">📄 ' + esc(f ? String(f.name).replace(/\.[^.]+$/, "") : "Dokument fehlt") + "</button>"; }).join("");
       d.appendChild(x);
     });
@@ -5388,13 +5409,19 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const ph = {}, col = {}, labels = planPhases(p), all = ned._secs();
       (p.rows || []).forEach((row, ri) => abGet(p, ri).forEach((id) => { const q = labels.find((y) => y.ri === ri); (ph[id] = ph[id] || []).push(q ? q.label : "Zeile " + (ri + 1)); }));
       all.forEach((q) => { col[q.id] = secColOf(p, q.id) || "#c3cad2"; });
-      return { ph, col, doc: (fid) => files().find((f) => f.id === fid) };
+      return { ph, col, canPh: (p.rows || []).length > 0, doc: (fid) => files().find((f) => f.id === fid) };
     };
     const deco = () => { nsecDeco(ned); };
     let dt = 0; const decoSoon = () => { clearTimeout(dt); dt = setTimeout(deco, 300); };
     root.addEventListener("input", (e) => { if (e.target.closest && e.target.closest("#p-table")) decoSoon(); });
     deco();
     const setAb = (ri, ids) => { abSet(p, ri, ids); HIST.brk = true; redraw(); deco(); changed(); };
+    // «＋ Phase» am Abschnitt: einer Zeile der Lektionsplanung zuordnen
+    ned._secPhMenu = (btn, id) => {
+      const labels = planPhases(p), r = btn.getBoundingClientRect();
+      const items = (p.rows || []).map((row, ri) => { const q = labels.find((y) => y.ri === ri), t = htmlToPlain(row.slice(q ? 2 : 0, p.cols.length).find((v) => htmlToPlain(v || "").trim()) || "").replace(/\s+/g, " ").trim(); return ["r" + ri, (q ? q.label : "Zeile " + (ri + 1)) + (t ? "  –  " + (t.length > 70 ? t.slice(0, 70) + "…" : t) : "")]; });
+      cellMenu(r.left, r.bottom + 4, "Phase zuordnen", items.length ? items : [["x", "Die Lektionsplanung hat noch keine Zeilen"]], (op) => { if (op[0] === "r") setAb(+op.slice(1), [...abGet(p, +op.slice(1)), id]); });
+    };
     root.addEventListener("click", (e) => {
       const go = e.target.closest && e.target.closest("[data-pabgo]");
       if (go) { e.preventDefault(); ned._secGo(go.dataset.pabgo); return; }
@@ -6068,7 +6095,10 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       setTimeout(() => { if (!ph.length || d) m.querySelector("#nsm-in").focus(); }, 0);
     };
     $("#d-ntask").addEventListener("click", () => { const sel = $("#d-ncols"); sel.value = "t"; sel.dispatchEvent(new Event("change")); });
-    $("#d-nsec").addEventListener("click", (e) => { nsecShow(true); nsecMenu(e.currentTarget, null); });
+    $("#d-nsec").addEventListener("click", () => {
+      nsecShow(true); const at = caretTop() || (lastTop && lastTop.isConnected ? lastTop : null);
+      const d = nsecInsert("Abschnitt " + (ned.querySelectorAll(":scope > .nsec").length + 1), !at, at); if (nopt.onSecs) nopt.onSecs(); if (d) setTimeout(() => nsecEdit(d), 0);
+    });
     // Auge: Abschnitte zeigen oder ausblenden (pro Gerät gemerkt)
     const eyeHost = ned.closest(".panel") || root, eye = $("#d-neye");
     const nsecShow = (on) => { eyeHost.classList.toggle("nsec-off", !on); eye.setAttribute("aria-pressed", String(on)); try { localStorage.setItem("zp-nsec", on ? "1" : "0"); } catch (er) {} nsecDeco(ned); };
@@ -6081,9 +6111,70 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       e.preventDefault(); e.stopPropagation();
       const sdc = e.target.closest(".nsec-dc"); if (sdc) { if (nopt.openDoc) nopt.openDoc(sdc.dataset.secdoc); return; }
       if (e.target.closest(".nsec-tg")) { HIST.brk = true; const op = d.dataset.c === "1"; if (op) delete d.dataset.c; else d.dataset.c = "1"; nsecDeco(ned); save(); if (op && nopt.onUnfold) nopt.onUnfold(d); return; }
-      nsecMenu(d.querySelector(".nsec-t") || d, d);
+      const sph = e.target.closest(".nsec-nph"); if (sph) { if (ned._secPhMenu) ned._secPhMenu(sph, d.dataset.id); return; }
+      if (secDragged) { secDragged = false; return; }
+      const t = e.target.closest(".nsec-t"); if (t) nsecEdit(d);
     }, true);
-    ned.addEventListener("mousedown", (e) => { if (e.target.closest && e.target.closest(".nsec") && ned.contains(e.target)) e.preventDefault(); }, true);
+    ned.addEventListener("mousedown", (e) => { if (e.target.closest && e.target.closest(".nsec") && ned.contains(e.target) && !(e.target.closest(".nsec-t") && e.target.closest(".nsec-t").isContentEditable)) e.preventDefault(); }, true);
+    // Titel direkt ändern: Klick auf den Titel, Enter = fertig, Esc = abbrechen
+    const nsecEdit = (d) => {
+      const t = d.querySelector(".nsec-t"); if (!t || t.isContentEditable) return;
+      const old = t.textContent; t.contentEditable = "true"; t.classList.add("editing"); t.focus();
+      const rg = document.createRange(); rg.selectNodeContents(t); const sl = getSelection(); sl.removeAllRanges(); sl.addRange(rg);
+      const done = (keep) => {
+        t.removeEventListener("keydown", key); t.removeEventListener("blur", blur);
+        t.contentEditable = "false"; t.classList.remove("editing");
+        const v = t.textContent.replace(/\s+/g, " ").trim();
+        if (!keep || !v) { t.textContent = old; return; }
+        t.textContent = v; if (v !== old) { HIST.brk = true; nsecDeco(ned); save(); if (nopt.onSecs) nopt.onSecs(); }
+      };
+      const key = (e) => { e.stopPropagation(); if (e.key === "Enter") { e.preventDefault(); done(true); } else if (e.key === "Escape") { e.preventDefault(); done(false); } };
+      const blur = () => done(true);
+      t.addEventListener("keydown", key); t.addEventListener("blur", blur);
+    };
+    ned._secEdit = (id) => { const d = ned._secEl(id); if (d) nsecEdit(d); };
+    // ein Abschnitt = Trennstrich bis zum nächsten Trennstrich (bzw. Ende-Linie)
+    const secSpan = (x) => { const a = [x]; let n = x.nextElementSibling; while (n && !n.classList.contains("nsec")) { a.push(n); if (n.classList.contains("nend")) break; n = n.nextElementSibling; } return a; };
+    // Rechtsklick auf den Titel: Titel (Trennstrich) entfernen, der Text bleibt
+    ned.addEventListener("contextmenu", (e) => {
+      const d = e.target.closest && e.target.closest(".nsec"); if (!d || !ned.contains(d) || e.target.closest(".nsec-t.editing")) return;
+      e.preventDefault(); e.stopPropagation();
+      const cur = (d.querySelector(".nsec-t") || d).textContent.trim();
+      cellMenu(e.clientX, e.clientY, "Abschnitt «" + cur + "»", [["ed", "✎ Titel ändern"], "-", ["rm", "Titel entfernen (Text bleibt) …", 1]], (op) => {
+        if (op === "ed") { nsecEdit(d); return; }
+        if (!confirm("Titel «" + cur + "» entfernen? Der Text darunter bleibt stehen.")) return;
+        HIST.brk = true; const ne = secSpan(d).pop(); if (ne && ne.classList.contains("nend")) ne.remove(); d.remove(); nsecDeco(ned); save(); if (nopt.onSecs) nopt.onSecs();
+      });
+    }, true);
+    // eingeklappten Abschnitt am Titel packen und nach oben oder unten ziehen
+    let secDragged = false;
+    ned.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0) return;
+      const t = e.target.closest && e.target.closest(".nsec-t"); const d = t && t.closest(".nsec");
+      if (!d || !ned.contains(d) || d.dataset.c !== "1" || t.isContentEditable) return;
+      const x0 = e.clientX, y0 = e.clientY; let on = false, ind = null, target = undefined;
+      const heads = () => [...ned.querySelectorAll(":scope > .nsec")].filter((h) => h !== d);
+      const mv = (ev) => {
+        if (!on) { if (Math.abs(ev.clientY - y0) + Math.abs(ev.clientX - x0) < 6) return; on = true; d.classList.add("nsec-drag"); document.body.classList.add("p-rowdrag"); ind = document.createElement("div"); ind.className = "p-dropline"; document.body.appendChild(ind); }
+        ev.preventDefault();
+        const hs = heads(); target = null;
+        for (const h of hs) { const r = h.getBoundingClientRect(); if (ev.clientY < r.top + r.height / 2) { target = h; break; } }
+        const er = ned.getBoundingClientRect(); let y;
+        if (target) y = target.getBoundingClientRect().top - 4; else { const l = ned.lastElementChild; y = (l ? l.getBoundingClientRect().bottom : er.bottom) + 2; }
+        Object.assign(ind.style, { left: er.left + "px", width: er.width + "px", top: y + "px" });
+      };
+      const up = () => {
+        document.removeEventListener("pointermove", mv, true); document.removeEventListener("pointerup", up, true);
+        if (!on) return;
+        secDragged = true; setTimeout(() => { secDragged = false; }, 400);
+        d.classList.remove("nsec-drag"); document.body.classList.remove("p-rowdrag"); if (ind) ind.remove();
+        const mine = secSpan(d); if (target && mine.includes(target)) return;
+        HIST.brk = true;
+        if (target) mine.forEach((n) => target.before(n)); else mine.forEach((n) => ned.appendChild(n));
+        nsecDeco(ned); save(); if (nopt.onSecs) nopt.onSecs();
+      };
+      document.addEventListener("pointermove", mv, true); document.addEventListener("pointerup", up, true);
+    }, true);
     // ----- 2 Spalten (z. B. Aufgabe | Notizen): Trennlinie ziehen = Breite links -----
     const ncNear = (e) => { const c = e.target.closest && e.target.closest(".ncols > .ncol + .ncol"); if (!c || !ned.contains(c)) return null; const blk = c.parentElement; if (blk.children.length !== 2) return null; const r = c.getBoundingClientRect(); return Math.abs(e.clientX - r.left) <= 6 ? blk : null; };
     ned.addEventListener("mousemove", (e) => { if (ned._ncd) return; ned.querySelectorAll(".ncols.nc-near").forEach((b) => b.classList.remove("nc-near")); const b = ncNear(e); if (b) b.classList.add("nc-near"); });
@@ -6508,7 +6599,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const first = (a.textContent || "").replace(/\s+/g, " ").trim();
       let title, dropFirst = false;
       if (a !== b && first && first.length <= 80 && a.tagName === "DIV" && !a.querySelector("img, figure, table")) { title = first; dropFirst = true; }
-      else { const w = all.split(" "); title = w.slice(0, 6).join(" ").slice(0, 60) + (w.length > 6 ? " …" : ""); }
+      else title = "Abschnitt " + (ned.querySelectorAll(":scope > .nsec").length + 1); // nie Text abschneiden: lieber neutral benennen
       const d = nsecMk(title || "Abschnitt"); a.before(d);
       const nx = b.nextElementSibling;
       if (nx && !nx.classList.contains("nsec") && !nx.classList.contains("nend")) { const e = document.createElement("div"); e.className = "nend"; b.after(e); }
@@ -6516,7 +6607,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       sl.removeAllRanges(); markPop(false); nsecShow(true); save();
       $("#d-nmsg").textContent = "Abschnitt «" + title + "» angelegt. Klick auf den Titel: umbenennen. In der Lektionsplanung mit ＋ einer Zeile zuordnen.";
       if (nopt.onSecs) nopt.onSecs();
-      if (!dropFirst) setTimeout(() => nsecMenu(d.querySelector(".nsec-t") || d, d), 0);
+      if (!dropFirst) setTimeout(() => nsecEdit(d), 0);
       return d;
     };
     const mk = $("#d-nmark"); if (mk) { mk.addEventListener("mousedown", (e) => e.preventDefault()); mk.addEventListener("click", markSec); }
@@ -11072,7 +11163,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         }
         if (/^(TBODY|THEAD|TFOOT|TR|TD|TH|CAPTION)$/.test(tag)) { walk(n); continue; }
         if (tag === "SPAN" || tag === "FONT") {
-          const c = []; (typeof n.className === "string" ? n.className.split(/\s+/) : []).forEach((x) => { if ((/^tc-/.test(x) && LK_TC[x.slice(3)]) || (/^hl-/.test(x) && LK_HL[x.slice(3)]) || x === "ls" || x === "ls-x" || (/^ff-[a-z]$/.test(x) && ffOf({ className: x }))) c.push(x); });
+          const c = []; (typeof n.className === "string" ? n.className.split(/\s+/) : []).forEach((x) => { if ((/^tc-/.test(x) && LK_TC[x.slice(3)]) || (/^hl-/.test(x) && LK_HL[x.slice(3)]) || x === "ls" || x === "ls-x" || x === "lk-sp" || (x === "open" && n.classList.contains("lk-sp")) || (/^ff-[a-z]$/.test(x) && ffOf({ className: x }))) c.push(x); });
           if (isLs(n) && !c.includes("ls")) c.push("ls");
           if (n.tagName === "FONT" && ffOf(n) && !c.some((x) => /^ff-/.test(x))) c.push("ff-" + ffOf(n));
           const col = lkFind(LK_TC, lkHex(n.getAttribute("color") || (n.style && n.style.color))); if (col && !c.some((x) => /^tc-/.test(x))) c.push("tc-" + col);
@@ -11114,7 +11205,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const hideLs = !lkLsShow() && /class="[^"]*\bls\b/.test(html || "");
     if (!/lk-note/.test(html || "") && !hideLs) return html || "";
     const t = document.createElement("template"); t.innerHTML = html; t.content.querySelectorAll(".lk-note").forEach((n) => n.remove());
-    if (hideLs) t.content.querySelectorAll(".ls").forEach((n) => { n.textContent = "\u00a0".repeat(Math.min(200, Math.max(1, n.textContent.length))); n.classList.add("ls-x"); });
+    if (hideLs) t.content.querySelectorAll(".ls").forEach((n) => { if (n.closest(".lk-sp")) return; n.textContent = "\u00a0".repeat(Math.min(200, Math.max(1, n.textContent.length))); n.classList.add("ls-x"); });
     t.content.querySelectorAll("ul, ol").forEach((l) => { if (!l.children.length) l.remove(); });
     return t.innerHTML;
   }
@@ -11183,13 +11274,15 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const on = $("#lk-list .lk-it.on"); if (on && on.scrollIntoView && !LK.scrolled) { LK.scrolled = true; on.scrollIntoView({ block: "nearest" }); }
     lkOpen();
   }
+  const lkTakeOn = () => { try { return localStorage.getItem("zp-lktake") === "1"; } catch (e) { return false; } };
+  const lkTakeSet = (v) => { try { localStorage.setItem("zp-lktake", v ? "1" : "0"); } catch (e) {} document.body.classList.toggle("lk-take", v); const b = document.getElementById("lk-taketg"); if (b) b.setAttribute("aria-pressed", String(v)); };
   function lkDocsHtml(x) {
     const r = U.reihen[x.u.rid] || {}, docs = lkDocs(x.u.rid, x.u.i), ids = new Set(docs.map((f) => f.id));
     const row = (f) => '<div class="lk-drow"><button type="button" class="doc" data-lkopen="' + esc(f.id) + '" title="Öffnen – dort können Sie es auch bearbeiten"><span class="tag">' + typeTag(f) + "</span><span>" + esc(f.name) + '</span></button>' + (lkCanPick(f) ? '<button type="button" class="btn ghost lk-ins" data-lkpick="' + esc(f.id) + '" title="' + (LK_IMG.test(extOf(f)) ? "Bild in die Seite einfügen (danach können Sie hineinschreiben)" : "Einzelne Folien bzw. Seiten als Bild in die Seite holen (danach können Sie hineinschreiben)") + '">🖼</button>' : "") + '<button type="button" class="btn ghost lk-ins" data-lkins="' + esc(f.id) + '" title="Als Verweis in die Seite einfügen">＋</button></div>';
     const more = (r.files || []).filter((f) => f && !f.folder && !ids.has(f.id));
     const all = [...docs, ...more], rv = all.some((f) => f.id === LK.rv) ? LK.rv : "plan", cur = rv && rv !== "plan" ? all.find((f) => f.id === rv) : null;
     const head = '<div class="lk-shead"><button type="button" class="lk-rvsel" id="lk-rv" title="Wählen, was hier rechts steht: die Lektionsplanung oder ein Dokument der Lektion gross">' + (rv === "plan" ? "Lektionsplanung" : cur ? esc(cur.name) : "Lektionsplanung") + ' <span aria-hidden="true">▾</span></button><span class="lk-rvbtns">' +
-      (rv === "plan" ? '<button type="button" class="btn ghost" id="lk-planedit" title="Lernziele, Ablauf und Notizen dieser Lektion bearbeiten">✎ Bearbeiten</button>' : "") +
+      (rv === "plan" ? '<button type="button" class="btn ghost" id="lk-taketg" aria-pressed="' + lkTakeOn() + '" title="Knöpfe «⇥ In die Seite» bei Bildern und Tabellen zeigen bzw. ausblenden">⇥ In die Seite</button><button type="button" class="btn ghost" id="lk-planedit" title="Lernziele, Ablauf und Notizen dieser Lektion bearbeiten">✎ Bearbeiten</button>' : "") +
       '<button type="button" class="lk-fold" id="lk-docsfold" title="Rechte Seite einklappen">▸</button></span></div>';
     if (rv === "plan") return head + '<div class="lk-planbox" id="lk-planbox"></div>';
     if (cur) return head + '<div class="lk-dvbar"><button type="button" class="btn ghost" data-lkopen="' + esc(cur.id) + '" title="Im eigenen Fenster öffnen – dort auch bearbeiten">⤢ Öffnen</button>' + (lkCanPick(cur) ? '<button type="button" class="btn ghost" data-lkpick="' + esc(cur.id) + '" title="Einzelne Seiten bzw. das Bild in die Seite holen">🖼 In die Seite</button>' : "") + '<button type="button" class="btn ghost" data-lkins="' + esc(cur.id) + '" title="Als Verweis in die Seite einfügen">＋ Verweis</button></div><div class="ufl-dmsg msg" id="lk-rvmsg"></div><div class="lk-rvdoc" id="lk-rvdoc" data-fid="' + esc(cur.id) + '"></div>';
@@ -11262,6 +11355,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       TB("insertUnorderedList", "", "• Liste", "Aufzählung") + TB("insertOrderedList", "", "1. Liste", "Nummerierte Liste") + POP("check", "☑ Checkliste", "Checkliste zum Abhaken während des Unterrichts", checkPop) + POP("tab", "▦ Tabelle", "Einfache Tabelle", tabPop) + POP("box", "▭ Kasten", "Farbiger Kasten, z. B. für einen Auftrag", boxPop) +
       TB("ls", "", '<span class="ls">✎ Lehrerschrift</span>', "Lehrerschrift (z. B. Lösungen) – ohne Markierung: ab hier in Lehrerschrift weiterschreiben; mit Markierung: markierten Text umstellen. Nochmals klicken: normale Schrift (Strg+Umschalt+L). Beim Zeigen ausgeblendet") +
       TB("note", "", "🔒 Notiz", "Notiz nur für Sie: markierte Zeilen werden grau-gelb und sind beim Projizieren, in Folien, im Beamer-Fenster und beim Ausgeben unsichtbar. Nochmals klicken macht wieder normalen Text") +
+      POP("sp", "▮ Abdecken", "Wörter abdecken wie mit einem schwarzen Balken: Sie sehen sie, die Klasse beim Zeigen nicht; Klick auf den Balken deckt auf", TB("sp", "", "▮ Markiertes abdecken / aufheben", "Markierte Wörter abdecken (Schreibmarke in einem Balken: Abdeckung entfernen)") + TB("spall", "", "Alle wieder abdecken", "Alle aufgedeckten Balken dieser Seite wieder schliessen, z. B. für die nächste Klasse")) +
       TB("dot", "", "·", "Mittelpunkt einfügen, z. B. «L6 · Die Prozesse»") + POP("emo", "💡", "Symbol einfügen", '<div class="lk-emo">' + LK_EMO.map((x) => '<button type="button" class="lk-sw lk-em" data-lkcmd="emo" data-arg="' + x[0] + '" title="' + x[1] + '">' + x[0] + "</button>").join("") + "</div>") + SEP + TB("hr", "", "<b style=\"color:var(--accent)\">━━</b> Abschnitt", "Abschnittslinie: beim Projizieren beginnt hier eine neue Folie (wird nicht gedruckt)") + TB("hr", "lk-step", "<span style=\"color:var(--muted);letter-spacing:-1px\">┅┅</span> Schritt", "Schrittlinie: beim Projizieren erscheint der Teil darunter erst beim Weiterschalten (wird nicht gedruckt)") + TB("hr", "lk-vis", "<span style=\"opacity:.7\">—</span> Visual", "Visual Line: kurze Linie in der Mitte, um die Seite zu gliedern (wird gedruckt)") + SEP +
       '<label class="lk-tb" title="Bild einfügen">🖼 Bild<input type="file" id="lk-img" accept="image/*" multiple hidden></label></div>' +
       '<div class="lk-page" id="lk-page" contenteditable="true" data-ph="Schreiben Sie hier die Seite für diese Lektion: Ablauf für die Klasse, Aufträge, Bilder, Links zu Dokumenten …"></div>';
@@ -11274,6 +11368,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   }
   // Rechte Seite (Pfeil-Menü): Lektionsplanung aus der Reihe oder ein Dokument gross
   function lkPlanRender() {
+    document.body.classList.toggle("lk-take", lkTakeOn());
     const x = LK.sel && lkLessons(LK.kid).find((y) => y.key === LK.sel), r = x && U.reihen[x.u.rid];
     const dv = $("#lk-rvdoc");
     if (dv && x) { const f = lkAllDocs()[dv.dataset.fid]; if (f && !dv.firstChild) lkRvDoc(f, dv, $("#lk-rvmsg")); }
@@ -11408,6 +11503,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     ov.addEventListener("click", (e) => {
       const b = e.target.closest("[data-lkn]"); if (b) { if (b.dataset.lkn === "x") close(); else go(+b.dataset.lkn); return; }
       const li = e.target.closest(".lk-slide ul.lk-check > li"); if (li && lkCheckHit(li, e)) { lkCheckToggleIdx(+li.dataset.ci); build(); draw(); return; }
+      const sp = e.target.closest(".lk-slide .lk-sp"); if (sp && sp.dataset.si != null) { lkSpToggleIdx(+sp.dataset.si); build(); draw(); return; }
       const a = e.target.closest("[data-doc]"); if (a) { const f = lkAllDocs()[a.dataset.doc]; if (f) openViewer(f); }
     });
     ov.addEventListener("keydown", (e) => { if (e.target.closest && e.target.closest(".lkw")) return; if (e.key === "Escape") close(); else if (/Right|Down|PageDown| /.test(e.key)) { go(1); e.preventDefault(); } else if (/Left|Up|PageUp/.test(e.key)) { go(-1); e.preventDefault(); } });
@@ -11556,6 +11652,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     w.document.addEventListener("click", (e) => {
       const b = e.target.closest("[data-lkt]"); if (b) { lkTool(w.document, b.dataset.lkt); return; }
       const li = e.target.closest("#st ul.lk-check > li"); if (li && lkCheckHit(li, e)) { li.classList.toggle("done"); lkCheckToggleIdx(+li.dataset.ci); }
+      const sp = e.target.closest("#st .lk-sp"); if (sp && sp.dataset.si != null) { sp.classList.toggle("open"); lkSpToggleIdx(+sp.dataset.si); }
     });
     w.document.addEventListener("dblclick", (e) => lkDbl(w.document, e));
     w.document.getElementById("fs").addEventListener("click", () => { try { w.document.documentElement.requestFullscreen(); } catch (e) {} });
@@ -12005,7 +12102,20 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   function lkCheckIdx(root, secs, s) {
     const tmp = document.createElement("div"); tmp.innerHTML = secs.slice(0, s).map((sec) => sec.map((p) => p.join("")).join("")).join("");
     let i = tmp.querySelectorAll(LK_CHK).length; root.querySelectorAll(LK_CHK).forEach((li) => (li.dataset.ci = i++));
+    let j = tmp.querySelectorAll(".lk-sp").length; root.querySelectorAll(".lk-sp").forEach((x) => (x.dataset.si = j++));
   }
+  // Abdecken: markierten Text in einen Balken packen; Schreibmarke in einem Balken = Balken entfernen
+  function lkSpWrap(pg) {
+    const sl = getSelection(); if (!sl.rangeCount) return;
+    const rg = sl.getRangeAt(0), an = rg.commonAncestorContainer, el = an.nodeType === 1 ? an : an.parentElement, inSp = el && el.closest(".lk-sp");
+    if (inSp && pg.contains(inSp)) { inSp.replaceWith(...inSp.childNodes); return; }
+    if (rg.collapsed) { lkStat("Zuerst die Wörter markieren, die abgedeckt werden sollen."); return; }
+    const frag = rg.extractContents(); frag.querySelectorAll && frag.querySelectorAll(".lk-sp").forEach((x) => x.replaceWith(...x.childNodes));
+    const sp = document.createElement("span"); sp.className = "lk-sp"; sp.appendChild(frag); rg.insertNode(sp);
+    const r2 = document.createRange(); r2.setStartAfter(sp); r2.collapse(true); sl.removeAllRanges(); sl.addRange(r2);
+  }
+  const LK_SP = ".lk-sp:not(.lk-note .lk-sp)";
+  function lkSpToggleIdx(i) { const pg = $("#lk-page"), x = pg && pg.querySelectorAll(LK_SP)[i]; if (!x) return; x.classList.toggle("open"); lkSave(); }
   function lkCheckToggleIdx(i) { const pg = $("#lk-page"), li = pg && pg.querySelectorAll(LK_CHK)[i]; if (!li) return; li.classList.toggle("done"); lkSave(); }
   // Tabelle: Zeilen und Spalten
   function lkTableOp(cmd) {
@@ -12747,6 +12857,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       if (ul && pg.contains(ul) && ul.tagName === "UL") ul.classList.toggle("lk-check");
       else { document.execCommand("insertUnorderedList"); const a2 = getSelection().anchorNode, e2 = a2 && (a2.nodeType === 1 ? a2 : a2.parentElement), u2 = e2 && e2.closest("ul"); if (u2 && pg.contains(u2)) u2.classList.add("lk-check"); }
     }
+    else if (cmd === "sp") { lkSpWrap(pg); lkPopsClose(); }
+    else if (cmd === "spall") { pg.querySelectorAll(".lk-sp.open").forEach((x) => x.classList.remove("open")); lkPopsClose(); if (lkBeaming()) setTimeout(() => lkPrRender(false), 0); }
     else if (cmd === "uncheck") pg.querySelectorAll("ul.lk-check > li.done").forEach((li) => li.classList.remove("done"));
     else if (cmd === "table") {
       const [nr, nc] = arg.split("x").map(Number), row = (t) => "<tr>" + Array.from({ length: nc }, () => "<" + t + "><br></" + t + ">").join("") + "</tr>";
@@ -12784,12 +12896,14 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     if (a) { e.preventDefault(); const f = lkAllDocs()[a.dataset.doc]; if (f) openViewer(f); return; }
     if (lkBeaming() && e.target.tagName === "HR" && $("#lk-page").contains(e.target) && PR.deck) { const m = PR.deck.map.find((x) => x.el === e.target); if (m) { PR.s = m.s; PR.k = m.k; lkPrRender(true); } return; }
     const ck = e.target.closest("#lk-page ul.lk-check > li"); if (ck && !b && lkCheckHit(ck, e)) { ck.classList.toggle("done"); lkSave(); return; }
+    const spc = e.target.closest("#lk-page .lk-sp"); if (spc && !b && (lkBeaming() || lkIsProj())) { spc.classList.toggle("open"); lkSave(); if (lkBeaming()) lkPrRender(false); return; }
     const fg = e.target.closest(".lk-fig"); if (fg && !b && $("#lk-page") && $("#lk-page").contains(fg)) { if (lkFigNoClick) { lkFigNoClick = 0; return; } if (lkFP && lkFP.fig === fg) return; lkInk(fg); return; }
     if (!b) return;
     if (b.id === "lk-sidefold" || b.id === "lk-sideopen") { if (lkIsProj()) LK.pside = b.id === "lk-sideopen"; else { LK.side = b.id === "lk-sideopen"; lkSaveSel(); } lkLayout(); return; }
     if (b.id === "lk-rv") { lkRvMenu(b); return; }
     if (b.dataset.lkrv != null) { lkRvSet(b.dataset.lkrv); return; }
     if (b.dataset.takesec != null) { const sc = b.closest(".psec"); if (!sc) return; const c = sc.cloneNode(true); c.querySelectorAll(".lk-ptake").forEach((y) => y.remove()); c.querySelectorAll(".lk-ptab, .lk-pimg").forEach((y) => y.replaceWith(...y.childNodes)); c.querySelectorAll("h4").forEach((y) => { const h3 = document.createElement("h3"); h3.innerHTML = y.innerHTML; y.replaceWith(h3); }); lkInsertBlocks(lkSanitize(c.innerHTML), LK.range); LK.range = null; lkStat("Abschnitt in die Seite übernommen."); return; }
+    if (b.id === "lk-taketg") { lkTakeSet(!lkTakeOn()); return; }
     if (b.id === "lk-planedit") { const x = lkLessons(LK.kid).find((y) => y.key === LK.sel); if (x) openLessonDetail(x.u.i, LK.planFrom || x.u.rid, lkPlanRender); return; }
     if (b.id === "lk-docsfold" || b.id === "lk-docsopen") { if (lkIsProj()) LK.pdocs = b.id === "lk-docsopen"; else { LK.docs = b.id === "lk-docsopen"; lkSaveSel(); } lkLayout(); return; }
     if (b.closest(".lk-showmenu")) lkPopsClose();
