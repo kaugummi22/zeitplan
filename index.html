@@ -1622,7 +1622,8 @@ html.phone .lesson.mat-slim .ldocs { grid-column: 1 / -1; }
 .nsec .nsec-tg::before { content: "▾"; }
 .nsec[data-c="1"] .nsec-tg::before { content: "▸"; }
 .nsec[data-c="1"] { color: var(--accent); }
-.nsec[data-c="1"] .nsec-t::after { content: " …"; }
+.nsec[data-c="1"] .nsec-t[data-n]::after { content: attr(data-n); margin-left: 8px; padding: 0 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 500; font-size: 0.86em; letter-spacing: 0; }
+.nsec[data-c="1"]:not(.has) { color: var(--muted); }
 .nsec .nsec-tg:hover { background: var(--accent-soft); }
 .nsec.flash .nsec-t { background: var(--accent-soft); color: var(--accent); }
 .notes-ed .nsec-hid { display: none !important; }
@@ -2241,7 +2242,7 @@ html.phone .ufl { left: 0 !important; top: 0 !important; width: 100vw !important
 .d-modes button { border: 0; background: var(--surface); color: var(--muted); padding: 3px 10px; cursor: pointer; font: inherit; }
 .d-modes button[aria-pressed="true"] { background: var(--accent); color: #fff; }
 .ueb-sheet { position: relative; min-height: 100%; font-family: Calibri, Candara, "Avenir Next", "Segoe UI", "Trebuchet MS", sans-serif; font-size: var(--ufs, 0.92rem); color: var(--ink); --ulh: 1.3; --cmw: 0px; }
-.ueb-sheet.rand { --cmw: 15em; } .ueb-sheet.rand-zu { --cmw: 7em; }
+.ueb-sheet.rand { --cmw: 15em; } .ueb-sheet.rand-zu { --cmw: 2.4em; }
 .ueb-sheet .ueb-page.notes-ed { max-width: calc(52em + var(--cmw)); padding-right: calc(var(--cmw) + 20px); }
 .ueb-mline { position: absolute; top: 14px; width: 3px; border-radius: 2px; background: color-mix(in srgb, var(--accent) 45%, transparent); pointer-events: none; }
 .ueb-sheet.rand .ueb-page.notes-ed { cursor: text; }
@@ -5200,8 +5201,10 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       if (!d.querySelector(".nsec-t")) { const t = d.textContent.trim(); d.innerHTML = '<button type="button" class="nsec-tg" tabindex="-1" title="Abschnitt zu- bzw. aufklappen" aria-label="Abschnitt zu- bzw. aufklappen"></button><span class="nsec-t" title="Titel ändern, entfernen …"></span>'; d.lastChild.textContent = t || "Abschnitt"; }
       d.contentEditable = "false";
     });
-    let hid = false;
-    [...box.children].forEach((k) => { if (k.classList.contains("nsec")) { hid = !off && k.dataset.c === "1"; return; } k.classList.toggle("nsec-hid", hid); });
+    let hid = false, cur = null, im = 0, tx = false;
+    const sum = () => { if (!cur) return; const t = cur.querySelector(".nsec-t"), n = im ? (im === 1 ? "1 Bild" : im + " Bilder") + (tx ? " · Text" : "") : tx ? "Text" : ""; if (t) { if (n) t.dataset.n = n; else delete t.dataset.n; } cur.classList.toggle("has", !!n); };
+    [...box.children].forEach((k) => { if (k.classList.contains("nsec")) { sum(); cur = k; im = 0; tx = false; hid = !off && k.dataset.c === "1"; return; } k.classList.toggle("nsec-hid", hid); if (cur) { im += k.matches("img, figure") ? 1 : k.querySelectorAll("img").length ? Math.max(1, k.querySelectorAll("figure").length || k.querySelectorAll("img").length) : 0; if (k.textContent.replace(/[\u00a0\u200b\s]/g, "")) tx = true; } });
+    sum();
   }
   async function ndocFill(box, files, force) {
     if (!box) return;
@@ -6891,6 +6894,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       Object.keys(grp).forEach((k) => { const g = grp[k]; let keep = k ? g.find((b) => b.textContent === kText[k]) || g.reduce((m, b) => (b.textContent.trim().length > m.textContent.trim().length ? b : m), g[0]) : null; g.forEach((b) => { if (b !== keep) b.setAttribute("data-k", uebId()); }); });
       kText = {}; blocks().forEach((b) => { kText[b.getAttribute("data-k")] = b.textContent; });
     };
+    // Kommentarrand: bei der Übersichtsseite ohne Wahl offen, in Materialsammlungen ohne Wahl zu (nur ein kleiner Pfeil)
+    const cmOn = () => (ctx ? UEBS.cmM === true : UEBS.cm !== false);
     const mline = pane.querySelector(".ueb-mline"), cm = pane.querySelector(".ueb-cm"), tab = pane.querySelector("#ueb-tab");
     cm.innerHTML = sanitizeNotes(u0.cm || "");
     const randX = () => page.offsetLeft + page.offsetWidth - (parseFloat(getComputedStyle(page).paddingRight) || 0) + 14;
@@ -6903,11 +6908,11 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         el.hidden = !!(b && (b.classList.contains("nsec-hid") || (b.classList.contains("nsec") && false)));
         if (!el.hidden) h = Math.max(h, top + el.offsetHeight);
       });
-      const open = UEBS.cm !== false, plh = parseFloat(getComputedStyle(page).lineHeight) || 20;
+      const open = cmOn(), plh = parseFloat(getComputedStyle(page).lineHeight) || 20;
       cm.hidden = !open; cm.style.left = rx + 8 + "px"; cm.style.lineHeight = plh + "px"; cm.style.minHeight = Math.max(page.offsetHeight - 28, 3 * plh) + "px";
       const ch = open ? cm.offsetTop + cm.offsetHeight : 0; h = Math.max(h, ch);
       mline.style.left = rx + "px"; mline.style.height = Math.max(page.offsetHeight - 28, ch - 14, 40) + "px";
-      tab.style.left = (open ? rx - 17 : rx + 3) + "px"; tab.textContent = open ? "▸" : "◂ Kommentare" + (filled(u.cm || "") ? " ●" : "");
+      tab.style.left = (open ? rx - 17 : rx + 3) + "px"; tab.textContent = open ? "▸" : "◂" + (filled(u.cm || "") ? " ●" : "");
       tab.title = open ? "Kommentare zuklappen" : "Kommentare im Rand aufklappen"; tab.classList.toggle("shut", !open); mline.classList.toggle("shut", !open);
       sheet.style.minHeight = Math.max(sc.clientHeight - 2, h + 240) + "px";
       let w = 0; sheet.querySelectorAll(".ueb-it:not(.ueb-c)").forEach((el) => { if (!el.hidden) w = Math.max(w, el.offsetLeft + el.offsetWidth); }); sheet.style.minWidth = w ? w + 40 + "px" : "";
@@ -6932,7 +6937,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     cm.addEventListener("pointerdown", (e) => { if (e.button === 0 && e.target === cm && cmClick(e)) e.preventDefault(); });
     cm.addEventListener("input", () => { cm.querySelectorAll("[data-fill]").forEach((d) => { if (d.textContent.trim()) delete d.dataset.fill; }); place(); const u = U_(); if (u) { const h2 = sanitizeNotes(cm.innerHTML); if (filled(h2)) u.cm = h2; else delete u.cm; } save(); });
     cm.addEventListener("blur", () => { cmTrim(); place(); cmSave(); });
-    tab.addEventListener("click", (e) => { e.stopPropagation(); UEBS.cm = UEBS.cm === false; uebsSave(); look(); place(); });
+    tab.addEventListener("click", (e) => { e.stopPropagation(); if (ctx) UEBS.cmM = !cmOn(); else UEBS.cm = !cmOn(); uebsSave(); look(); place(); });
     tab.addEventListener("pointerdown", (e) => e.stopPropagation());
     const anchor = (q, x, y) => {
       q.x = Math.max(0, Math.round(x)); y = Math.max(0, Math.round(y));
@@ -6950,7 +6955,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const deco = () => { nsecDeco(page); page.querySelectorAll("figure.nfig").forEach((f) => { f.contentEditable = "false"; }); };
     const setFree = () => { const on = !!UEBS.free; sheet.classList.toggle("free", on); page.contentEditable = on ? "false" : "true"; say(on ? HINT_F : HINT_N); uebBarState(pane); };
     const ULH = [[1.15, "eng"], [1.3, "mittel"], [1.5, "normal"], [1.8, "weit"]], UFS = [[0.82, "klein"], [0.92, "mittel"], [1.05, "gross"], [1.2, "sehr gross"]];
-    const look = () => { const u = U_(); if (!u) return; sheet.style.setProperty("--ulh", String(u.lh || 1.3)); sheet.style.setProperty("--ufs", (u.fs || 0.92) + "rem"); sheet.classList.toggle("rand", UEBS.cm !== false); sheet.classList.toggle("rand-zu", UEBS.cm === false); };
+    const look = () => { const u = U_(); if (!u) return; sheet.style.setProperty("--ulh", String(u.lh || 1.3)); sheet.style.setProperty("--ufs", (u.fs || 0.92) + "rem"); sheet.classList.toggle("rand", cmOn()); sheet.classList.toggle("rand-zu", !cmOn()); };
     look();
     sheet.insertAdjacentHTML("beforeend", u0.items.map(itHtml).join(""));
     norm(); deco(); setFree(); uebBarState(pane);
@@ -6974,7 +6979,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       if (it) { if (!touch) { sel(it); last = { x: it.offsetLeft, y: it.offsetTop + it.offsetHeight + 12 }; } return; }
       sel(null); const p = at(e); last = p;
       const u = U_(), rx = randX();
-      if (UEBS.cm !== false && p.x >= rx - 4 && !e.target.closest(".nsec-tg, .nsec-t, #ueb-tab")) { if (cmClick(e)) e.preventDefault(); return; }
+      if (cmOn() && p.x >= rx - 4 && !e.target.closest(".nsec-tg, .nsec-t, #ueb-tab")) { if (cmClick(e)) e.preventDefault(); return; }
       if (!UEBS.free) { if (e.target === sheet) { e.preventDefault(); page.focus(); caretToEnd(page); } return; }
       if (e.target.closest(".nsec-tg, .nsec-t")) return;
       e.preventDefault(); const a = document.activeElement; if (a && a.blur && pane.contains(a)) a.blur(); newText(p);
