@@ -1662,6 +1662,8 @@ main.wrap:has(#u-view-reihen:not([hidden]) .r-layout.ueb-on) { max-width: none; 
 .ueb-pg.on { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
 .ueb-pg.ddrop { outline: 2px dashed var(--accent); outline-offset: 1px; background: var(--accent-soft); color: var(--ink); }
 .ueb-pgadd { border-style: dashed; background: none; }
+.ueb-pgx { flex: none; border: 0; background: none; color: var(--muted); font-size: 1rem; line-height: 1; padding: 0 4px 0 0; margin-left: -2px; cursor: pointer; }
+.ueb-pgx:hover { color: var(--danger, #c0392b); }
 .ueb-name { font-weight: 700; color: var(--accent); }
 .ueb-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; }
 .ueb-right { margin-left: auto; display: flex; gap: 4px; }
@@ -6232,7 +6234,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const R = () => U.reihen[rid];
     pane.dataset.rid = rid; pane.dataset.sig = sigOf(u0);
     const pgName = (p, i) => p.name || "Seite " + (i + 1);
-    const tabsHtml = ctx ? "" : '<span class="ueb-pgs" role="tablist" aria-label="Seiten">' + (pages.length > 1 ? pages.map((p, i) => '<button type="button" class="ueb-pg' + (p.id === u0.id ? " on" : "") + '" role="tab" aria-selected="' + (p.id === u0.id) + '" draggable="true" data-upg="' + esc(p.id) + '" title="' + (p.id === u0.id ? "Klick: umbenennen, verschieben oder löschen. Ziehen: Reihenfolge ändern" : "Diese Seite öffnen. Markierten Text hierher ziehen = unten an diese Seite anhängen") + '">' + esc(pgName(p, i)) + "</button>").join("") : "") +
+    const tabsHtml = ctx ? "" : '<span class="ueb-pgs" role="tablist" aria-label="Seiten">' + (pages.length > 1 ? pages.map((p, i) => '<button type="button" class="ueb-pg' + (p.id === u0.id ? " on" : "") + '" role="tab" aria-selected="' + (p.id === u0.id) + '" draggable="true" data-upg="' + esc(p.id) + '" title="' + (p.id === u0.id ? "Klick: umbenennen, verschieben oder löschen. Ziehen: Reihenfolge ändern" : "Diese Seite öffnen. Markierten Text hierher ziehen = unten an diese Seite anhängen") + '">' + esc(pgName(p, i)) + "</button>" + (p.id === u0.id ? '<button type="button" class="ueb-pgx" id="ueb-pgdel" title="Diese Seite löschen" aria-label="Seite löschen">×</button>' : "")).join("") : "") +
       '<button type="button" class="ueb-pg ueb-pgadd" id="ueb-pgadd" title="Neue Seite anlegen (wie in einem Büchlein)">+ Seite</button></span>';
     const TB = (cmd, label, title, cls) => '<button type="button" class="nb' + (cls ? " " + cls : "") + '" data-ucmd="' + cmd + '" title="' + title + '" aria-label="' + title + '">' + label + "</button>";
     pane.innerHTML = '<div class="ueb-in"><div class="ueb-bar">' + (ctx ? '<span class="ueb-name">' + esc(ctx.name || "Seite") + "</span>" : '<div class="ueb-top"><span class="ueb-name">Übersichtsseite</span>' + tabsHtml + '<span class="ueb-right"><button type="button" class="btn ghost" id="ueb-solo"></button><button type="button" class="btn ghost" id="ueb-close" title="Übersichtsseite einklappen – die Reihenliste erscheint wieder">✕ Einklappen</button></span></div>') + '<span class="ueb-tools">' +
@@ -6397,6 +6399,11 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     };
     // Seiten: wechseln, Reihenfolge per Ziehen, markierten Text auf eine Seite ziehen = dort unten anhängen
     let pgDragT = 0, pgDrag = null, txtRange = null;
+    const pgDel = () => {
+      save(true); const ps2 = uebData(R()).pages, j = ps2.findIndex((p) => p.id === u0.id); if (j < 0) return;
+      if (!confirm(uebPgHas(ps2[j]) ? "«" + pgName(ps2[j], j) + "» enthält Notizen. Wirklich löschen? (Mit «↶ Rückgängig» lässt sie sich wiederherstellen.)" : "«" + pgName(ps2[j], j) + "» löschen?")) return;
+      ps2.splice(j, 1); if (!ps2.length) ps2.push(uebNorm({ id: uebId() })); saveReihe(rid, 0); pgGo(ps2[Math.max(0, j - 1)].id);
+    };
     const pgGo = (id) => { UEBS.pg = UEBS.pg || {}; UEBS.pg[rid] = id; uebsSave(); uebMount(pane, rid); };
     if (!ctx) {
       const pgs = pane.querySelector(".ueb-pgs");
@@ -6501,6 +6508,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const b = e.target.closest("button"); if (!b) return;
       if (b.id === "ueb-close") { save(true); UEBS.open = false; uebsSave(); renderU(); return; }
       if (b.id === "ueb-pgadd") { save(true); const rr = R(); if (!rr) return; const ps = uebData(rr).pages, np = uebNorm({ id: uebId() }), ci = ps.findIndex((p) => p.id === u0.id); ps.splice(ci + 1, 0, np); pgGo(np.id); saveReihe(rid, 0); return; }
+      if (b.id === "ueb-pgdel") { pgDel(); return; }
       if (b.dataset.upg) {
         if (Date.now() - pgDragT < 300) return;
         if (b.dataset.upg !== u0.id) { save(true); pgGo(b.dataset.upg); return; }
@@ -6510,7 +6518,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
           const ps2 = uebData(R()).pages, j = ps2.findIndex((p) => p.id === u0.id); if (j < 0) return;
           if (k === "ok") { if (v) ps2[j].name = v; else delete ps2[j].name; }
           else if (k === "l" || k === "r") { const t = j + (k === "l" ? -1 : 1); if (t < 0 || t >= ps2.length) return; ps2.splice(t, 0, ps2.splice(j, 1)[0]); }
-          else if (k === "del") { save(true); if (uebPgHas(ps2[j]) && !confirm("Diese Seite enthält Notizen. Trotzdem löschen? (Mit «Rückgängig» lässt sie sich wiederherstellen.)")) return; ps2.splice(j, 1); if (!ps2.length) ps2.push(uebNorm({ id: uebId() })); pgGo(ps2[Math.max(0, j - 1)].id); saveReihe(rid, 0); return; }
+          else if (k === "del") { pgDel(); return; }
           else return;
           save(true); uebMount(pane, rid);
         });
@@ -7013,7 +7021,10 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   function rUndo() {
     const id = U.sel, st = RUNDO[id]; if (!st || !st.length) return;
     Object.keys(uTimers).forEach((k) => { if (k === "r:" + id) clearTimeout(uTimers[k]); });
-    const prev = st.pop(); U.reihen[id] = normReihe(JSON.parse(prev)); RSNAP[id] = JSON.stringify(U.reihen[id]);
+    let prev = st.pop(), others = null; if (typeof prev === "object") { others = prev.others; prev = prev.s; }
+    U.reihen[id] = normReihe(JSON.parse(prev)); RSNAP[id] = JSON.stringify(U.reihen[id]);
+    // Verschieben zwischen Reihen (z. B. aus einer Unterreihe): die anderen betroffenen Reihen mit zurücknehmen
+    if (others) for (const [oid, v] of Object.entries(others)) { clearTimeout(uTimers["r:" + oid]); if (v) U.reihen[oid] = normReihe(clone(v)); else delete U.reihen[oid]; if (oid in RSNAP) { if (U.reihen[oid]) RSNAP[oid] = JSON.stringify(U.reihen[oid]); else delete RSNAP[oid]; } saveReihe(oid, 0); }
     const r = U.reihen[id]; if (!r.klasse && !yearsOf(r).includes(U.year)) U.year = homeYear(r);
     saveReihe(id, 0); uStatus("Rückgängig gemacht");
     if (r.klasse && typeof renderK === "function") renderK(); else renderU();
@@ -7721,6 +7732,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const snap = {}, touch = (id) => { if (!(id in snap)) snap[id] = U.reihen[id] ? clone(U.reihen[id]) : null; };
     if (fn(touch) === false) return;
     closeMenu();
+    // «↶ Rückgängig» der Reihe nimmt alle betroffenen Reihen zusammen zurück (sonst ginge z. B. eine Lektion verloren)
+    { const sel = U.sel; if (sel && sel in snap && snap[sel] && Object.keys(snap).length > 1) { const others = {}; Object.keys(snap).forEach((id) => { if (id !== sel) others[id] = snap[id]; if (id in RSNAP && U.reihen[id]) RSNAP[id] = JSON.stringify(U.reihen[id]); }); (RUNDO[sel] = RUNDO[sel] || []).push({ s: JSON.stringify(snap[sel]), others }); if (U.reihen[sel]) RSNAP[sel] = JSON.stringify(U.reihen[sel]); } }
     const ae = document.activeElement; if (ae && ae !== document.body && uEl.contains(ae)) ae.blur();
     Object.keys(snap).forEach((id) => saveReihe(id, 0));
     if (U.sel && !U.reihen[U.sel]) U.sel = null;
@@ -7790,6 +7803,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         list.splice(at > k ? at - 1 : at, 0, x); setBlocks(src, list, touch); return;
       }
       b.link = false;
+      // aus einer Unterreihe in die Masterreihe: kleiner Vermerk, woher die Lektion stammt (lässt sich einfach löschen)
+      if (src !== mid && dst === mid) { b.les = b.les.slice(); b.les[0] = (b.les[0] || "") + "<div>— aus «" + esc((S.title || "Unterreihe").trim()) + "»</div>"; }
       setBlocks(src, sbl.map(([a], j) => ({ b: sd[j], from: a })).filter((_, j) => j !== k), touch);
       const dd = blocksData(D), list = blocksOf(D).map(([a], j) => ({ b: dd[j], from: a }));
       list.splice(Math.max(0, Math.min(at, list.length)), 0, { b, from: null });
