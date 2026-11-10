@@ -1306,6 +1306,9 @@ html.fit body { touch-action: pan-x pan-y; }
 .empty { padding: 20px 12px; color: var(--muted); text-align: center; }
 .month { padding: 8px 8px 4px; font-family: var(--font-display); font-weight: 700; border-top: 1px solid var(--line); }
 .help { color: var(--muted); font-size: 0.8rem; margin-top: 8px; }
+.doccheck { max-height: 55vh; overflow: auto; display: grid; gap: 8px; margin-top: 10px; }
+.dc-row { padding: 6px 10px; border: 1px solid var(--line); border-left: 3px solid var(--danger, #c0392b); border-radius: 6px; font-size: 0.88rem; }
+.dc-row small { color: var(--muted); }
 /* lange Hilfetexte erst auf ⓘ hin */
 details.hint { margin-top: 8px; }
 details.hint > summary { list-style: none; display: inline-block; cursor: pointer; color: var(--muted); font-size: 0.78rem; font-weight: 700; padding: 2px 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
@@ -4373,17 +4376,54 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     });
     return scriptCache[src];
   }
+  // Immer die Fassung aus dem Ordner lesen. Nur wenn sie dort fehlt (umbenannt, verschoben) oder OneDrive nicht erreichbar ist,
+  // die ältere Kopie der App nehmen – und das deutlich melden (bytes.stale = "fehlt" | "offline")
   async function fileBytes(f) {
-    if (window.ZLOCAL && f.path) { try { return new Uint8Array(await (await window.ZLOCAL.read(f.path)).arrayBuffer()); } catch (e) { console.warn("Datei im Ordner nicht gefunden, nehme App-Kopie", e); } }
-    const res = await fetch("/_blob/" + f.id);
-    if (!res.ok) throw new Error("fetch");
-    if (f.enc === "b64") {
-      const bin = atob((await res.text()).trim()), bytes = new Uint8Array(bin.length);
-      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-      return bytes;
+    let stale = null;
+    if (window.ZLOCAL && f.path) {
+      try { return new Uint8Array(await (await window.ZLOCAL.read(f.path)).arrayBuffer()); }
+      catch (e) { stale = /nicht gefunden/.test(String(e && e.message)) ? "fehlt" : "offline"; console.warn("Datei im Ordner nicht lesbar, nehme ältere Kopie der App", e); if (stale === "fehlt") docMissNote(f); }
     }
-    return new Uint8Array(await res.arrayBuffer());
+    const res = await fetch("/_blob/" + f.id);
+    if (!res.ok) { if (stale === "fehlt") throw new Error("«" + f.name + "» wurde im Ordner nicht gefunden (" + wdShort(f.path) + "). Wurde die Datei umbenannt oder verschoben?"); throw new Error("fetch"); }
+    let bytes;
+    if (f.enc === "b64") {
+      const bin = atob((await res.text()).trim()); bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    } else bytes = new Uint8Array(await res.arrayBuffer());
+    if (stale) bytes.stale = stale;
+    return bytes;
   }
+  const staleText = (f, st) => st === "fehlt" ? "Achtung: «" + f.name + "» liegt nicht mehr am gespeicherten Ort (" + wdShort(f.path) + "). Wurde die Datei umbenannt oder verschoben? Angezeigt wird eine ältere Kopie." : "Achtung: OneDrive war nicht erreichbar. Angezeigt wird eine ältere Kopie, vielleicht nicht die neueste Fassung.";
+  function docMissNote(f) { try { uStatus("«" + f.name + "» nicht im Ordner gefunden – umbenannt oder verschoben?", true); } catch (e) {} }
+  // Einmal am Tag (und auf Wunsch) prüfen, ob alle Dokumente mit Ordner-Pfad noch dort liegen
+  async function docCheck(force) {
+    if (!window.ZLOCAL || !window.ZLOCAL.exists || !U.loaded) return;
+    const today = new Date().toISOString().slice(0, 10);
+    if (!force) { try { if (localStorage.getItem("zp-doccheck") === today) return; } catch (e) {} }
+    const seen = new Map();
+    for (const [rid, r] of Object.entries(U.reihen)) {
+      if (!r) continue;
+      const add = (f, where) => { if (!f || !f.path) return; if (!seen.has(f.path)) seen.set(f.path, { f, rid, title: r.title || "Reihe", where }); };
+      (r.files || []).forEach((f) => add(f, "Dokumente der ganzen Reihe")); (r.mainFiles || []).forEach((f) => add(f, "Hauptdokumente"));
+      Object.entries(r.meta || {}).forEach(([i, m]) => m && (m.files || []).forEach((f) => add(f, "L" + (+i + 1))));
+      (r.lnItems || []).forEach((m) => m && (m.files || []).forEach((f) => add(f, m.mat ? "Materialsammlung" + (m.name ? " «" + m.name + "»" : "") : m.name || "Leistungsnachweis")));
+    }
+    const list = [...seen.values()], miss = []; let k = 0, fail = 0;
+    const work = async () => { while (k < list.length) { const x = list[k++]; try { if (!(await window.ZLOCAL.exists(x.f.path))) miss.push(x); } catch (e) { fail++; } } };
+    await Promise.all([work(), work(), work(), work()]);
+    if (fail > list.length / 2) return; // offline: morgen bzw. beim nächsten Start nochmals
+    try { localStorage.setItem("zp-doccheck", today); } catch (e) {}
+    if (!miss.length) { if (force) uStatus("Alle " + list.length + " Dokumente liegen am gespeicherten Ort."); return; }
+    miss.sort((a, b) => a.title.localeCompare(b.title, "de"));
+    openModal('<h3>Dokumente nicht gefunden</h3><p class="help">Diese ' + (miss.length === 1 ? "Datei liegt" : miss.length + " Dateien liegen") + ' nicht mehr am gespeicherten Ort. Wahrscheinlich wurden sie umbenannt oder verschoben. Bitte im Ordner den alten Namen bzw. Ort wiederherstellen oder das Dokument in der Reihe neu hinzufügen.</p>' +
+      '<div class="doccheck">' + miss.map((x) => '<div class="dc-row"><button type="button" class="linkbtn" data-dcgo="' + esc(x.rid) + '">' + esc(x.title) + "</button> · " + esc(x.where) + "<br><b>" + esc(x.f.name) + '</b> <small>' + esc(wdShort(x.f.path)) + "</small></div>").join("") + "</div>" +
+      '<div class="row" style="justify-content:flex-end;margin-top:12px"><button type="button" class="btn primary" id="dc-ok">Schliessen</button></div>', (root) => {
+      root.querySelector("#dc-ok").onclick = closeModal;
+      root.querySelector(".doccheck").addEventListener("click", (e) => { const b = e.target.closest("[data-dcgo]"); if (!b) return; closeModal(); U.view = "reihen"; U.sel = b.dataset.dcgo; const t = document.querySelector('[data-tab="unterricht"]'); if (t) t.click(); renderU(); });
+    });
+  }
+  window.__docCheck = docCheck;
   const extOf = (f) => (String(f.name || "").split(".").pop() || "").toLowerCase();
   let viewerDirty = false;
   function closeViewer(force) {
@@ -5326,6 +5366,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     };
     try {
       bytes = await fileBytes(f);
+      if (bytes.stale) { msg.className = "msg warn"; msg.textContent = staleText(f, bytes.stale); }
       if (ext === "pdf") {
         await loadScript(LIBS.pdf); await loadScript(LIBS.pdfWorker);
         const lib = window.pdfjsLib; lib.GlobalWorkerOptions.workerSrc = LIBS.pdfWorker;
@@ -10971,7 +11012,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       say("Microsoft wandelt «" + f.name + "» in Folien um … (kann etwas dauern)");
       let blob = null, err = null;
       if (f.path) { try { blob = await window.ZLOCAL.toPdf({ path: f.path }); } catch (e) { err = e; } }
-      if (!blob) { try { blob = await window.ZLOCAL.toPdf({ bytes: await fileBytes(f), name: f.name }); } catch (e) { err = e; } }
+      if (!blob) { try { const b0 = await fileBytes(f); if (b0.stale) say(staleText(f, b0.stale)); blob = await window.ZLOCAL.toPdf({ bytes: b0, name: f.name }); } catch (e) { err = e; } }
       if (!blob) throw err || new Error("Umwandeln");
       bytes = new Uint8Array(await blob.arrayBuffer());
     }
@@ -12651,7 +12692,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       return;
     }
     let gotReihen = false, gotPlan = false;
-    const uReady = () => { if (gotReihen && gotPlan) { U.loaded = true; renderU(); if (!LK.pid) renderLK(); } };
+    const uReady = () => { if (gotReihen && gotPlan) { U.loaded = true; renderU(); if (!LK.pid) renderLK(); if (!uReady.dc) { uReady.dc = 1; setTimeout(() => docCheck().catch((e) => console.warn(e)), 20000); } } };
     db.collection("reihen").onSnapshot((snap) => {
       const m = {};
       snap.docs.forEach((d) => { const v = d.data(); if (v) m[d.id] = normReihe(v); });

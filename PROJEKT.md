@@ -62,6 +62,7 @@ umfrage/index.html    ← Abstimmungsseite für die Handys der Klasse (eigenstä
 - `temp/`: kurz abgelegte Dateien für die PDF-Umwandlung (werden wieder gelöscht)
 - Reihen-Ordner unter `0_Planung/Reihen/…`, Klassenordner unter `0_Planung/Klassen/…`
   - Zugriff über `window.ZLOCAL`: `open, list, read, place, exists, mkdir, copy, write, toPdf`
+- **Dokumente immer aktuell** (10.11.2026): `fileBytes` liest immer zuerst die Datei im Ordner (`f.path`). Fehlt sie dort (umbenannt/verschoben) oder ist OneDrive nicht erreichbar, wird die ältere Kopie der App (`/_blob/<id>`) nur noch mit deutlicher Warnung gezeigt (`bytes.stale`, `staleText`, Meldung oben im Betrachter). `docCheck`: einmal am Tag (20 s nach dem Laden, `localStorage zp-doccheck`) werden alle Dokumente mit Pfad per `ZLOCAL.exists` geprüft; fehlende erscheinen in einem Fenster «Dokumente nicht gefunden» mit Reihe, Ort und Pfad (Klick öffnet die Reihe). Von Hand: `__docCheck(true)` in der Konsole.
 - Offline: IndexedDB `zeitplan-offline`. Änderungen werden später hochgeladen.
 - Die App-Oberfläche spricht Daten über `state.db.collection(c).doc(id).get/set/onSnapshot` an.
 
