@@ -1571,8 +1571,12 @@ html.jpw main.wrap:has(#view-unterricht:not([hidden])) { max-width: none; }
 .mat-fold-tog { justify-self: start; font-size: 0.78rem; margin-top: 2px; font-weight: 700; }
 .mat-foldsum { display: none; }
 .lesson.mat-fold .cell, .lesson.mat-fold .ldocs { display: none !important; }
-.lesson.mat-fold .mat-foldsum { display: flex; align-items: center; grid-column: 2 / -1; padding: 6px 12px; border: 0; background: none; font: inherit; text-align: left; color: var(--muted); font-size: 0.85rem; cursor: pointer; }
-.lesson.mat-fold .mat-foldsum:hover { color: var(--accent); }
+.lesson.mat-fold .mat-foldsum { display: flex; align-items: center; gap: 6px; grid-column: 2 / -1; padding: 6px 12px; color: var(--muted); font-size: 0.85rem; }
+.mat-foldsum button { border: 0; background: none; font: inherit; color: inherit; padding: 2px 4px; border-radius: 6px; cursor: pointer; }
+.mat-foldsum button:hover { color: var(--accent); background: var(--accent-soft); }
+.mat-foldsum .mat-nt { position: relative; } .mat-foldsum .mat-nt.has { color: var(--ink); }
+.mat-ntp { display: none; position: absolute; left: 0; top: calc(100% + 4px); z-index: 30; width: max-content; min-width: 220px; max-width: 420px; padding: 8px 10px; text-align: left; white-space: normal; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.15); font-size: 0.9rem; cursor: default; }
+.mat-nt:hover .mat-ntp, .mat-nt:focus-visible .mat-ntp { display: block; }
 html.phone .lesson.mat-slim .ldocs { grid-column: 1 / -1; }
 .doc { display: flex; gap: 6px; align-items: baseline; border: 0; background: none; padding: 2px 4px; border-radius: 4px; color: var(--ink); text-decoration: none; text-align: left; font-size: 0.82rem; min-width: 0; }
 .doc span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
@@ -7504,11 +7508,11 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const rid = it.c.rid, ch = U.reihen[rid], k = it.k, m = (ch.lnItems || [])[k] || {}, key = "ln" + k, ro = !!r.klasse;
     const more = !!(m.details || filled(m.notesHtml) || (m.files && m.files.length) || hasPlan(m.plan)), lk = m.rid && U.reihen[m.rid];
     const slim = typeof m.slim === "boolean" ? m.slim : (m.files || []).length > 0;
-    return '<div class="lesson ln-row mat-row ms-mat' + (slim ? " mat-slim" : "") + (m.fold ? " mat-fold" : "") + '" data-crid="' + esc(rid) + '" data-mrid="' + esc(rid) + '" data-cmat="' + k + '"><div class="lh"><div class="lh-top"><b>' + it.L + "·M" + matNo(ch, k) + "</b>" +
+    return '<div class="lesson ln-row mat-row ms-mat' + (matFolded(m) ? " mat-fold" : "") + '" data-crid="' + esc(rid) + '" data-mrid="' + esc(rid) + '" data-cmat="' + k + '"><div class="lh"><div class="lh-top"><b>' + it.L + "·M" + matNo(ch, k) + "</b>" +
       '<button type="button" class="lexp' + (more ? " on" : "") + '" data-lexp="' + key + '" title="Gross öffnen: Kommentare, Notizen, Dokumente (gilt für die Unterreihe)" aria-label="Materialsammlung gross öffnen">+</button>' +
       (ro ? "" : '<button type="button" class="ln-rm" data-lnrm="' + k + '" title="Diese Materialsammlung aus der Unterreihe entfernen" aria-label="Materialsammlung entfernen">×</button>') + "</div>" +
       '<input type="text" class="ln-name" data-lnname="' + k + '" value="' + esc(m.name || "") + '" placeholder="Name, z. B. Bilder" aria-label="Name der Materialsammlung"' + (ro ? " readonly" : "") + ">" +
-      matFoldBtn(m, k) + (m.fold ? "" : '<button type="button" class="linkbtn mat-slim-tog" data-matslim="' + k + '" title="' + (slim ? "Notizfeld wieder breit zeigen" : "Notizfeld klein machen, Dokumente in Spalten über die ganze Breite") + '">' + (slim ? "▸ Notiz zeigen" : "◂ Notiz klein") + "</button>") +
+      matFoldBtn(m, k) +
       (lk ? '<span class="mat-link"><button type="button" class="linkbtn" data-goto="' + esc(m.rid) + '" title="Verknüpfte Reihe öffnen">↗ ' + esc(lk.title || "Reihe") + "</button>" + (ro ? "" : '<button type="button" class="x" data-matunlink="' + k + '" title="Verknüpfung lösen" aria-label="Verknüpfung lösen">×</button>') + "</span>"
         : "") +
       '<span class="ms-from">aus ' + esc(ch.title || "Unterreihe") + "</span></div>" +
@@ -7545,17 +7549,21 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     }).join("") + chAt(1e9) + lnRowHtml(r, mp.placed) + hiddenNote(r);
   }
   // Materialsammlung ganz zuklappen (Dokumente und Notiz ausblenden), gemerkt pro Sammlung (m.fold), ohne Wahl offen
-  const matFoldBtn = (m, k) => '<button type="button" class="linkbtn mat-fold-tog" data-matfold="' + k + '" aria-expanded="' + !m.fold + '" title="' + (m.fold ? "Materialsammlung aufklappen: Dokumente und Notiz zeigen" : "Materialsammlung zuklappen: nur Name und Anzahl Dokumente zeigen") + '">' + (m.fold ? "▸ Aufklappen" : "▾ Zuklappen") + "</button>";
-  const matFoldSum = (m, k) => { const n = (m.files || []).length, nt = filled(m.html); return '<button type="button" class="mat-foldsum" data-matfold="' + k + '" title="Aufklappen">' + (n ? n + (n === 1 ? " Dokument" : " Dokumente") : "keine Dokumente") + (nt ? " · mit Notiz" : "") + "</button>"; };
+  // ohne Wahl zu (m.fold === false = offen); auf/zu gilt für Dokumente und Notiz zusammen
+  const matFolded = (m) => m.fold !== false;
+  const matFoldBtn = (m, k) => '<button type="button" class="linkbtn mat-fold-tog" data-matfold="' + k + '" aria-expanded="' + !matFolded(m) + '" title="' + (matFolded(m) ? "Materialsammlung aufklappen: Dokumente und Notiz zeigen" : "Materialsammlung zuklappen: nur Anzahl Dokumente und Notiz zeigen") + '">' + (matFolded(m) ? "▸ Aufklappen" : "▾ Zuklappen") + "</button>";
+  const matFoldSum = (m, k) => { const n = (m.files || []).length, nt = filled(m.html || "");
+    return '<div class="mat-foldsum"><button type="button" class="mat-fs-docs" data-matfold="' + k + '" title="Aufklappen: Dokumente und Notiz zeigen">' + (n ? n + (n === 1 ? " Dokument" : " Dokumente") : "keine Dokumente") + "</button>" +
+      '<span class="mat-fs-sep">+</span><button type="button" class="mat-nt' + (nt ? " has" : "") + '" data-matnote="' + k + '" title="' + (nt ? "Notiz bearbeiten" : "Eine Notiz schreiben") + '">' + (nt ? "📝 Notiz" : "Notiz schreiben") + (nt ? '<span class="mat-ntp">' + sanitize(m.html) + "</span>" : "") + "</button></div>"; };
   function matRowHtml(r, m, k) {
     const key = "ln" + k, more = !!(m.details || filled(m.notesHtml) || (m.files && m.files.length) || hasPlan(m.plan));
         const lk = m.rid && U.reihen[m.rid];
         // Notizteil klein: Dokumente nutzen die ganze Breite und stehen in Spalten (ohne eigene Wahl ab 7 Dokumenten)
         const slim = typeof m.slim === "boolean" ? m.slim : (m.files || []).length > 0;
-        return '<div class="lesson ln-row mat-row' + (slim ? " mat-slim" : "") + (m.fold ? " mat-fold" : "") + '" data-li="' + key + '"><div class="lh"><div class="lh-top"><b' + (' class="l-drag" draggable="true" data-mdrag="' + k + '" data-mnum="' + k + '" title="Ziehen = verschieben (zwischen Lektionen oder andere Materialsammlungen) · Klick = Nummer ändern"') + ">M" + matNo(r, k) + "</b>" + '<button type="button" class="lexp' + (more ? " on" : "") + '" data-lexp="' + key + '" title="Gross öffnen: Kommentare, Notizen, Dokumente" aria-label="Materialsammlung gross öffnen">+</button>' +
+        return '<div class="lesson ln-row mat-row' + (matFolded(m) ? " mat-fold" : "") + '" data-li="' + key + '"><div class="lh"><div class="lh-top"><b' + (' class="l-drag" draggable="true" data-mdrag="' + k + '" data-mnum="' + k + '" title="Ziehen = verschieben (zwischen Lektionen oder andere Materialsammlungen) · Klick = Nummer ändern"') + ">M" + matNo(r, k) + "</b>" + '<button type="button" class="lexp' + (more ? " on" : "") + '" data-lexp="' + key + '" title="Gross öffnen: Kommentare, Notizen, Dokumente" aria-label="Materialsammlung gross öffnen">+</button>' +
           '<button type="button" class="ln-rm" data-lnrm="' + k + '" title="Diese Materialsammlung entfernen" aria-label="Materialsammlung entfernen">×</button></div>' +
           '<input type="text" class="ln-name" data-lnname="' + k + '" value="' + esc(m.name || "") + '" placeholder="Name, z. B. Bilder" aria-label="Name der Materialsammlung">' +
-          matFoldBtn(m, k) + (m.fold ? "" : '<button type="button" class="linkbtn mat-slim-tog" data-matslim="' + k + '" title="' + (slim ? "Notizfeld wieder breit zeigen" : "Notizfeld klein machen, Dokumente in Spalten über die ganze Breite") + '">' + (slim ? "▸ Notiz zeigen" : "◂ Notiz klein") + "</button>") +
+          matFoldBtn(m, k) +
           (lk ? '<span class="mat-link"><button type="button" class="linkbtn" data-goto="' + esc(m.rid) + '" title="Verknüpfte Reihe öffnen">↗ ' + esc(lk.title || "Reihe") + '</button><button type="button" class="x" data-matunlink="' + k + '" title="Verknüpfung lösen" aria-label="Verknüpfung lösen">×</button></span>'
               : "") + "</div>" +
           cellHtml2('data-rf="lnItems.' + k + '.html" id="l-' + key + '" aria-label="Kurzzusammenfassung der Materialsammlung"', m.html || "", { color: m.color, more, cellAttrs: ' data-lesson="' + key + '"' }) +
@@ -9093,7 +9101,9 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const b = e.target.closest("button"); if (!b || !uEl.contains(b)) return;
     if (b.dataset.uebnew != null) { const r = U.sel && U.reihen[U.sel]; if (!r) return; if (!r.ueb) { r.ueb = { html: "", items: [] }; saveReihe(U.sel, 0); } UEBS.open = true; uebsSave(); renderU(); return; }
     if (b.dataset.uebopen != null) { UEBS.open = true; uebsSave(); renderU(); return; }
-    if (b.dataset.matfold != null) { const id = mrOf(b), r = U.reihen[id]; if (!r) return; const k = +b.dataset.matfold, m = (r.lnItems || [])[k]; if (!m) return; r.lnItems = r.lnItems.slice(); const nm = { ...m }; if (m.fold) delete nm.fold; else nm.fold = true; r.lnItems[k] = nm; saveReihe(id, 0); renderLessonsOnly(U.reihen[U.sel]); return; }
+    if (b.dataset.matfold != null) { const id = mrOf(b), r = U.reihen[id]; if (!r) return; const k = +b.dataset.matfold, m = (r.lnItems || [])[k]; if (!m) return; r.lnItems = r.lnItems.slice(); const nm = { ...m }; if (matFolded(m)) nm.fold = false; else delete nm.fold; delete nm.slim; r.lnItems[k] = nm; saveReihe(id, 0); renderLessonsOnly(U.reihen[U.sel]); return; }
+    if (b.dataset.matnote != null) { const id = mrOf(b), r = U.reihen[id]; if (!r) return; const k = +b.dataset.matnote, m = (r.lnItems || [])[k]; if (!m) return; r.lnItems = r.lnItems.slice(); r.lnItems[k] = { ...m, fold: false }; delete r.lnItems[k].slim; saveReihe(id, 0); renderLessonsOnly(U.reihen[U.sel]);
+      setTimeout(() => { const row = id === U.sel ? document.querySelector('.lesson.mat-row[data-li="ln' + k + '"]') : document.querySelector('.lesson.mat-row[data-mrid="' + id + '"][data-cmat="' + k + '"]'); const ed = row && row.querySelector(".ucell .inp"); if (ed) { row.scrollIntoView({ block: "nearest" }); uStart(ed); } }, 30); return; }
     if (b.dataset.matslim != null) { const id = mrOf(b), r = U.reihen[id]; if (!r) return; const k = +b.dataset.matslim, m = (r.lnItems || [])[k]; if (!m) return; const row = b.closest(".lesson"); r.lnItems = r.lnItems.slice(); r.lnItems[k] = { ...m, slim: !row.classList.contains("mat-slim") }; saveReihe(id, 0); renderLessonsOnly(U.reihen[U.sel]); return; }
     if (b.id === "u-legend") { prioFilterMenu(b); return; }
     if (b.id === "u-subs") { UP.subs = !UP.subs; UP.subOpen = {}; saveUP(); renderU(); return; }
