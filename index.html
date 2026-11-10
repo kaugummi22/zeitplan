@@ -1976,6 +1976,9 @@ body:not(.lk-take) .lk-plantext .lk-ptab { padding-top: 0; }
 /* Lektionsfenster: immer volle Breite, schlanke Kopfzeile mit Menü «Angaben», ↶ ↷, Arbeitsblatt, Drucken, ✕ */
 .panel.wide.lfull { width: min(1760px, 100%); }
 .panel.wide.lfull.lnarrow:not(.wsp) { width: min(1080px, 100%); }
+.panel.lfull .nbar { top: calc(var(--dth, 50px) - 2px); }
+.panel.lfull .d-title { box-shadow: 0 -40px 0 0 var(--surface); }
+@media (min-width: 900px) { .panel.lfull .d-split.ws > .d-ws, .panel.lfull .d-split.rail > .d-rail { top: calc(var(--dth, 50px) + 4px); } .panel.lfull .d-split.ws > .d-ws { height: calc(100vh - 5vh - 32px - var(--dth, 50px)); } }
 .panel.lfull .d-title { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; position: sticky; top: -1px; z-index: 40; background: var(--surface); padding: 6px 0 8px; margin-top: -6px; }
 .panel.lfull .d-title small { margin-left: 0; }
 .panel.lfull .d-toggles { display: none; }
@@ -6257,6 +6260,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   function lessonHead(root) {
     const pn = root.querySelector(".panel"), tt = root.querySelector(".d-title"), tg = root.querySelector(".d-toggles"); if (!pn || !tt || !tg) return;
     pn.classList.add("lfull");
+    // Höhe der Titelzeile merken: Werkzeugleiste, Arbeitsblatt und Leiste kleben beim Scrollen darunter (nicht dahinter)
+    const dth = () => pn.style.setProperty("--dth", tt.offsetHeight + "px"); dth(); if (window.ResizeObserver) new ResizeObserver(dth).observe(tt);
     const bar = document.createElement("span"); bar.className = "d-tbar";
     const mb = document.createElement("button"); mb.type = "button"; mb.className = "d-tmenu"; mb.id = "d-tmenu"; mb.setAttribute("aria-haspopup", "menu"); mb.title = "Lernziele, Kurzeintrag, Farbe und Dokumente ein- bzw. ausblenden";
     const lab = () => { mb.innerHTML = "Angaben" + ([...tg.querySelectorAll(".d-tog.has[data-dtog]")].length ? '<span class="dot"></span>' : "") + " ▾"; };
