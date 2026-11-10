@@ -216,6 +216,8 @@ html:not(.ls-on).lk-proj .lk-page .ls:not(.lk-sp .ls), .ls-x { visibility: hidde
 /* Abdecken (wie Spoiler): Sie sehen den Text durch den dunklen Balken, beim Zeigen ist er schwarz; Klick deckt auf */
 .lk-sp { background: #26282c; color: #f3f3f3; border-radius: 3px; padding: 0 3px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
 .lk-sp .ls, .ls .lk-sp { color: #ffab9c; }
+table.trect *::selection { background: transparent; }
+table.trect td.tcsel, table.trect th.tcsel { background: color-mix(in srgb, #3b82f6 28%, transparent) !important; }
 .lk-split { display: inline-flex; align-items: center; }
 .lk-split > .lk-tb { border-top-right-radius: 0; border-bottom-right-radius: 0; }
 .lk-split > .lk-tbw > .lk-tb { border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: -1px; padding-left: 5px; padding-right: 5px; }
@@ -2653,6 +2655,38 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   }
   // Abdecken (Unterricht und Notizen): jedes markierte Textstück einzeln in einen Balken packen – so bleiben Tabellen, Listen und Absätze heil.
   // Schreibmarke (ohne Markierung) in einem Balken = diesen Balken entfernen. Gibt false zurück, wenn nichts markiert war.
+  // Markierung von Zelle zu Zelle in einer Tabelle: Rechteck zwischen erster und letzter Zelle (Set der Zellen) oder null
+  let TSEL = null; // Zellen, über die gerade mit der Maus gezogen wurde: { tb, a, b }
+  function tRect(rg) {
+    const cellOf = (x) => { const e = x.nodeType === 1 ? x : x.parentElement; return e && e.closest("td, th"); };
+    let c1 = cellOf(rg.startContainer), c2 = cellOf(rg.endContainer);
+    if (TSEL && TSEL.a !== TSEL.b && TSEL.tb.isConnected && rg.intersectsNode(TSEL.tb)) { c1 = TSEL.a; c2 = TSEL.b; }
+    if (!c1 || !c2 || c1 === c2 || c1.closest("table") !== c2.closest("table")) return null;
+    const tb = c1.closest("table"), g = tGrid([...tb.rows]), pos = (c) => { for (let r = 0; r < g.rows.length; r++) { const x = g.rows[r].find((y) => y.cell === c); if (x) return { r, c0: x.start, c1: x.start + x.span - 1, r1: r + x.rs - 1 }; } return null; };
+    const a = pos(c1), b = pos(c2); if (!a || !b) return null;
+    const R0 = Math.min(a.r, b.r), R1 = Math.max(a.r1, b.r1), C0 = Math.min(a.c0, b.c0), C1 = Math.max(a.c1, b.c1), ok = new Set();
+    g.rows.forEach((l, r) => l.forEach((x) => { if (r <= R1 && r + x.rs - 1 >= R0 && x.start <= C1 && x.start + x.span - 1 >= C0) ok.add(x.cell); }));
+    return { tb, cells: ok };
+  }
+  // Ziehen mit der Maus über Zellen: Start- und aktuelle Zelle merken (die Browser-Markierung springt sonst leicht hinter die Tabelle)
+  document.addEventListener("pointerdown", (e) => {
+    if (!(e.target.closest && e.target.closest("#lk-page, .notes-ed"))) return; // Knöpfe der Werkzeugleiste: Markierung behalten
+    TSEL = null; if (e.button !== 0) return;
+    const c = e.target.closest && e.target.closest("td, th"), tb = c && c.closest("table");
+    if (!tb || !tb.isContentEditable || !tb.closest("#lk-page, .notes-ed")) return;
+    TSEL = { tb, a: c, b: c };
+    const mv = (ev) => { const el = document.elementFromPoint(ev.clientX, ev.clientY), c2 = el && el.closest && el.closest("td, th"); if (c2 && c2.closest("table") === tb) { TSEL.b = c2; tShow(); } };
+    const up = () => { document.removeEventListener("pointermove", mv, true); document.removeEventListener("pointerup", up, true); tShow(); };
+    document.addEventListener("pointermove", mv, true); document.addEventListener("pointerup", up, true);
+  }, true);
+  const tShow = () => {
+    const sl = getSelection(), rg = sl.rangeCount ? sl.getRangeAt(0) : null, R = rg && !rg.collapsed ? tRect(rg) : null;
+    const ok = R && R.tb.closest("#lk-page, .notes-ed") && R.tb.isContentEditable;
+    document.querySelectorAll("table.trect").forEach((t) => { if (!ok || t !== R.tb) { t.classList.remove("trect"); t.querySelectorAll(".tcsel").forEach((c) => c.classList.remove("tcsel")); } });
+    if (!ok) return;
+    R.tb.classList.add("trect"); R.tb.querySelectorAll("td, th").forEach((c) => c.classList.toggle("tcsel", R.cells.has(c)));
+  };
+  document.addEventListener("selectionchange", tShow);
   function spWrap(root) {
     const sl = getSelection(); if (!sl.rangeCount) return false;
     const rg = sl.getRangeAt(0); if (!root.contains(rg.commonAncestorContainer)) return false;
@@ -2663,17 +2697,9 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const inSp = host.closest(".lk-sp"); if (inSp && root.contains(inSp)) { unwrap(inSp); return true; }
     // in einer Tabelle von Zelle zu Zelle markiert: nur das Rechteck zwischen erster und letzter Zelle (nicht ganze Zeilen dazwischen)
     const cellOf = (x) => { const e = x.nodeType === 1 ? x : x.parentElement; return e && e.closest("td, th"); };
-    const c1 = cellOf(rg.startContainer), c2 = cellOf(rg.endContainer); let inRect = null, whole = false;
-    if (c1 && c2 && c1 !== c2 && c1.closest("table") === c2.closest("table") && root.contains(c1)) {
-      const tb = c1.closest("table"), rows = [...tb.rows], g = tGrid(rows), pos = (c) => { for (let r = 0; r < g.rows.length; r++) { const x = g.rows[r].find((y) => y.cell === c); if (x) return { r, c0: x.start, c1: x.start + x.span - 1, r1: r + x.rs - 1 }; } return null; };
-      const a = pos(c1), b = pos(c2);
-      if (a && b) {
-        const R0 = Math.min(a.r, b.r), R1 = Math.max(a.r1, b.r1), C0 = Math.min(a.c0, b.c0), C1 = Math.max(a.c1, b.c1), ok = new Set();
-        g.rows.forEach((l, r) => l.forEach((x) => { if (r <= R1 && r + x.rs - 1 >= R0 && x.start <= C1 && x.start + x.span - 1 >= C0) ok.add(x.cell); }));
-        inRect = (t) => { const c = cellOf(t); return c && ok.has(c) && c.closest("table") === tb; }; whole = true;
-      }
-    }
-    const tw = document.createTreeWalker(inRect ? c1.closest("table") : host, NodeFilter.SHOW_TEXT), list = [];
+    const R = tRect(rg); let inRect = null, whole = false;
+    if (R && root.contains(R.tb)) { inRect = (t) => { const c = cellOf(t); return c && R.cells.has(c); }; whole = true; }
+    const tw = document.createTreeWalker(inRect ? R.tb : host, NodeFilter.SHOW_TEXT), list = [];
     let n; while ((n = tw.nextNode())) if ((inRect ? inRect(n) : rg.intersectsNode(n)) && n.nodeValue.trim() && !(n.parentElement && n.parentElement.closest(".lk-sp, .nsec, .nend, figure, .lk-doc, a"))) list.push(n);
     if (!list.length) return false;
     const sc = whole ? null : rg.startContainer, so = rg.startOffset, ec = whole ? null : rg.endContainer, eo = rg.endOffset;
