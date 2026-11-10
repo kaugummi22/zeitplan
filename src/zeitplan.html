@@ -1149,12 +1149,19 @@ html.phone .lesson.mat-slim .ldocs { grid-column: 1 / -1; }
 .ndoc-cbar span { flex: 1 1 140px; }
 .nf-edit { width: 100%; margin: 2px 0 6px; }
 /* Word-Editor */
-#wdRoot .wd-ov { position: fixed; inset: 0; z-index: 9000; background: #e9ecef; display: flex; flex-direction: column; }
-#wdRoot .wd-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 14px; background: var(--surface); border-bottom: 1px solid var(--line); box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
-#wdRoot .wd-name { font-size: 1rem; max-width: 34ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#wdRoot .wd-tools { display: inline-flex; align-items: center; gap: 2px; }
-#wdRoot .wd-bar .right { margin-left: auto; display: inline-flex; gap: 8px; }
-#wdRoot .wd-scroll { flex: 1; overflow: auto; padding: 18px 16px 60px; }
+.wdRoot .wd-ov { position: fixed; inset: 0; z-index: 9000; background: #e9ecef; display: flex; flex-direction: column; }
+.wdRoot .wd-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 14px; background: var(--surface); border-bottom: 1px solid var(--line); box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+.wdRoot .wd-name { font-size: 1rem; max-width: 34ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wdRoot .wd-tools { display: inline-flex; align-items: center; gap: 2px; }
+.wdRoot .wd-bar .right { margin-left: auto; display: inline-flex; gap: 8px; }
+.wdRoot .wd-scroll { flex: 1; overflow: auto; padding: 18px 16px 60px; }
+.wdRoot.wd-in { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.wdRoot.wd-in .wd-ov { position: static; flex: 1; min-height: 0; z-index: auto; }
+.wdRoot.wd-in .wd-bar { padding: 6px 8px; gap: 6px; }
+.wdRoot.wd-in .wd-name { font-size: 0.86rem; max-width: 100%; flex: 1 1 100%; }
+.wdRoot.wd-in .wd-bar .msg { flex: 1 1 100%; order: 9; font-size: 0.8rem; }
+.wdRoot.wd-in .wd-bar .btn { padding: 2px 10px; font-size: 0.85rem; }
+.wdRoot.wd-in .wd-scroll { padding: 12px 8px 40px; }
 .wd-page { position: relative; isolation: isolate; overflow: hidden; box-sizing: border-box; background: #fff; color: #000; margin: 0 auto; box-shadow: 0 2px 12px rgba(0,0,0,0.18); white-space: pre-wrap; overflow-wrap: break-word; text-align: left; line-height: 1.15; }
 .wd-page .wd-body { outline: none; min-height: 2em; }
 .wd-page p { margin: 0; min-height: 1em; }
@@ -4726,8 +4733,11 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   // Der Editor: ganze Seite wie in Word, Schreiben direkt im Dokument
   async function wdEdit(f, opt) {
     opt = opt || {};
-    let root = document.getElementById("wdRoot"); if (!root) { root = document.createElement("div"); root.id = "wdRoot"; document.body.appendChild(root); }
-    root.innerHTML = '<div class="wd-ov" role="dialog" aria-modal="true" aria-label="' + esc(f.name) + '"><div class="wd-bar">' +
+    let root;
+    // opt.host: im Fenster (z. B. rechts in der Materialsammlung) statt über den ganzen Bildschirm
+    if (opt.host) { root = document.createElement("div"); root.className = "wdRoot wd-in"; opt.host.innerHTML = ""; opt.host.appendChild(root); }
+    else { root = document.getElementById("wdRoot"); if (!root) { root = document.createElement("div"); root.id = "wdRoot"; document.body.appendChild(root); } root.className = "wdRoot"; }
+    root.innerHTML = '<div class="wd-ov" role="dialog" ' + (opt.host ? "" : 'aria-modal="true" ') + 'aria-label="' + esc(f.name) + '"><div class="wd-bar">' +
       '<b class="wd-name">' + esc(f.name) + "</b>" +
       '<span class="wd-tools"><button type="button" class="nb" data-wc="undo" title="Rückgängig (Strg+Z)">↶</button><button type="button" class="nb" data-wc="redo" title="Wiederholen (Strg+Y)">↷</button><span class="nsep"></span>' +
       '<button type="button" class="nb" data-wc="bold" title="Fett (Strg+B)"><b>F</b></button><button type="button" class="nb" data-wc="italic" title="Kursiv (Strg+I)"><i>K</i></button><button type="button" class="nb" data-wc="underline" title="Unterstrichen (Strg+U)"><u>U</u></button>' +
@@ -4742,17 +4752,20 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const close = () => { root.innerHTML = ""; document.removeEventListener("keydown", keys, true); if (opt.onClose) opt.onClose(); };
     const tryClose = () => { if (dirty) { $w("#wd-ask").hidden = false; return; } close(); };
     const keys = (e) => {
+      if (!root.isConnected) { document.removeEventListener("keydown", keys, true); return; }
       if (!root.firstChild) return;
+      if (opt.host && !root.contains(document.activeElement)) return;
       if (e.key === "Escape") { e.preventDefault(); e.stopImmediatePropagation(); tryClose(); return; }
       if ((e.ctrlKey || e.metaKey) && (e.key || "").toLowerCase() === "s") { e.preventDefault(); e.stopImmediatePropagation(); save(); }
     };
     document.addEventListener("keydown", keys, true);
     $w("#wd-close").onclick = tryClose;
+    root._dirty = () => dirty;
     $w("#wd-ask-back").onclick = () => { $w("#wd-ask").hidden = true; };
     $w("#wd-ask-drop").onclick = close;
     $w("#wd-ask-save").onclick = async () => { if (await save()) close(); };
     const applyZoom = () => { if (!cur) return; cur.style.zoom = String(zoom); };
-    const fitZoom = () => { if (!cur) return; const w = scroll.clientWidth - 32, pw = cur.offsetWidth / (zoom || 1); zoom = Math.min(1.25, Math.max(0.4, w / pw)); if (zoom > 0.97 && zoom < 1.03) zoom = 1; applyZoom(); };
+    const fitZoom = () => { if (!cur) return; cur.style.zoom = "1"; const w = scroll.clientWidth - (opt.host ? 16 : 32), pw = cur.offsetWidth; zoom = Math.min(1.25, Math.max(0.4, w / pw)); if (zoom > 0.97 && zoom < 1.03) zoom = 1; applyZoom(); };
     root.querySelector(".wd-tools").addEventListener("mousedown", (e) => e.preventDefault());
     root.querySelector(".wd-tools").addEventListener("click", (e) => {
       const b = e.target.closest("[data-wc]"); if (!b) return;
@@ -7460,20 +7473,25 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const setDocs = () => { const on = docsOn(); split.classList.toggle("on", on); const b = w.querySelector("#ufl-docs"); if (b) { b.hidden = !((item() || {}).files || []).length; b.textContent = on ? "◨ Dokumente ausblenden" : "◧ Dokumente daneben"; } if (on && !dp.dataset.on) docsPane(); setTimeout(() => fit(), 0); };
     let curDoc = null, curPg = null;
     const pinBtn = () => { const b = dp.querySelector("[data-dpin]"); if (!b) return; const on = !!(curPg && curPg.doc && curPg.doc === curDoc); b.setAttribute("aria-pressed", String(on)); b.title = on ? "Dieses Dokument öffnet sich zuerst, wenn Sie diese Seite aufschlagen. Klick: Zuordnung lösen" : "Dieses Dokument der offenen Seite zuordnen: es öffnet sich dann zuerst"; b.textContent = on ? "📌 Zur Seite" : "📌"; };
-    const onPage = (pg) => { curPg = pg; const fs = (item() || {}).files || []; if (pg && pg.doc && fs.some((f) => f.id === pg.doc) && pg.doc !== curDoc) { curDoc = pg.doc; if (dp.dataset.on) docsPane(); } else pinBtn(); };
+    const onPage = (pg) => { curPg = pg; const fs = (item() || {}).files || []; if (pg && pg.doc && fs.some((f) => f.id === pg.doc) && pg.doc !== curDoc && !wdIn()) { curDoc = pg.doc; if (dp.dataset.on) docsPane(); } else pinBtn(); };
     function docsPane() {
       dp.dataset.on = "1"; const fs = (item() || {}).files || []; if (!fs.length) { dp.innerHTML = ""; return; }
       if (!curDoc || !fs.some((f) => f.id === curDoc)) curDoc = (UFL.doc && UFL.doc[id + "|" + k] && fs.some((f) => f.id === UFL.doc[id + "|" + k])) ? UFL.doc[id + "|" + k] : fs[0].id;
       const short = (n) => String(n || "").replace(/\.[^.]+$/, "");
-      dp.innerHTML = '<div class="ufl-dbar"><select class="ufl-dsel" aria-label="Dokument wählen">' + fs.map((f) => '<option value="' + esc(f.id) + '"' + (f.id === curDoc ? " selected" : "") + ">" + esc(short(f.name)) + "</option>").join("") + '</select><button type="button" class="btn ghost" data-dnav="-1" title="Vorheriges Dokument" aria-label="Vorheriges Dokument">‹</button><button type="button" class="btn ghost" data-dnav="1" title="Nächstes Dokument" aria-label="Nächstes Dokument">›</button><button type="button" class="btn ghost ufl-pin" data-dpin aria-pressed="false">📌</button><button type="button" class="btn ghost" data-dbig title="Gross öffnen (mit Bearbeiten, Herunterladen …)">⤢ Öffnen</button></div><div class="ufl-dmsg msg"></div><div class="ufl-dbody"><div class="empty">Lädt …</div></div>';
+      dp.innerHTML = '<div class="ufl-dbar"><select class="ufl-dsel" aria-label="Dokument wählen">' + fs.map((f) => '<option value="' + esc(f.id) + '"' + (f.id === curDoc ? " selected" : "") + ">" + esc(short(f.name)) + "</option>").join("") + '</select><button type="button" class="btn ghost" data-dnav="-1" title="Vorheriges Dokument" aria-label="Vorheriges Dokument">‹</button><button type="button" class="btn ghost" data-dnav="1" title="Nächstes Dokument" aria-label="Nächstes Dokument">›</button><button type="button" class="btn ghost ufl-pin" data-dpin aria-pressed="false">📌</button><button type="button" class="btn ghost" data-dedit hidden title="Hier bearbeiten (z. B. Tippfehler) und direkt in dieselbe Word-Datei speichern">✎ Bearbeiten</button><button type="button" class="btn ghost" data-dbig title="Gross öffnen (mit Bearbeiten, Herunterladen …)">⤢ Öffnen</button></div><div class="ufl-dmsg msg"></div><div class="ufl-dbody"><div class="empty">Lädt …</div></div>';
       const f = fs.find((x) => x.id === curDoc); UFL.doc = UFL.doc || {}; UFL.doc[id + "|" + k] = curDoc; try { localStorage.setItem("zp-ufl", JSON.stringify(UFL)); } catch (e) {}
-      pinBtn(); docPreview(f, dp.querySelector(".ufl-dbody"), dp.querySelector(".ufl-dmsg"));
+      pinBtn(); dp.querySelector("[data-dedit]").hidden = !(f && /^docx$/i.test(extOf(f)) && window.ZLOCAL && window.ZLOCAL.readEx);
+      docPreview(f, dp.querySelector(".ufl-dbody"), dp.querySelector(".ufl-dmsg"));
     }
+    // Word-Dokument rechts im Fenster bearbeiten; gespeichert wird in dieselbe Datei
+    const wdIn = () => dp.querySelector(".wdRoot");
+    const editDoc = (f) => { dp.dataset.on = "1"; wdEdit(f, { host: dp, onClose: () => docsPane() }); };
     dp.addEventListener("change", (e) => { if (e.target.classList.contains("ufl-dsel")) { curDoc = e.target.value; docsPane(); } });
     dp.addEventListener("click", (e) => {
       const b = e.target.closest("button"); if (!b) return; const fs = (item() || {}).files || [];
       if (b.dataset.dnav) { const j = fs.findIndex((f) => f.id === curDoc), n = j + +b.dataset.dnav; if (n >= 0 && n < fs.length) { curDoc = fs[n].id; docsPane(); } return; }
       if (b.dataset.dpin != null) { const m = item(); if (!curPg || !m || !m.page) return; const pg = uebPg(m.page).pages.find((x) => x.id === curPg.id); if (!pg) return; if (pg.doc === curDoc) delete pg.doc; else pg.doc = curDoc; curPg = pg; save(); pinBtn(); return; }
+      if (b.dataset.dedit != null) { const f = fs.find((x) => x.id === curDoc); if (f) editDoc(f); return; }
       if (b.dataset.dbig != null) { const f = fs.find((x) => x.id === curDoc); if (f) openViewer(f); }
     });
     { const g = w.querySelector(".ufl-gut"); g.addEventListener("pointerdown", (e) => {
@@ -7491,7 +7509,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     kz.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); lineBreak(); } });
     const keep = () => { if (w.classList.contains("max")) return; UFL.x = w.offsetLeft; UFL.y = w.offsetTop; UFL.w = w.offsetWidth; UFL.h = w.offsetHeight; try { localStorage.setItem("zp-ufl", JSON.stringify(UFL)); } catch (e) {} };
     const fit = () => { const s = w.querySelector(".ueb-sheet"); if (s && s._place) s._place(); };
-    const close = (quiet) => { const a = document.activeElement; if (a && w.contains(a) && a.blur) a.blur(); save(); keep(); w.remove(); uFlush("r:" + id); if (!quiet) { renderU(); if (after) after(); } };
+    const close = (quiet) => { { const ed = wdIn(); if (ed && ed._dirty && ed._dirty() && !confirm("Im Word-Dokument rechts gibt es ungespeicherte Änderungen. Trotzdem schliessen (die Änderungen gehen verloren)?")) return false; }
+      const a = document.activeElement; if (a && w.contains(a) && a.blur) a.blur(); save(); keep(); w.remove(); uFlush("r:" + id); if (!quiet) { renderU(); if (after) after(); } };
     w._close = close;
     // verschieben am Kopf, Grösse an der Ecke
     const drag = (el, fn) => el.addEventListener("pointerdown", (e) => {
@@ -7507,7 +7526,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const b = e.target.closest("button"); if (!b) return;
       if (b.dataset.ufl === "close") { close(); return; }
       if (b.dataset.ufl === "max") { UFL.max = !w.classList.contains("max"); w.classList.toggle("max", UFL.max); try { localStorage.setItem("zp-ufl", JSON.stringify(UFL)); } catch (err) {} setTimeout(fit, 0); return; }
-      if (b.dataset.umode === "l") { close(true); const rr = U.reihen[id]; if (!rr) return; rr.lnItems = (rr.lnItems || []).slice(); rr.lnItems[k] = { ...(rr.lnItems[k] || {}), asLesson: true }; saveReihe(id, 0); openLessonDetail(i, id, after); }
+      if (b.dataset.umode === "l") { if (close(true) === false) return; const rr = U.reihen[id]; if (!rr) return; rr.lnItems = (rr.lnItems || []).slice(); rr.lnItems[k] = { ...(rr.lnItems[k] || {}), asLesson: true }; saveReihe(id, 0); openLessonDetail(i, id, after); }
     });
   }
   function openLessonDetail(i, rid, after) {
