@@ -719,8 +719,13 @@ html.phone .k-vbar { flex-wrap: wrap; gap: 8px; }
 .lk-plantext .pph.pph-rest { background: none; color: var(--ink); padding-left: 0; border-bottom: 1px solid var(--line); border-radius: 0; }
 .lk-plantext .pgrp.shut { display: none; }
 .lk-plantext tr[style*="--pc"] > td:first-child { box-shadow: inset 4px 0 0 var(--pc); padding-left: 9px; }
-.lk-plantext .pab-s { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); border-radius: 999px; padding: 0 8px; margin: 1px 0; background: var(--surface); color: var(--accent); font-weight: 600; font-size: 0.85em; cursor: pointer; text-decoration: none; }
-.lk-plantext .pab-s::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--pc); flex: none; }
+.lk-plantext .pab-s { display: inline-block; width: 15px; height: 15px; margin: 2px 3px 2px 0; border-radius: 50%; background: var(--pc); border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--pc); cursor: pointer; vertical-align: middle; }
+.lk-plantext .pab-s:hover { transform: scale(1.25); }
+.lk-plantext .pab-s > span { display: none; }
+.lk-plantext col.pab-col { width: 3.4em !important; }
+.lk-plantext td.pab-p { text-align: center; }
+.lk-plantext th.pab-ph > span { display: none; }
+.lk-plantext th.pab-ph::after { content: "§"; }
 .lk-plantext .psec { position: relative; border-radius: 6px; padding: 2px 4px; scroll-margin-top: 8px; }
 .lk-plantext .psec h4 { margin: 6px 0 3px; font-size: 0.95rem; color: var(--accent); border-bottom: 1px solid var(--line); padding-right: 9em; }
 .lk-plantext .psec > .lk-psect { position: absolute; top: 2px; right: 2px; }
@@ -1836,7 +1841,6 @@ table.tt-moving { opacity: 0.45; }
   .d-split.ws:not(.on) > .d-sl { grid-column: 1 / -1; }
   .d-split.on.ws { grid-template-columns: minmax(0, calc(var(--dl, 55) * (100% - var(--wsw, 40%)) / 100)) 14px minmax(0, 1fr) 14px minmax(0, var(--wsw, 40%)); }
   .d-split.on.ws .ptable { min-width: 0; }
-  .d-split.on.ws .ptable col.pab-col { width: 8em !important; }
   .d-split.ws > .d-gut2 { display: block; align-self: stretch; cursor: col-resize; position: relative; touch-action: none; }
   .d-split.ws > .d-gut2::before { content: ""; position: absolute; top: 0; bottom: 0; left: 6px; width: 2px; border-radius: 2px; background: var(--line); }
   .d-split.ws > .d-gut2:hover::before, .d-split.ws > .d-gut2.active::before { background: var(--accent); }
@@ -1848,6 +1852,10 @@ table.tt-moving { opacity: 0.45; }
 .ws-bar .ufl-dsel { flex: 1 1 140px; min-width: 0; }
 .ws-bar .btn[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
 .ws-body { position: relative; }
+.ws-np { display: grid; gap: 6px; padding: 8px; }
+.ws-nph { font-size: 0.78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.ws-npb { min-height: 0; border-radius: 6px; background: var(--surface); }
+.ws-npc { font-size: 0.9em; }
 .ws-hold { position: relative; overflow: hidden; margin: 0 auto; background: #fff; box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15); }
 .ws-sc { transform-origin: 0 0; width: max-content; }
 .ws-sc .wd-page { box-shadow: none; margin: 0; }
@@ -1858,13 +1866,13 @@ table.tt-moving { opacity: 0.45; }
 .ptable th.pab-h { font-size: 0.85em; color: var(--accent); }
 .ptable td.pab { background: color-mix(in srgb, var(--accent) 4%, transparent); }
 .pab-w { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; padding: 2px; }
-.pab-c { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 1px 8px 1px 6px; font: inherit; font-size: 0.8rem; font-weight: 600; color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; gap: 4px; max-width: 100%; text-align: left; }
-.pab-c::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--sc); flex: none; }
-.pab-c:hover { border-color: var(--accent); color: var(--accent); }
-.pab-add { border: 1px dashed var(--line); background: none; border-radius: 999px; color: var(--accent); font: inherit; font-weight: 700; padding: 0 7px; cursor: pointer; }
+.pab-c { width: 16px; height: 16px; padding: 0; border: 2px solid var(--surface); border-radius: 50%; background: var(--sc); box-shadow: 0 0 0 1px color-mix(in srgb, var(--sc) 70%, #000 10%); cursor: pointer; flex: none; }
+.pab-c:hover, .pab-c:focus-visible { transform: scale(1.25); box-shadow: 0 0 0 2px var(--accent); outline: none; }
+.pab-add { border: 1px dashed var(--line); background: none; border-radius: 999px; color: var(--accent); font: inherit; font-weight: 700; padding: 0 5px; line-height: 1.2; cursor: pointer; }
+.ptable th.pab-h { text-align: center; }
 .pab-add:hover { background: var(--accent-soft); }
 .nsec.nsec-c .nsec-t::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--sc); margin-right: 6px; vertical-align: 0; }
-.notes-ed .nsec .nsec-t { white-space: nowrap; }
+.notes-ed .nsec .nsec-t { white-space: normal; }
 .nsec .nsec-x { display: inline-flex; gap: 4px; align-items: center; flex-wrap: wrap; font-weight: 500; letter-spacing: 0; }
 .nsec-ph, .nsec-dc { white-space: nowrap; }
 .nsec-ph { background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 0 7px; font-size: 0.92em; }
@@ -1931,12 +1939,12 @@ table.tt-moving { opacity: 0.45; }
   .d-split.on.ws .ptable-wrap { overflow-x: auto; }
   .d-split.on:not(.ws) { grid-template-columns: minmax(360px, calc(var(--dl, 42) * 1%)) 14px minmax(0, 1fr); }
   .d-split.on .ptable { font-size: 0.9rem; }
-  .d-split.on .ptable .pab-w { flex-direction: column; align-items: flex-start; }
   .d-split.on.ws .ptable { font-size: 0.86rem; }
-  .d-split.on .ptable { table-layout: auto; min-width: 0; }
+  .d-split.on .ptable { min-width: 0; }
+  .d-split.on .ptable:not(.wman) { table-layout: auto; }
   .d-split.on .ptable .pcell { overflow-wrap: break-word; word-break: normal; hyphens: auto; padding: 5px 6px; }
-  .d-split.on .ptable td:first-child .pcell, .d-split.on .ptable th:first-child .pcell { white-space: nowrap; }
-  .d-split.on .ptable col { width: auto !important; }
+  .d-split.on .ptable:not(.wman) td:first-child .pcell, .d-split.on .ptable:not(.wman) th:first-child .pcell { white-space: nowrap; }
+  .d-split.on .ptable:not(.wman) col:not(.pab-col) { width: auto !important; }
 }
 @media (max-width: 899px) { .d-split.rail > .d-rail { width: 100%; justify-content: flex-start; } }
 /* Lektionsfenster: immer volle Breite, schlanke Kopfzeile mit Menü «Angaben», ↶ ↷, Arbeitsblatt, Drucken, ✕ */
@@ -2203,7 +2211,7 @@ body.col-resizing, body.col-resizing * { cursor: col-resize !important; user-sel
 .vw-table { overflow-x: auto; background: #fff; color: #111; padding: 8px; margin-bottom: 12px; font-size: 0.85rem; }
 .vw-sheet { margin: 4px 0; font-family: var(--font-display); }
 .vw-text { white-space: pre-wrap; margin: 0; font-size: 0.85rem; }
-.ptable .rm { width: 62px; border-right: 0; }
+.ptable .rm { width: 26px; border-right: 0; text-align: center; }
 .ptable td.rm { white-space: nowrap; }
 .pgrip { display: inline-block; width: 20px; padding: 6px 0; text-align: center; color: var(--muted); cursor: grab; touch-action: none; user-select: none; font-size: 1rem; line-height: 1; }
 .pgrip:hover { color: var(--accent); }
@@ -4395,7 +4403,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     if (!Array.isArray(p.widths) || p.widths.length !== p.cols.length) p.widths = p.cols.length === DEF_W.length ? DEF_W.slice() : p.cols.map(() => +(100 / p.cols.length).toFixed(1));
     return p;
   }
-  const colgroup = (p, extra, ab) => "<colgroup>" + p.widths.map((w) => '<col style="width:' + w + '%">').join("") + (ab ? '<col class="pab-col" style="width:' + ab + '">' : "") + (extra ? '<col style="width:62px">' : "") + "</colgroup>";
+  const colgroup = (p, extra, ab) => "<colgroup>" + p.widths.map((w) => '<col style="width:' + w + '%">').join("") + (ab ? '<col class="pab-col" style="width:' + ab + '">' : "") + (extra ? '<col style="width:' + extra + 'px">' : "") + "</colgroup>";
   // Spalte «Abschnitt»: welche Abschnitte der Notizen zu einer Zeile gehören. Gespeichert als Kennungen hinter der letzten Spalte (row[cols.length]),
   // so wandern sie beim Verschieben, Einfügen und Löschen von Zeilen und Spalten von selbst mit
   const abGet = (p, ri) => { const row = (p.rows || [])[ri]; return row && typeof row[p.cols.length] === "string" ? row[p.cols.length].split(/[\s,]+/).filter((v) => /^[a-z0-9]{3,16}$/.test(v)) : []; };
@@ -4412,20 +4420,20 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   function abCell(p, ri) {
     if (!PAB) return "";
     const all = PAB.secs(), ids = abGet(p, ri);
-    return '<td class="pab"><div class="pab-w">' + ids.map((id) => { const q = all.find((y) => y.id === id); return q ? '<button type="button" class="pab-c" data-pabgo="' + id + '" data-pabri="' + ri + '" style="--sc:' + PAB.col(id) + '" title="Klick: in den Notizen zu diesem Abschnitt springen. Rechtsklick: von dieser Zeile lösen">' + esc(q.t) + "</button>" : ""; }).join("") +
-      '<button type="button" class="pab-add" data-pabadd="' + ri + '" title="Abschnitt aus den Notizen dieser Zeile zuordnen bzw. neu anlegen" aria-label="Abschnitt zuordnen">＋</button></div></td>';
+    return '<td class="pab"><div class="pab-w">' + ids.map((id) => { const q = all.find((y) => y.id === id); return q ? '<button type="button" class="pab-c" data-pabgo="' + id + '" data-pabri="' + ri + '" style="--sc:' + PAB.col(id) + '" title="' + esc(q.t) + ' – Klick: hinspringen, Rechtsklick: lösen" aria-label="' + esc(q.t) + '" data-pabt="' + esc(q.t) + '"></button>' : ""; }).join("") +
+      '<button type="button" class="pab-add" data-pabadd="' + ri + '" title="Abschnitt aus den Notizen dieser Zeile zuordnen bzw. neu anlegen" aria-label="Abschnitt zuordnen">+</button></div></td>';
   }
   function planTableInner(p) {
-    return colgroup(p, true, PAB ? "11em" : "") + "<thead><tr>" + p.cols.map((c, j) => '<th><div class="pcell" contenteditable="true" data-pc="' + j + '" aria-label="Spaltentitel">' + esc(c) + "</div>" +
-      (j < p.cols.length - 1 ? '<span class="crz" data-crz="' + j + '" title="Ziehen, um die Spalte breiter oder schmaler zu machen"></span>' : "") + "</th>").join("") + (PAB ? '<th class="pab-h" title="Abschnitte aus den Notizen, die zu dieser Phase gehören. Text in den Notizen markieren und «§ Als Abschnitt» wählen, dann hier mit ＋ zuordnen">§ Abschnitt</th>' : "") + '<th class="rm"></th></tr></thead><tbody>' +
+    return colgroup(p, PAB ? 26 : 48, PAB ? "4.6em" : "") + "<thead><tr>" + p.cols.map((c, j) => '<th><div class="pcell" contenteditable="true" data-pc="' + j + '" aria-label="Spaltentitel">' + esc(c) + "</div>" +
+      (j < p.cols.length - 1 ? '<span class="crz" data-crz="' + j + '" title="Ziehen, um die Spalte breiter oder schmaler zu machen"></span>' : "") + "</th>").join("") + (PAB ? '<th class="pab-h" title="Abschnitte aus den Notizen, die zu dieser Phase gehören (Farbpunkt: Klick springt hin). Text in den Notizen markieren und «§ Als Abschnitt» wählen, dann hier mit + zuordnen">§</th>' : "") + '<th class="rm"></th></tr></thead><tbody>' +
       p.rows.map((row, ri) => "<tr" + (PAB ? ' style="--pc:' + rowCol(ri) + '"' : "") + ">" + p.cols.map((c, j) => '<td><div class="rich pcell" contenteditable="true" data-pr="' + ri + '" data-pj="' + j + '" aria-label="' + esc(c) + '">' + sanitize(row[j] || "") + "</div></td>").join("") + abCell(p, ri) +
-        '<td class="rm">' + (PAB ? "" : '<button type="button" class="psec" data-psec="' + ri + '" title="Abschnitt in den Notizen zu dieser Zeile: hinspringen bzw. anlegen" aria-label="Abschnitt in den Notizen">§</button>') + '<span class="pgrip" data-pgrip="' + ri + '" title="Ziehen, um die Zeile nach oben oder unten zu verschieben" aria-label="Zeile verschieben">⠿</span><button type="button" class="btn ghost danger" data-prm="' + ri + '" title="Zeile löschen" aria-label="Zeile löschen">×</button></td></tr>').join("") + "</tbody>";
+        '<td class="rm">' + (PAB ? "" : '<button type="button" class="psec" data-psec="' + ri + '" title="Abschnitt in den Notizen zu dieser Zeile: hinspringen bzw. anlegen" aria-label="Abschnitt in den Notizen">§</button>') + '<span class="pgrip" data-pgrip="' + ri + '" title="Ziehen: Zeile nach oben oder unten verschieben. Rechtsklick: Zeile einfügen, löschen …" aria-label="Zeile verschieben">⠿</span></td></tr>').join("") + "</tbody>";
   }
   function planHtml(p) {
     ensurePlan(p);
     return '<div class="field"><span class="lbl">Lernziele</span><div class="rich rtfield" contenteditable="true" role="textbox" aria-multiline="true" id="p-ziele" data-ph="Die Lernenden können …">' + sanitize(p.ziele || "") + "</div></div>" +
-      '<div class="field"><span class="lbl">Lektionsplanung</span><div class="ptable-wrap"><table class="ptable" id="p-table">' + planTableInner(p) + "</table></div>" +
-      '<div class="ptools"><button class="btn ghost" type="button" id="p-addrow">+ Zeile</button><span class="msg">Spaltentitel lassen sich anklicken und umbenennen. Die Trennlinie zwischen zwei Titeln ziehen, um die Breite zu ändern. Zeilen am Griff ⠿ rechts nach oben oder unten ziehen. Rechtsklick (Tablet: lange drücken auf den Titel): Spalten und Zeilen verschieben, einfügen, löschen.</span></div></div>';
+      '<div class="field"><span class="lbl">Lektionsplanung</span><div class="ptable-wrap"><table class="ptable' + (p.wman ? " wman" : "") + '" id="p-table">' + planTableInner(p) + "</table></div>" +
+      '<div class="ptools"><button class="btn ghost" type="button" id="p-addrow">+ Zeile</button><span class="msg">Spaltentitel lassen sich anklicken und umbenennen. Die Trennlinie zwischen zwei Titeln ziehen, um die Breite zu ändern. Zeilen am Griff ⠿ rechts nach oben oder unten ziehen, Rechtsklick auf den Griff: Zeile einfügen oder löschen. Rechtsklick auf eine Zelle (Tablet: lange drücken auf den Titel): Spalten und Zeilen verschieben, einfügen, löschen.</span></div></div>';
   }
   function bindPlan(root, p, changed) {
     const tbl = $("#p-table");
@@ -4449,14 +4457,17 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     tbl.addEventListener("pointerdown", (e) => {
       const h = e.target.closest(".crz"); if (!h) return;
       e.preventDefault();
-      const j = +h.dataset.crz, start = p.widths.slice(), x0 = e.clientX;
-      const W = tbl.getBoundingClientRect().width - 62, pair = start[j] + start[j + 1];
-      const cols = tbl.querySelectorAll("col");
+      const j = +h.dataset.crz, x0 = e.clientX, ths = [...tbl.tHead.rows[0].cells].slice(0, p.cols.length);
+      const W = ths.reduce((a, c) => a + c.getBoundingClientRect().width, 0) || 1;
+      // aktuelle (evtl. automatische) Breiten übernehmen, ab jetzt gelten die eigenen Breiten
+      if (getComputedStyle(tbl).tableLayout !== "fixed") { p.widths = ths.map((c) => +(c.getBoundingClientRect().width / W * 100).toFixed(1)); tbl.classList.add("wman"); }
+      p.wman = 1; const start = p.widths.slice(), pair = start[j] + start[j + 1];
+      const cols = tbl.querySelectorAll("col"); start.forEach((w, k) => { cols[k].style.width = w + "%"; });
       try { h.setPointerCapture(e.pointerId); } catch (err) {}
       h.classList.add("active"); tbl.classList.add("resizing");
       const move = (ev) => {
         let w = Math.round((start[j] + (ev.clientX - x0) / W * 100) / 2.5) * 2.5;
-        w = Math.max(5, Math.min(pair - 5, w));
+        const mn = Math.max(5, 56 / W * 100); w = Math.max(mn, Math.min(pair - mn, w));
         p.widths[j] = w; p.widths[j + 1] = +(pair - w).toFixed(1);
         cols[j].style.width = p.widths[j] + "%"; cols[j + 1].style.width = p.widths[j + 1] + "%";
       };
@@ -4465,7 +4476,9 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     });
     // Rechtsklick (Tablet: lange drücken) auf eine Zelle oder einen Spaltentitel: Spalten und Zeilen verschieben, einfügen, löschen
     const planMenu = (cx, cy, cell) => {
-      const th = cell.closest("th"), td = cell.closest("td"); if (/\b(rm|pab|pab-h)\b/.test((th || td).className)) return;
+      const th = cell.closest("th"), td = cell.closest("td");
+      if (td && td.classList.contains("rm")) { const tr0 = td.closest("tr"), r0 = [...tr0.parentElement.children].indexOf(tr0); rowMenu(cx, cy, r0); return; }
+      if (/\b(rm|pab|pab-h)\b/.test((th || td).className)) return;
       const tr = cell.closest("tr"), j = [...tr.children].indexOf(th || td), ri = td ? [...tr.parentElement.children].indexOf(tr) : -1, n = p.cols.length;
       const items = [];
       if (j > 0) items.push(["cl", "◀ Spalte nach links"]); if (j < n - 1) items.push(["cr", "Spalte nach rechts ▶"]);
@@ -4473,6 +4486,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       items.push("-", ["lc", "✎ Spalte in Lehrerschrift / normal"]); if (ri >= 0) items.push(["lz", "✎ Zelle in Lehrerschrift / normal"]);
       items.push("-", ["ca", "+ Spalte rechts einfügen"]); if (ri >= 0) items.push(["ra", "+ Zeile darunter einfügen"]);
       if (n > 1) items.push(["cx", "Spalte «" + (p.cols[j] || "") + "» löschen", 1]);
+      if (ri >= 0) items.push(["rx", "Zeile löschen …", 1]);
       cellMenu(cx, cy, "Spalte «" + (p.cols[j] || "") + "»", items, (op) => {
         const swap = (a, i, k) => { const t = a[i]; a[i] = a[k]; a[k] = t; };
         if (op === "cl" || op === "cr") { const k = op === "cl" ? j - 1 : j + 1; swap(p.cols, j, k); swap(p.widths, j, k); p.rows.forEach((r) => swap(r, j, k)); }
@@ -4481,10 +4495,28 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         else if (op === "ra") p.rows.splice(ri + 1, 0, p.cols.map(() => ""));
         else if (op === "lc") { const on = !p.rows.filter((r) => htmlToPlain(r[j] || "").trim()).every((r) => lsStrAll(r[j])); p.rows.forEach((r) => { r[j] = lsStr(r[j], on); }); }
         else if (op === "lz") p.rows[ri][j] = lsStr(p.rows[ri][j], !lsStrAll(p.rows[ri][j]));
+        else if (op === "rx") { if (!delRow(ri)) return; }
         else if (op === "cx") {
           if (p.rows.some((r) => filled(r[j])) && !confirm("Die Spalte «" + (p.cols[j] || "") + "» enthält Text. Trotzdem löschen? (Mit «Rückgängig» lässt es sich wiederherstellen.)")) return;
           const w = p.widths[j]; p.cols.splice(j, 1); p.widths.splice(j, 1); p.rows.forEach((r) => r.splice(j, 1)); p.widths[Math.max(0, j - 1)] = +(p.widths[Math.max(0, j - 1)] + w).toFixed(1);
         }
+        tbl.innerHTML = planTableInner(p); changed();
+      });
+    };
+    // Zeile löschen: immer mit Rückfrage
+    const delRow = (ri) => {
+      const t = htmlToPlain(p.rows[ri].slice(0, p.cols.length).join(" ")).replace(/\s+/g, " ").trim();
+      if (!confirm("Zeile " + (ri + 1) + (t ? " «" + (t.length > 60 ? t.slice(0, 60) + "…" : t) + "»" : " (leer)") + " löschen? (Mit «Rückgängig» lässt es sich wiederherstellen.)")) return false;
+      HIST.brk = true; p.rows.splice(ri, 1); if (!p.rows.length) p.rows.push(p.cols.map(() => "")); return true;
+    };
+    const rowMenu = (cx, cy, ri) => {
+      const items = [];
+      if (ri > 0) items.push(["ru", "▲ Zeile nach oben"]); if (ri < p.rows.length - 1) items.push(["rd", "▼ Zeile nach unten"]);
+      items.push("-", ["rb", "+ Zeile darüber einfügen"], ["ra", "+ Zeile darunter einfügen"], "-", ["rx", "Zeile löschen …", 1]);
+      cellMenu(cx, cy, "Zeile " + (ri + 1), items, (op) => {
+        if (op === "ru" || op === "rd") { const k = op === "ru" ? ri - 1 : ri + 1, t = p.rows[ri]; p.rows[ri] = p.rows[k]; p.rows[k] = t; }
+        else if (op === "rb" || op === "ra") p.rows.splice(op === "rb" ? ri : ri + 1, 0, p.cols.map(() => ""));
+        else if (op === "rx") { if (!delRow(ri)) return; }
         tbl.innerHTML = planTableInner(p); changed();
       });
     };
@@ -4516,7 +4548,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   }
 
   // ---------- Drucken: eine Datei, die sich im Browser öffnet und gleich das Druckfenster zeigt ----------
-  const PRINT_CSS = "@page{size:A4;margin:10mm 11mm}body{font-family:Arial,Helvetica,sans-serif;font-size:9.5pt;color:#111;line-height:1.3;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}h1{font-size:13pt;margin:0 0 4px}h2{font-size:11pt;margin:10px 0 4px;padding-bottom:2px;border-bottom:1.2px solid #333}h3{font-size:8.5pt;margin:6px 0 2px;text-transform:uppercase;letter-spacing:.04em;color:#444}.meta{color:#444;margin:0 0 10px}.box{border:1px solid #bbb;border-radius:4px;padding:6px 8px;margin:4px 0}table{width:100%;border-collapse:collapse;margin:4px 0;table-layout:fixed}th,td{border:1px solid #999;padding:4px 6px;vertical-align:top;text-align:left;overflow-wrap:break-word}th{background:#eee;font-size:9.5pt}.pre{white-space:pre-wrap}tr{break-inside:avoid}.notes img{max-width:100%;max-height:120mm}.notes img.w50{max-width:50%}.notes img.w33{max-width:33%}.notes img.w25{max-width:25%}.notes img.w75{max-width:75%}.notes{display:flow-root}.nfig{margin:4px 0;width:fit-content;max-width:100%;break-inside:avoid}.nfig img{display:block;max-width:100%;max-height:120mm}.nfig[class*=\" w\"] img{width:100%}.nfig.w25{width:25%}.nfig.w33{width:33%}.nfig.w50{width:50%}.nfig.w75{width:75%}.nfig.w100{width:100%}.nfig figcaption{contain:inline-size;font-size:8pt;font-style:italic;color:#555;margin-top:2px}.nfig.p-l{float:left;margin:2px 10px 6px 0}.nfig.p-r{float:right;margin:2px 0 6px 10px}.nfig.p-c{margin-left:auto;margin-right:auto}.nfig.p-c figcaption{text-align:center}.ls{font-family:'Ink Free','Segoe Print','Bradley Hand',Noteworthy,'Comic Sans MS',cursive;color:#c8402c}table caption{caption-side:bottom;text-align:left;font-size:8pt;font-style:italic;color:#555;padding-top:2px}table.tp-l{float:left;margin:2px 10px 6px 0}table.tp-r{float:right;margin:2px 0 6px 10px}table.tp-c{margin-left:auto;margin-right:auto}mark.hl-y{background:#fff1a6}mark.hl-g{background:#d3f2c4}mark.hl-b{background:#cfe4ff}mark{color:inherit}.fs-s{font-size:85%}.fs-l{font-size:125%}.fs-xl{font-size:150%}.one h1{border-bottom:1.2px solid #333;padding-bottom:2px}.lhn-1{line-height:1.15}.lhn-2{line-height:1.5}.lhn-3{line-height:1.8}.lhn-4{line-height:2.2}.al-c{text-align:center}.al-r{text-align:right}.al-j{text-align:justify}.notes ul,.notes ol{margin:2px 0;padding-left:20px}.ncols{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);margin:4px 0;break-inside:avoid}.ncol{padding:2px 8px}.ncol+.ncol{border-left:1px solid #999}.nflow{column-count:2;column-gap:8mm;column-rule:1px solid #bbb;margin:4px 0}.nflow[data-n=\"3\"]{column-count:3}.nflow li{break-inside:avoid}.nsec{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px 0 4px;font-size:8.5pt;font-weight:700;color:#555;break-after:avoid}.nsec::before,.nsec::after{content:\"\";flex:0 1 22%;border-top:1px solid #999}.nsec .nsec-tg{display:none}.phase{font-weight:400;color:#555}ul{margin:2px 0;padding-left:18px}@media screen{body{max-width:190mm;margin:20px auto;padding:0 12px}}figure.ndoc::before{content:\"📄 \" attr(data-name);display:block;color:#555;font-style:italic}.ls{font-style:italic}.nend{display:none}.pph{font-weight:700;font-size:10.5pt;margin:12px 0 2px;break-after:avoid}.psec{margin:0 0 6px}.psec h4{margin:6px 0 3px;font-size:10pt;border-bottom:1px solid #000;padding-bottom:1px;break-after:avoid}.psec-ref{color:#444;font-style:italic;margin:2px 0 6px}.pcm{font-size:8.5pt;color:#222;border-left:2px solid #000;padding:2px 0 2px 7px;margin:4px 0}.pcut{position:relative;overflow:hidden;margin:4px auto;outline:1px solid #888;outline-offset:0;break-inside:avoid;background:#fff}.pcut-in{transform-origin:0 0}.pcut-n{font-size:7.5pt;color:#444;font-style:italic;margin:-2px 0 6px}.psheet{break-before:page}.psheet h3{margin:0 0 4px}.psheet img{max-width:100%;display:block;margin:0 auto 6px;border:1px solid #888}td.pab-p{font-size:8.5pt}" + FF_CSS;
+  const PRINT_CSS = "@page{size:A4;margin:10mm 11mm}body{font-family:Arial,Helvetica,sans-serif;font-size:9.5pt;color:#111;line-height:1.3;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}h1{font-size:13pt;margin:0 0 4px}h2{font-size:11pt;margin:10px 0 4px;padding-bottom:2px;border-bottom:1.2px solid #333}h3{font-size:8.5pt;margin:6px 0 2px;text-transform:uppercase;letter-spacing:.04em;color:#444}.meta{color:#444;margin:0 0 10px}.box{border:1px solid #bbb;border-radius:4px;padding:6px 8px;margin:4px 0}table{width:100%;border-collapse:collapse;margin:4px 0;table-layout:fixed}th,td{border:1px solid #999;padding:4px 6px;vertical-align:top;text-align:left;overflow-wrap:break-word}th{background:#eee;font-size:9.5pt}.pre{white-space:pre-wrap}tr{break-inside:avoid}.notes img{max-width:100%;max-height:120mm}.notes img.w50{max-width:50%}.notes img.w33{max-width:33%}.notes img.w25{max-width:25%}.notes img.w75{max-width:75%}.notes{display:flow-root}.nfig{margin:4px 0;width:fit-content;max-width:100%;break-inside:avoid}.nfig img{display:block;max-width:100%;max-height:120mm}.nfig[class*=\" w\"] img{width:100%}.nfig.w25{width:25%}.nfig.w33{width:33%}.nfig.w50{width:50%}.nfig.w75{width:75%}.nfig.w100{width:100%}.nfig figcaption{contain:inline-size;font-size:8pt;font-style:italic;color:#555;margin-top:2px}.nfig.p-l{float:left;margin:2px 10px 6px 0}.nfig.p-r{float:right;margin:2px 0 6px 10px}.nfig.p-c{margin-left:auto;margin-right:auto}.nfig.p-c figcaption{text-align:center}.ls{font-family:'Ink Free','Segoe Print','Bradley Hand',Noteworthy,'Comic Sans MS',cursive;color:#c8402c}table caption{caption-side:bottom;text-align:left;font-size:8pt;font-style:italic;color:#555;padding-top:2px}table.tp-l{float:left;margin:2px 10px 6px 0}table.tp-r{float:right;margin:2px 0 6px 10px}table.tp-c{margin-left:auto;margin-right:auto}mark.hl-y{background:#fff1a6}mark.hl-g{background:#d3f2c4}mark.hl-b{background:#cfe4ff}mark{color:inherit}.fs-s{font-size:85%}.fs-l{font-size:125%}.fs-xl{font-size:150%}.one h1{border-bottom:1.2px solid #333;padding-bottom:2px}.lhn-1{line-height:1.15}.lhn-2{line-height:1.5}.lhn-3{line-height:1.8}.lhn-4{line-height:2.2}.al-c{text-align:center}.al-r{text-align:right}.al-j{text-align:justify}.notes ul,.notes ol{margin:2px 0;padding-left:20px}.ncols{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);margin:4px 0;break-inside:avoid}.ncol{padding:2px 8px}.ncol+.ncol{border-left:1px solid #999}.nflow{column-count:2;column-gap:8mm;column-rule:1px solid #bbb;margin:4px 0}.nflow[data-n=\"3\"]{column-count:3}.nflow li{break-inside:avoid}.nsec{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px 0 4px;font-size:8.5pt;font-weight:700;color:#555;break-after:avoid}.nsec::before,.nsec::after{content:\"\";flex:0 1 22%;border-top:1px solid #999}.nsec .nsec-tg{display:none}.phase{font-weight:400;color:#555}ul{margin:2px 0;padding-left:18px}@media screen{body{max-width:190mm;margin:20px auto;padding:0 12px}}figure.ndoc::before{content:\"📄 \" attr(data-name);display:block;color:#555;font-style:italic}.ls{font-style:italic}.nend{display:none}.pph{font-weight:700;font-size:10.5pt;margin:12px 0 2px;break-after:avoid}.psec{margin:0 0 6px}.psec h4{margin:6px 0 3px;font-size:10pt;border-bottom:1px solid #000;padding-bottom:1px;break-after:avoid}.psec-ref{color:#444;font-style:italic;margin:2px 0 6px}.pcm{font-size:8.5pt;color:#222;border-left:2px solid #000;padding:2px 0 2px 7px;margin:4px 0}.pcut{position:relative;overflow:hidden;margin:4px auto;outline:1px solid #888;outline-offset:0;break-inside:avoid;background:#fff}.pcut-in{transform-origin:0 0}.pcut-n{font-size:7.5pt;color:#444;font-style:italic;margin:-2px 0 6px}.psheet{break-before:page}.psheet h3{margin:0 0 4px}.psheet img{max-width:100%;display:block;margin:0 auto 6px;border:1px solid #888}td.pab-p{font-size:8.5pt}td.pab-p .pab-s{display:block;margin-bottom:2px}" + FF_CSS;
   const safeName = (t) => String(t || "Planung").replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, " ").trim().slice(0, 120);
   async function inlineImgs(body) {
     const ids = [...new Set([...body.matchAll(/src="\/_blob\/([0-9a-f]+)"/g)].map((m) => m[1]))];
@@ -4608,8 +4640,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       ensurePlan(p);
       const rows = p.rows.map((row, ri) => [row, ri]).filter(([row]) => row.some(filled));
       anyAb = rows.some(([, ri]) => abGet(p, ri).some((id) => sp.secs[id]));
-      h += "<h3>Lektionsplanung</h3><table>" + colgroup(p, false, anyAb ? "17%" : "") + "<thead><tr>" + p.cols.map((c) => "<th>" + esc(c) + "</th>").join("") + (anyAb ? "<th>Abschnitt</th>" : "") + "</tr></thead><tbody>" +
-        rows.map(([row, ri]) => '<tr style="--pc:' + rowCol(ri) + '">' + p.cols.map((c, j) => "<td>" + lsOff(sanitize(row[j] || "")) + "</td>").join("") + (anyAb ? '<td class="pab-p">' + abGet(p, ri).filter((id) => sp.secs[id]).map((id) => '<span class="pab-s" data-sref="' + id + '" style="--pc:' + rowCol(ri) + '">' + esc(sp.secs[id].t) + "</span>").join("<br>") + "</td>" : "") + "</tr>").join("") + "</tbody></table>";
+      h += "<h3>Lektionsplanung</h3><table>" + colgroup(p, false, anyAb ? "17%" : "") + "<thead><tr>" + p.cols.map((c) => "<th>" + esc(c) + "</th>").join("") + (anyAb ? '<th class="pab-ph"><span>Abschnitt</span></th>' : "") + "</tr></thead><tbody>" +
+        rows.map(([row, ri]) => '<tr style="--pc:' + rowCol(ri) + '">' + p.cols.map((c, j) => "<td>" + lsOff(sanitize(row[j] || "")) + "</td>").join("") + (anyAb ? '<td class="pab-p">' + abGet(p, ri).filter((id) => sp.secs[id]).map((id) => '<span class="pab-s" data-sref="' + id + '" style="--pc:' + rowCol(ri) + '" title="' + esc(sp.secs[id].t) + '"><span>' + esc(sp.secs[id].t) + "</span></span>").join("") + "</td>" : "") + "</tr>").join("") + "</tbody></table>";
     }
     if (hasNotes && anyAb) {
       // Abschnitte in der Reihenfolge der Lektionsplanung, darüber die Phase als schwarzer Balken (auch schwarz-weiss gut lesbar)
@@ -5915,9 +5947,10 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     root.addEventListener("contextmenu", (e) => {
       const c = e.target.closest && e.target.closest(".pab-c"); if (!c) return;
       e.preventDefault(); e.stopPropagation(); const ri = +c.dataset.pabri, id = c.dataset.pabgo;
-      cellMenu(e.clientX, e.clientY, "Abschnitt «" + c.textContent + "»", [["go", "In den Notizen zeigen"], "-", ["rm", "Von dieser Zeile lösen …", 1]], (op) => {
+      const tt = c.dataset.pabt || "";
+      cellMenu(e.clientX, e.clientY, "Abschnitt «" + tt + "»", [["go", "In den Notizen zeigen"], "-", ["rm", "Von dieser Zeile lösen …", 1]], (op) => {
         if (op === "go") ned._secGo(id);
-        else if (op === "rm" && confirm("Abschnitt «" + c.textContent + "» von dieser Zeile lösen? Der Text in den Notizen bleibt.")) setAb(ri, abGet(p, ri).filter((v) => v !== id));
+        else if (op === "rm" && confirm("Abschnitt «" + tt + "» von dieser Zeile lösen? Der Text in den Notizen bleibt.")) setAb(ri, abGet(p, ri).filter((v) => v !== id));
       });
     }, true);
     // --- Kommentarecke (wie bei den Materialsammlungen) ---
@@ -5968,13 +6001,25 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const f = fs.find((y) => y.id === cur);
       dp.innerHTML = '<div class="ufl-dbar ws-bar"><select class="ufl-dsel" aria-label="Dokument wählen">' + (a.length ? '<optgroup label="Dokumente der Lektion">' + a.map(opt1).join("") + "</optgroup>" : "") + (b.length ? '<optgroup label="Dokumente der Reihe">' + b.map(opt1).join("") + "</optgroup>" : "") + "</select>" +
         '<button type="button" class="btn ghost" data-wnav="-1" title="Vorheriges Dokument" aria-label="Vorheriges Dokument">‹</button><button type="button" class="btn ghost" data-wnav="1" title="Nächstes Dokument" aria-label="Nächstes Dokument">›</button>' +
+        (docPages(f).length ? '<button type="button" class="btn ghost" data-wnp aria-pressed="' + !!npSel + '" title="Die Notizseite zu diesem Blatt aus der Materialsammlung hier anzeigen (Text markieren und in die Notizen ziehen oder kopieren)">📖 Notizseite' + (docPages(f).length > 1 ? " ▾" : "") + "</button>" : "") +
         '<button type="button" class="btn ghost" data-wpin title="Dieses Arbeitsblatt einem oder mehreren Abschnitten der Notizen zuordnen">📌 Abschnitt ▾</button>' +
         '<button type="button" class="btn ghost" data-wcut aria-pressed="' + cutting + '" title="Ausschnitt wählen: Rahmen über das Blatt ziehen, dann in die Notizen ziehen">✂ Ausschnitt</button>' +
         ('<button type="button" class="btn ghost" data-wedit title="Word-Datei hier bearbeiten; gespeichert wird in dieselbe Datei"' + (/^docx$/.test(extW(f)) && window.ZLOCAL && window.ZLOCAL.readEx ? "" : " hidden") + ">✎</button>") +
         '<button type="button" class="btn ghost" data-wbig title="Gross ansehen">⤢</button><button type="button" class="btn ghost" data-wclose title="Arbeitsblatt ausblenden" aria-label="Arbeitsblatt ausblenden">✕</button></div>' +
         '<div class="ufl-dmsg msg"></div><div class="ufl-dbody ws-body' + (cutting ? " cutting" : "") + '"></div>';
       try { localStorage.setItem("zp-dwsdoc", cur); } catch (e) {}
-      show(f);
+      const dps = docPages(f), np = npSel && dps.find((y) => y.rid + "|" + y.k + "|" + y.pid === npSel);
+      if (np) showNp(np); else { npSel = null; show(f); }
+    }
+    // Notizseite eines Blattes aus der Materialsammlung (nur zum Ansehen, Text lässt sich markieren und hinüberziehen)
+    let npSel = null;
+    function showNp(x) {
+      const body = dp.querySelector(".ws-body"); band = null; body.classList.remove("cutting");
+      const o = U.reihen[x.rid], m = o && (o.lnItems || [])[x.k], pg = m && m.page && (m.page.pages || []).find((y) => y.id === x.pid);
+      if (!pg) { body.innerHTML = '<div class="empty">Die Notizseite wurde nicht gefunden.</div>'; return; }
+      body.innerHTML = '<div class="ws-np"><div class="ws-nph">📖 ' + esc(x.mat) + " · " + esc(x.page) + '</div><div class="notes-ed ws-npb" style="line-height:' + (pg.lh || 1.5) + '">' + sanitizeNotes(pg.html || "") + "</div>" +
+        (filled(pg.cm || "") ? '<div class="ws-nph">Kommentare</div><div class="notes-ed ws-npb ws-npc">' + sanitizeNotes(pg.cm) + "</div>" : "") + "</div>";
+      body.querySelectorAll(".ws-npb").forEach((b) => ndocFill(b, m.files || []));
     }
     async function show(f) {
       const body = dp.querySelector(".ws-body"), m = dp.querySelector(".ufl-dmsg"); band = null;
@@ -5997,6 +6042,14 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const b = e.target.closest("button"); if (!b) return; const fs = files(), f = fs.find((y) => y.id === cur);
       if (b.dataset.wnav) { const j = fs.findIndex((y) => y.id === cur), n = j + +b.dataset.wnav; if (n >= 0 && n < fs.length) { cur = fs[n].id; render(); } return; }
       if (b.dataset.wclose != null) { set(false); return; }
+      if (b.dataset.wnp != null) {
+        const dps = docPages(f), key = (y) => y.rid + "|" + y.k + "|" + y.pid;
+        if (npSel) { npSel = null; render(); return; }
+        if (dps.length === 1) { npSel = key(dps[0]); render(); return; }
+        const r = b.getBoundingClientRect();
+        cellMenu(r.left, r.bottom + 4, "Notizseite anzeigen", dps.map((y, j) => ["n" + j, y.title + " · " + y.mat + " · " + y.page]), (op) => { npSel = key(dps[+op.slice(1)]); render(); });
+        return;
+      }
       if (b.dataset.wbig != null) { if (f) openViewer(f); return; }
       if (b.dataset.wedit != null) { if (f) wdEdit(f, { host: dp.querySelector(".ws-body"), onSaved: () => { ned._ndocAck = f.id; ndocFill(ned, files(), f.id); }, onClose: () => { delete WD_CACHE[f.id]; render(); } }); return; }
       if (b.dataset.wcut != null) { cutting = !cutting; b.setAttribute("aria-pressed", String(cutting)); dp.querySelector(".ws-body").classList.toggle("cutting", cutting); if (!cutting) dropBand(); else { const mm = dp.querySelector(".ufl-dmsg"); if (mm) mm.textContent = "Rahmen über den gewünschten Teil ziehen, dann den Ausschnitt in die Notizen ziehen (oder «⇥ Einfügen»)."; } return; }
@@ -6160,8 +6213,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         '<span class="d-ur"><button type="button" id="d-undo" disabled title="Rückgängig (Strg+Z): Lektionsplanung, Lernziele, Kurzeintrag und Notizen">↶ Rückgängig</button><button type="button" id="d-redo" disabled title="Wiederholen (Strg+Y)" aria-label="Wiederholen">↷</button></span>' +
         '<button type="button" class="d-tog d-wsb" id="d-wsb" aria-pressed="' + wsOn + '"' + (wsHas ? "" : " hidden") + ' title="Arbeitsblatt bzw. Dokument rechts neben den Notizen zeigen (wird auf diesem Gerät gemerkt)">Arbeitsblatt</button></div>' +
         secs.map(([k, , h]) => '<div class="d-sec" data-dsec="' + k + '"' + (openSet[k] ? "" : " hidden") + ">" + h + "</div>").join("") +
-        '<div class="d-split' + (pt === "left" ? " on" : pt === "rail" ? " rail" : "") + (wsOn ? " ws" : "") + '" id="d-split" style="--dl:' + dSideW() + ";--wsw:" + dWsW() + '%"><button type="button" class="d-rail" id="d-rail" aria-expanded="false" aria-label="Lektionsplanung einblenden"><span class="d-rarr">▸</span><span class="d-rl">Lektionsplanung</span><span class="d-rhint" hidden></span></button><div class="d-sl"><div class="field" id="d-pfield"><div class="d-phead"><span class="lbl">Lektionsplanung</span><span class="d-pbtns"><button type="button" class="btn ghost" id="d-ptop"></button><button type="button" class="btn ghost" id="d-pfold" title="Tabelle wieder links als schmale Leiste einklappen">◂ Einklappen</button><button type="button" class="btn ghost" id="d-pclose" title="Tabelle ausblenden (Esc)" aria-label="Tabelle ausblenden">✕</button></span></div><div class="ptable-wrap"><table class="ptable" id="p-table">' + planTableInner(opt.plan) + "</table></div>" +
-        '<div class="ptools"><button class="btn ghost" type="button" id="p-addrow">+ Zeile</button><button class="btn ghost" type="button" id="d-pleft" title="Tabelle als Spalte links neben den Notizen zeigen (Breite an der Trennlinie ziehen)">⇤ Links einblenden</button><details class="hint"><summary title="Hilfe anzeigen">ⓘ Hilfe</summary><p class="help">Spaltentitel lassen sich anklicken und umbenennen. Die Trennlinie zwischen zwei Titeln ziehen, um die Breite zu ändern. Zeilen am Griff ⠿ rechts nach oben oder unten ziehen. Rechtsklick (Tablet: lange drücken auf den Titel): Spalten und Zeilen verschieben, einfügen, löschen. Jede Zeile hat ihre Farbe; die Abschnitte in den Notizen übernehmen sie.</p></details></div></div></div>' +
+        '<div class="d-split' + (pt === "left" ? " on" : pt === "rail" ? " rail" : "") + (wsOn ? " ws" : "") + '" id="d-split" style="--dl:' + dSideW() + ";--wsw:" + dWsW() + '%"><button type="button" class="d-rail" id="d-rail" aria-expanded="false" aria-label="Lektionsplanung einblenden"><span class="d-rarr">▸</span><span class="d-rl">Lektionsplanung</span><span class="d-rhint" hidden></span></button><div class="d-sl"><div class="field" id="d-pfield"><div class="d-phead"><span class="lbl">Lektionsplanung</span><span class="d-pbtns"><button type="button" class="btn ghost" id="d-ptop"></button><button type="button" class="btn ghost" id="d-pfold" title="Tabelle wieder links als schmale Leiste einklappen">◂ Einklappen</button><button type="button" class="btn ghost" id="d-pclose" title="Tabelle ausblenden (Esc)" aria-label="Tabelle ausblenden">✕</button></span></div><div class="ptable-wrap"><table class="ptable' + (opt.plan.wman ? " wman" : "") + '" id="p-table">' + planTableInner(opt.plan) + "</table></div>" +
+        '<div class="ptools"><button class="btn ghost" type="button" id="p-addrow">+ Zeile</button><button class="btn ghost" type="button" id="d-pleft" title="Tabelle als Spalte links neben den Notizen zeigen (Breite an der Trennlinie ziehen)">⇤ Links einblenden</button><details class="hint"><summary title="Hilfe anzeigen">ⓘ Hilfe</summary><p class="help">Spaltentitel lassen sich anklicken und umbenennen. Die Trennlinie zwischen zwei Titeln ziehen, um die Breite zu ändern. Zeilen am Griff ⠿ rechts nach oben oder unten ziehen, Rechtsklick auf den Griff: Zeile einfügen oder löschen. Rechtsklick auf eine Zelle (Tablet: lange drücken auf den Titel): Spalten und Zeilen verschieben, einfügen, löschen. Jede Zeile hat ihre Farbe; die Abschnitte in den Notizen übernehmen sie.</p></details></div></div></div>' +
         '<div class="d-gut" id="d-gut" title="Ziehen, um die Breite der beiden Seiten zu ändern" aria-hidden="true"></div><div class="d-sr">' + notesF + '</div><div class="d-gut2" id="d-gut2" title="Ziehen, um die Breite des Arbeitsblatts zu ändern" aria-hidden="true"></div><section class="d-ws" id="d-ws" aria-label="Arbeitsblatt"></section></div>' + actionsF;
     } else body = textF + (opt.todo ? '<div class="field d-todof"><button type="button" class="btn ghost tdb" id="d-tdb" title="Die Zeile mit der Schreibmarke bekommt ein Kästchen zum Abhaken (oder verliert es). Enter = nächstes To-do, Enter in einem leeren To-do = fertig.">'+'<span class="tdq"></span> To-do</button></div>' : "") + (opt.time ? '<div class="field d-timef"><span class="lbl">Zeit (freiwillig)</span><div class="d-time"><input type="time" id="d-from" value="' + esc(x.from || "") + '" aria-label="von"><span>bis</span><input type="time" id="d-to" value="' + esc(x.to || "") + '" aria-label="bis"><button type="button" class="btn ghost" id="d-tclr" title="Zeit entfernen">×</button>' + (x.split ? '<span class="msg">(erster Teil)</span>' : "") + "</div>" +
       (x.split ? Array.from({ length: (x.nparts || 2) - 1 }, (_, k) => { const n = k + 2; return '<div class="d-time" data-ptime="' + n + '"><input type="time" class="pf" value="' + esc(x["from" + n] || "") + '" aria-label="Teil ' + n + ' von"><span>bis</span><input type="time" class="pt" value="' + esc(x["to" + n] || "") + '" aria-label="Teil ' + n + ' bis"><button type="button" class="btn ghost pc" title="Zeit entfernen">×</button><span class="msg">(Teil ' + n + ")</span></div>"; }).join("") : "") + '</div>' : "") + colorF + notesF + docsF + actionsF;
@@ -11795,8 +11848,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const b = document.createElement("button"); b.type = "button"; b.className = "lk-ptake"; b.dataset.taketab = "1"; b.textContent = "⇥ In die Seite"; b.title = "Diese Tabelle in die Unterrichtsseite übernehmen – dort, wo der Cursor zuletzt stand";
       host.appendChild(b);
     });
-    // Ganzer Abschnitt in die Seite; Tabelle zuklappbar; Klick auf einen Abschnitt in der Tabelle springt hin
-    box.querySelectorAll(".lk-plantext .psec").forEach((sc) => { const b = document.createElement("button"); b.type = "button"; b.className = "lk-ptake lk-psect"; b.dataset.takesec = "1"; b.textContent = "⇥ Abschnitt in die Seite"; b.title = "Den ganzen Abschnitt in die Unterrichtsseite übernehmen – dort, wo der Cursor zuletzt stand"; sc.prepend(b); });
+    // Tabelle zuklappbar; Klick auf einen Abschnitt in der Tabelle springt hin
     const th = [...box.querySelectorAll(".lk-plantext h3")].find((h) => h.textContent.trim() === "Lektionsplanung");
     if (th) { let tf = false; try { tf = localStorage.getItem("zp-lktab") === "1"; } catch (e) {} th.classList.add("lk-tfold"); th.innerHTML = '<button type="button" class="lk-tfb" aria-expanded="' + !tf + '" title="Tabelle auf- oder zuklappen">' + (tf ? "▸" : "▾") + "</button> Lektionsplanung"; box.classList.toggle("tab-off", tf); }
     ndocFill(box); box.querySelectorAll(".nsec").forEach((d) => { d.removeAttribute("data-c"); });
