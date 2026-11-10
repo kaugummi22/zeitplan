@@ -216,6 +216,9 @@ html:not(.ls-on).lk-proj .lk-page .ls:not(.lk-sp .ls), .ls-x { visibility: hidde
 /* Abdecken (wie Spoiler): Sie sehen den Text durch den dunklen Balken, beim Zeigen ist er schwarz; Klick deckt auf */
 .lk-sp { background: #26282c; color: #f3f3f3; border-radius: 3px; padding: 0 3px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
 .lk-sp .ls, .ls .lk-sp { color: #ffab9c; }
+.lk-split { display: inline-flex; align-items: center; }
+.lk-split > .lk-tb { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.lk-split > .lk-tbw > .lk-tb { border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: -1px; padding-left: 5px; padding-right: 5px; }
 html.lk-proj .lk-page .lk-sp { visibility: visible; }
 .lk-sp.open { background: none; color: inherit; outline: 1.5px dashed #9aa3ad; outline-offset: 1px; }
 .lk-sp.open .ls, .ls .lk-sp.open { color: #c8402c; }
@@ -2658,10 +2661,22 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const ca = rg.commonAncestorContainer, host = ca.nodeType === 1 ? ca : ca.parentElement;
     // ganz in einem Balken markiert: Balken entfernen
     const inSp = host.closest(".lk-sp"); if (inSp && root.contains(inSp)) { unwrap(inSp); return true; }
-    const tw = document.createTreeWalker(host, NodeFilter.SHOW_TEXT), list = [];
-    let n; while ((n = tw.nextNode())) if (rg.intersectsNode(n) && n.nodeValue.trim() && !(n.parentElement && n.parentElement.closest(".lk-sp, .nsec, .nend, figure, .lk-doc, a"))) list.push(n);
+    // in einer Tabelle von Zelle zu Zelle markiert: nur das Rechteck zwischen erster und letzter Zelle (nicht ganze Zeilen dazwischen)
+    const cellOf = (x) => { const e = x.nodeType === 1 ? x : x.parentElement; return e && e.closest("td, th"); };
+    const c1 = cellOf(rg.startContainer), c2 = cellOf(rg.endContainer); let inRect = null, whole = false;
+    if (c1 && c2 && c1 !== c2 && c1.closest("table") === c2.closest("table") && root.contains(c1)) {
+      const tb = c1.closest("table"), rows = [...tb.rows], g = tGrid(rows), pos = (c) => { for (let r = 0; r < g.rows.length; r++) { const x = g.rows[r].find((y) => y.cell === c); if (x) return { r, c0: x.start, c1: x.start + x.span - 1, r1: r + x.rs - 1 }; } return null; };
+      const a = pos(c1), b = pos(c2);
+      if (a && b) {
+        const R0 = Math.min(a.r, b.r), R1 = Math.max(a.r1, b.r1), C0 = Math.min(a.c0, b.c0), C1 = Math.max(a.c1, b.c1), ok = new Set();
+        g.rows.forEach((l, r) => l.forEach((x) => { if (r <= R1 && r + x.rs - 1 >= R0 && x.start <= C1 && x.start + x.span - 1 >= C0) ok.add(x.cell); }));
+        inRect = (t) => { const c = cellOf(t); return c && ok.has(c) && c.closest("table") === tb; }; whole = true;
+      }
+    }
+    const tw = document.createTreeWalker(inRect ? c1.closest("table") : host, NodeFilter.SHOW_TEXT), list = [];
+    let n; while ((n = tw.nextNode())) if ((inRect ? inRect(n) : rg.intersectsNode(n)) && n.nodeValue.trim() && !(n.parentElement && n.parentElement.closest(".lk-sp, .nsec, .nend, figure, .lk-doc, a"))) list.push(n);
     if (!list.length) return false;
-    const sc = rg.startContainer, so = rg.startOffset, ec = rg.endContainer, eo = rg.endOffset;
+    const sc = whole ? null : rg.startContainer, so = rg.startOffset, ec = whole ? null : rg.endContainer, eo = rg.endOffset;
     let first = null, last = null;
     list.forEach((t) => {
       let a = 0, b = t.nodeValue.length;
@@ -11403,7 +11418,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       TB("insertUnorderedList", "", "• Liste", "Aufzählung") + TB("insertOrderedList", "", "1. Liste", "Nummerierte Liste") + POP("check", "☑ Checkliste", "Checkliste zum Abhaken während des Unterrichts", checkPop) + POP("tab", "▦ Tabelle", "Einfache Tabelle", tabPop) + POP("box", "▭ Kasten", "Farbiger Kasten, z. B. für einen Auftrag", boxPop) +
       TB("ls", "", '<span class="ls">✎ Lehrerschrift</span>', "Lehrerschrift (z. B. Lösungen) – ohne Markierung: ab hier in Lehrerschrift weiterschreiben; mit Markierung: markierten Text umstellen. Nochmals klicken: normale Schrift (Strg+Umschalt+L). Beim Zeigen ausgeblendet") +
       TB("note", "", "🔒 Notiz", "Notiz nur für Sie: markierte Zeilen werden grau-gelb und sind beim Projizieren, in Folien, im Beamer-Fenster und beim Ausgeben unsichtbar. Nochmals klicken macht wieder normalen Text") +
-      POP("sp", "▮ Abdecken", "Wörter abdecken wie mit einem schwarzen Balken: Sie sehen sie, die Klasse beim Zeigen nicht; Klick auf den Balken deckt auf", TB("sp", "", "▮ Markiertes abdecken / aufheben", "Markierte Wörter abdecken (Schreibmarke in einem Balken: Abdeckung entfernen)") + TB("spall", "", "Alle wieder abdecken", "Alle aufgedeckten Balken dieser Seite wieder schliessen, z. B. für die nächste Klasse")) +
+      '<span class="lk-split">' + TB("sp", "", "▮ Abdecken", "Markierte Wörter abdecken wie mit einem schwarzen Balken: Sie sehen sie, die Klasse beim Zeigen nicht; Klick auf den Balken deckt auf. Schreibmarke in einem Balken: Abdeckung entfernen") + POP("spm", "", "Weitere: alle wieder abdecken", TB("spall", "", "Alle wieder abdecken", "Alle aufgedeckten Balken dieser Seite wieder schliessen, z. B. für die nächste Klasse")) + "</span>" +
       TB("dot", "", "·", "Mittelpunkt einfügen, z. B. «L6 · Die Prozesse»") + POP("emo", "💡", "Symbol einfügen", '<div class="lk-emo">' + LK_EMO.map((x) => '<button type="button" class="lk-sw lk-em" data-lkcmd="emo" data-arg="' + x[0] + '" title="' + x[1] + '">' + x[0] + "</button>").join("") + "</div>") + SEP + TB("hr", "", "<b style=\"color:var(--accent)\">━━</b> Abschnitt", "Abschnittslinie: beim Projizieren beginnt hier eine neue Folie (wird nicht gedruckt)") + TB("hr", "lk-step", "<span style=\"color:var(--muted);letter-spacing:-1px\">┅┅</span> Schritt", "Schrittlinie: beim Projizieren erscheint der Teil darunter erst beim Weiterschalten (wird nicht gedruckt)") + TB("hr", "lk-vis", "<span style=\"opacity:.7\">—</span> Visual", "Visual Line: kurze Linie in der Mitte, um die Seite zu gliedern (wird gedruckt)") + SEP +
       '<label class="lk-tb" title="Bild einfügen">🖼 Bild<input type="file" id="lk-img" accept="image/*" multiple hidden></label></div>' +
       '<div class="lk-page" id="lk-page" contenteditable="true" data-ph="Schreiben Sie hier die Seite für diese Lektion: Ablauf für die Klasse, Aufträge, Bilder, Links zu Dokumenten …"></div>';
