@@ -400,6 +400,7 @@ body:has(.lk-inkov) #zl-badge, body:has(.lk-cropov) #zl-badge, html.lk-pen #zl-b
 .lk-penbar > .lk-iopen { position: static; transform: none; }
 html.lk-proj #view-lektion { position: fixed; inset: 0; z-index: 900; overflow: auto; background: var(--bg); padding: 8px; --hdr: 0px; }
 html.lk-proj .overlay { z-index: 1000; }
+body:has(#ufl) #modalRoot .overlay { z-index: 950; }
 html.lk-proj #zl-badge { display: none !important; }
 html.lk-proj .lk-head { align-items: center; }
 html.lk-proj .lk-head .lk-meta { display: none; }
@@ -6351,7 +6352,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       TB("bold", "<b>F</b>", "Fett (Strg+B)") + TB("italic", "<i>K</i>", "Kursiv (Strg+I)") + TB("underline", "<u>U</u>", "Unterstrichen (Strg+U)") + '<span class="nsep"></span>' +
       TB("size:2", '<span style="font-size:11px">A</span>', "Kleine Schrift (markierter Text)") + TB("size:3", '<span style="font-size:14px">A</span>', "Normale Schrift (markierter Text)") + TB("size:4", '<span style="font-size:17px">A</span>', "Grosse Schrift (markierter Text)") + TB("size:5", '<span style="font-size:20px">A</span>', "Sehr grosse Schrift (markierter Text)") +
       '<button type="button" class="nb nimg" id="ueb-lh" aria-haspopup="menu" title="Zeilenabstand der markierten Zeilen oder der ganzen Seite, Schriftgrösse der ganzen Seite">Zeilenabstand ▾</button><span class="nsep"></span>' + TB("hl", "", "Gelb markieren", "sw-y") + TB("hlx", "✕", "Markierung entfernen", "sw-x") +
-      TB("insertUnorderedList", "•", "Aufzählung") + TB("ls", '<span class="ls">✎</span>', "Lehrerschrift (Strg+Umschalt+L)", "nls") + '<span class="nsep"></span>' +
+      TB("al:", "⯇≡", "Linksbündig") + TB("al:al-c", "≡", "Zentriert") + TB("al:al-r", "≡⯈", "Rechtsbündig") + TB("al:al-j", "☰", "Blocksatz") + '<span class="nsep"></span>' + TB("insertUnorderedList", "•", "Aufzählung") + TB("ls", '<span class="ls">✎</span>', "Lehrerschrift (Strg+Umschalt+L)", "nls") + '<span class="nsep"></span>' +
       '<button type="button" class="nb nimg" id="ueb-sec" title="Abschnitt mit Titel einfügen (lässt sich zuklappen und samt Inhalt und freien Notizen nach oben/unten schieben)">§ Abschnitt</button>' +
       '<label class="nb nimg" title="Bild einfügen">🖼 Bild<input type="file" id="ueb-img" accept="image/*" multiple hidden></label></span>' +
       "</div>" +
@@ -6660,8 +6661,9 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         if (b.dataset.upg !== u0.id) { save(true); pgGo(b.dataset.upg); return; }
         const ps = box().pages, i = ps.findIndex((p) => p.id === u0.id);
         menu(b, '<div class="cm-title">Seite</div><div class="nsm-own"><input type="text" maxlength="60" value="' + esc(ps[i].name || "") + '" placeholder="Seite ' + (i + 1) + '" aria-label="Name der Seite"><button type="button" class="btn primary" data-um="ok">Umbenennen</button></div>' +
-          (i > 0 ? '<button type="button" role="menuitem" data-um="l">← Nach vorne schieben</button>' : "") + (i < ps.length - 1 ? '<button type="button" role="menuitem" data-um="r">Nach hinten schieben →</button>' : "") + '<hr><button type="button" role="menuitem" data-um="del">Seite löschen</button>', (k, v) => {
+          (i > 0 ? '<button type="button" role="menuitem" data-um="l">← Nach vorne schieben</button>' : "") + (i < ps.length - 1 ? '<button type="button" role="menuitem" data-um="r">Nach hinten schieben →</button>' : "") + '<hr><button type="button" role="menuitem" data-um="cp" title="Eine Kopie dieser Seite in eine Materialsammlung einer anderen Reihe legen. Dokumente bleiben dieselben Dateien, die Notizen sind danach getrennt.">⧉ In eine andere Reihe kopieren …</button><hr><button type="button" role="menuitem" data-um="del">Seite löschen</button>', (k, v) => {
           const ps2 = box().pages, j = ps2.findIndex((p) => p.id === u0.id); if (j < 0) return;
+          if (k === "cp") { save(true); const rr = U.reihen[rid] || {}; pgCopy(ps2[j], ctx ? (ctx.files ? ctx.files() : []) : [...(rr.mainFiles || []), ...(rr.files || [])], rr.title || "", say); return; }
           if (k === "ok") { if (v) ps2[j].name = v; else delete ps2[j].name; }
           else if (k === "l" || k === "r") { const t = j + (k === "l" ? -1 : 1); if (t < 0 || t >= ps2.length) return; ps2.splice(t, 0, ps2.splice(j, 1)[0]); }
           else if (k === "del") { pgDel(); return; }
@@ -6698,7 +6700,19 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       if (!t) { say("Zuerst in den Text klicken bzw. Text markieren."); return; }
       // Dreifachklick markiert bis an den Anfang des nächsten Absatzes: Ende zurücknehmen, sonst verschmilzt der Browser die Absätze
       { const sl = getSelection(); if (sl.rangeCount) { const rg = sl.getRangeAt(0); if (!rg.collapsed && rg.endOffset === 0 && rg.endContainer !== rg.startContainer) { const tw = document.createTreeWalker(t, NodeFilter.SHOW_TEXT); let lastT = null; for (let n = tw.nextNode(); n; n = tw.nextNode()) { if (rg.comparePoint(n, n.length) > 0) break; if (n.length && rg.comparePoint(n, 0) >= 0) lastT = n; } if (lastT) { rg.setEnd(lastT, lastT.length); sl.removeAllRanges(); sl.addRange(rg); } } } }
-      if (c === "ls") lsToggle(t);
+      if (c.startsWith("al:")) {
+        const sl = getSelection(); if (!sl.rangeCount || !t.contains(sl.anchorNode)) { say("Zuerst in den Text klicken bzw. Zeilen markieren."); return; }
+        const rg = sl.getRangeAt(0).cloneRange();
+        let run = []; const flush = () => { if (run.length && run.some((n) => rg.intersectsNode(n))) { const d = document.createElement("div"); run[0].before(d); run.forEach((n) => d.appendChild(n)); } run = []; };
+        [...t.childNodes].forEach((n) => { if (n.nodeType === 3 || (n.nodeType === 1 && /^(B|I|U|SPAN|MARK|A|BR|STRONG|EM|FONT)$/.test(n.tagName))) run.push(n); else flush(); }); flush();
+        const BL = "div, p, li, h1, h2, h3, h4, h5, h6, blockquote";
+        let bl = [...t.querySelectorAll(BL)].filter((el) => rg.intersectsNode(el) && !el.closest("td, th, .nsec, figure") && !el.querySelector(BL + ", ul, ol, table, figure"));
+        if (!bl.length && t.classList.contains("ueb-txt")) bl = [t];
+        const v = c.slice(3);
+        bl.forEach((el) => { el.classList.remove("al-c", "al-r", "al-j"); el.style.textAlign = ""; if (!el.getAttribute("style")) el.removeAttribute("style"); if (v) el.classList.add(v); if (!el.className) el.removeAttribute("class"); });
+        sl.removeAllRanges(); sl.addRange(rg);
+      }
+      else if (c === "ls") lsToggle(t);
       else if (c.startsWith("size:")) document.execCommand("fontSize", false, c.slice(5));
       else if (c === "hl" || c === "hlx") { try { document.execCommand("styleWithCSS", false, true); } catch (err) {} document.execCommand("hiliteColor", false, c === "hl" ? HL.y : "transparent"); try { document.execCommand("styleWithCSS", false, false); } catch (err) {} }
       else document.execCommand(c, false, null);
@@ -7148,6 +7162,38 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       draw(); setTimeout(() => root.querySelector("#rp-q").focus(), 30);
     });
   }
+  // Eine Seite (z. B. eine Stil-Geschichte) als Kopie in eine Materialsammlung einer anderen Reihe legen.
+  // Notizen sind danach getrennt; die zugehörigen Dokumente bleiben dieselben Dateien (gleicher Pfad), Word-Änderungen gelten überall.
+  function pgCopy(pg, files, defName, done) {
+    reihePicker(null, (tid) => {
+      const t0 = U.reihen[tid]; if (!t0) return;
+      const mats = (t0.lnItems || []).map((m, k) => [m, k]).filter(([m]) => m && m.mat);
+      openModal('<h3>Seite «' + esc(pg.name || "Seite") + '» kopieren</h3><p class="msg">nach «' + esc(t0.title || "Reihe") + '»' + (mats.length ? " – in welche Materialsammlung?" : "") + '</p>' +
+        (mats.length ? '<div class="fp-list" id="pc-list">' + mats.map(([m, k]) => '<button type="button" data-pc="' + k + '">M' + matNo(t0, k) + " " + esc(m.name || "Materialsammlung") + "</button>").join("") + "</div>" : "") +
+        '<div class="field" style="margin-top:10px"><span class="lbl">' + (mats.length ? "Oder neue Materialsammlung" : "Neue Materialsammlung") + ' (mit Seite «Übersicht» zuerst)</span><div class="nsm-own"><input type="text" id="pc-name" style="flex:1;min-width:0" maxlength="80" value="' + esc(defName) + '" aria-label="Name der neuen Materialsammlung"><button type="button" class="btn primary" id="pc-new">Neu anlegen und kopieren</button></div></div>' +
+        '<div class="actions"><span></span><div class="right"><button type="button" class="btn" id="pc-cancel">Abbrechen</button></div></div>', (root) => {
+        const go = (k, name) => {
+          const t = U.reihen[tid]; if (!t) return; closeModal();
+          const cp = JSON.parse(JSON.stringify(pg)); cp.id = uebId();
+          const need = new Set([pg.doc, ...[...String(pg.html || "").matchAll(/data-doc="([\w-]+)"/g)].map((x) => x[1])].filter(Boolean));
+          const add = files.filter((f) => need.has(f.id)).map((f) => ({ ...f }));
+          t.lnItems = (t.lnItems || []).slice(); let m;
+          if (k == null) { m = { mat: true, name: name || defName || "Material", html: "", page: { pages: [uebNorm({ id: uebId(), name: "Übersicht" }), cp] }, files: add }; t.lnItems.push(m); k = t.lnItems.length - 1; }
+          else {
+            m = { ...t.lnItems[k] }; if (!m.page) m.page = { notesHtml: m.notesHtml != null ? m.notesHtml : plainToHtml(m.details || "") };
+            m.page = uebPg(m.page); m.page.pages.push(cp); m.files = [...(m.files || [])];
+            add.forEach((f) => { const ex = m.files.find((x) => x.id === f.id || (f.path && x.path === f.path)); if (!ex) m.files.push(f); else if (ex.id !== f.id) { if (cp.doc === f.id) cp.doc = ex.id; cp.html = String(cp.html || "").split('data-doc="' + f.id + '"').join('data-doc="' + ex.id + '"'); } });
+            t.lnItems[k] = m;
+          }
+          saveReihe(tid, 0); uStatus("Seite kopiert nach «" + (t.title || "Reihe") + "», M" + matNo(t, k) + " " + (m.name || ""));
+          if (done) done("✓ Seite kopiert nach «" + (t.title || "Reihe") + "» · M" + matNo(t, k) + " " + (m.name || "") + ". Die Notizen dort sind eine eigene Kopie.");
+        };
+        const l = root.querySelector("#pc-list"); if (l) l.addEventListener("click", (e) => { const b = e.target.closest("[data-pc]"); if (b) go(+b.dataset.pc); });
+        root.querySelector("#pc-new").onclick = () => go(null, root.querySelector("#pc-name").value.trim());
+        root.querySelector("#pc-cancel").onclick = closeModal;
+      });
+    }, "In welche Reihe kopieren?");
+  }
   // Rückgängig: Zustände einer Reihe vor jeder gespeicherten Änderung (nur in dieser Sitzung)
   const RSNAP = {}, RUNDO = {};
   function rSnapBase(id) { const r = U.reihen[id]; if (r && !(id in RSNAP)) RSNAP[id] = JSON.stringify(r); }
@@ -7543,7 +7589,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const pane = w.querySelector(".ufl-pane");
     pane.addEventListener("click", (e) => { if (e.target.closest("#ufl-docs")) { UFL.docs = !docsOn(); try { localStorage.setItem("zp-ufl", JSON.stringify(UFL)); } catch (err) {} setDocs(); } });
     new MutationObserver(() => { const b = pane.querySelector("#ufl-docs"); if (b && !b.textContent) setDocs(); }).observe(pane, { childList: true });
-    uebMount(pane, id, { name: "Material", key: "ln" + k, right, onPage, data: () => { const m = item(); return m ? m.page || (m.page = {}) : null; }, save });
+    uebMount(pane, id, { name: "Material", key: "ln" + k, right, onPage, files: () => (item() || {}).files || [], data: () => { const m = item(); return m ? m.page || (m.page = {}) : null; }, save });
     setDocs();
     const kz = w.querySelector(".ufl-kurz .rtfield");
     kz.addEventListener("input", () => { const m = item(); if (!m) return; m.html = sanitize(kz.innerHTML); clearTimeout(t); t = setTimeout(() => saveReihe(id, 300), 500); });
