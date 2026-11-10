@@ -1036,8 +1036,14 @@ html.jpw main.wrap:has(#view-unterricht:not([hidden])) { max-width: none; }
 .mat-slim-tog { justify-self: start; font-size: 0.78rem; margin-top: 2px; }
 .mat-fold-tog { justify-self: start; font-size: 0.78rem; margin-top: 2px; font-weight: 700; }
 .mat-foldsum { display: none; }
-.mat-row .mat-bar { display: block; justify-self: stretch; height: 4px; margin: 3px 0 1px; border-radius: 2px; background: color-mix(in srgb, var(--muted) 18%, transparent); overflow: hidden; }
-.mat-row .mat-bar > i { display: block; height: 100%; background: color-mix(in srgb, var(--accent) 55%, var(--c-gruen)); }
+/* offene Materialsammlung: Notiz und Dokumente nebeneinander, Breite ziehbar (gemerkt auf dem Gerät) */
+.lesson.mat-row:not(.mat-fold) { grid-template-columns: 170px minmax(140px, 1fr) var(--mdw, 46%); }
+.lesson.mat-row:not(.mat-fold) .ldocs { position: relative; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 3px 8px; align-content: start; }
+.mat-gut { display: none; }
+.lesson.mat-row:not(.mat-fold) .mat-gut { display: block; position: absolute; left: -5px; top: 0; bottom: 0; width: 9px; cursor: col-resize; z-index: 3; touch-action: none; }
+.lesson.mat-row:not(.mat-fold) .mat-gut:hover, .mat-gut.on { background: linear-gradient(90deg, transparent 3px, var(--accent) 3px 6px, transparent 6px); }
+html.phone .mat-gut { display: none !important; } html.phone .lesson.mat-row:not(.mat-fold) { grid-template-columns: minmax(0, 1fr); }
+.jp-item .bar-mini.bar-fill { background: repeating-linear-gradient(90deg, var(--jp-pill) 0 6px, color-mix(in srgb, var(--jp-pill) 60%, transparent) 6px 8px); }
 .lesson.mat-fold .cell, .lesson.mat-fold .ldocs { display: none !important; }
 .lesson.mat-fold .mat-foldsum { display: flex; align-items: center; gap: 6px; grid-column: 2 / -1; padding: 6px 12px; color: var(--muted); font-size: 0.85rem; }
 .mat-foldsum button { border: 0; background: none; font: inherit; color: inherit; padding: 2px 4px; border-radius: 6px; cursor: pointer; }
@@ -6667,7 +6673,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         if (b.dataset.upg !== u0.id) { save(true); pgGo(b.dataset.upg); return; }
         const ps = box().pages, i = ps.findIndex((p) => p.id === u0.id);
         menu(b, '<div class="cm-title">Seite</div><div class="nsm-own"><input type="text" maxlength="60" value="' + esc(ps[i].name || "") + '" placeholder="Seite ' + (i + 1) + '" aria-label="Name der Seite"><button type="button" class="btn primary" data-um="ok">Umbenennen</button></div>' +
-          (i > 0 ? '<button type="button" role="menuitem" data-um="l">← Nach vorne schieben</button>' : "") + (i < ps.length - 1 ? '<button type="button" role="menuitem" data-um="r">Nach hinten schieben →</button>' : "") + '<hr><button type="button" role="menuitem" data-um="cp" title="Eine Kopie dieser Seite in eine Materialsammlung einer anderen Reihe legen. Dokumente bleiben dieselben Dateien, die Notizen sind danach getrennt.">⧉ In eine andere Reihe kopieren …</button><hr><button type="button" role="menuitem" data-um="del">Seite löschen</button>', (k, v) => {
+          (i > 0 ? '<button type="button" role="menuitem" data-um="l">← Nach vorne schieben</button>' : "") + (i < ps.length - 1 ? '<button type="button" role="menuitem" data-um="r">Nach hinten schieben →</button>' : "") + '<hr><button type="button" role="menuitem" data-um="cp" title="Eine Kopie dieser Seite in die Materialsammlung «Gesamt» einer anderen Reihe legen (wird bei Bedarf angelegt). Das zugeordnete Dokument bleibt verknüpft (dieselbe Datei), die Notizen sind danach getrennt.">⧉ In eine andere Reihe kopieren …</button><hr><button type="button" role="menuitem" data-um="del">Seite löschen</button>', (k, v) => {
           const ps2 = box().pages, j = ps2.findIndex((p) => p.id === u0.id); if (j < 0) return;
           if (k === "cp") { save(true); const rr = U.reihen[rid] || {}; pgCopy(ps2[j], ctx ? (ctx.files ? ctx.files() : []) : [...(rr.mainFiles || []), ...(rr.files || [])], rr.title || "", say); return; }
           if (k === "ok") { if (v) ps2[j].name = v; else delete ps2[j].name; }
@@ -6823,7 +6829,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
           return '<button type="button" draggable="true" class="jp-item prio-' + prioOf(r) + (foreign ? " jp-foreign" : "") + (isLoose(r) ? " jp-loose" : "") + (JSEL.has(id) ? " jp-sel" : "") + '" data-open="' + id + '" data-from="' + y + '" title="' + (isLoose(r) ? "Einzellektion öffnen · Strg+Klick: auswählen zum Gruppieren" : "Reihe öffnen") + (foreign ? " · Mehrfach-Reihe aus " + YEAR_SHORT[homeOf(r)] : (also.length ? " · auch in " + also.map((z) => YEAR_SHORT[z]).join(", ") : "")) + (isLoose(r) ? " · Ziehen: verschieben oder auf eine Reihe legen" : " · Ziehen zum Verschieben") + ' · Rechtsklick (lange drücken): Menü"><span class="t">' + (isLoose(r) ? '<span class="lo-mark" aria-hidden="true">L</span>' : "") + statusBadge(r) + msArrow(id) + (r.master ? '<span class="ms-mark" title="Masterreihe mit ' + childrenOf(r).length + ' Unterreihen">◆ </span>' : "") + litMark(r) + esc(r.title || "Ohne Titel") + subsHtml(id, r).after + (foreign ? '<span class="home-yr">Mehrfach-Reihe aus ' + YEAR_SHORT[homeOf(r)] + "</span>" : "") + subsHtml(id, r).list + (isLoose(r) && r.from ? '<span class="lo-from">aus ' + esc(r.from) + "</span>" : "") + '</span><span class="jp-rt"><span class="n">' +
             (effL(r) ? effL(r) + " L" : esc(htmlToPlain(r.hinweis || ""))) + "</span>" +
             (UP.eye ? '<span class="jp-eye" role="button" tabindex="0" data-jpeye="' + id + '" data-y="' + y + '" title="' + (isParked(r, y) ? "Wieder einblenden" : "Ausblenden (nach unten)") + '">' + (isParked(r, y) ? "👁" : "⊘") + "</span>" : "") + "</span>" +
-            kidsLinks(r) + (pl && n && UP.bars !== false ? '<span class="bar-mini" title="' + pl + " von " + n + ' Lektionen ausgearbeitet"><i style="width:' + Math.round(pl / n * 100) + '%"></i></span>' : "") + "</button>";
+            kidsLinks(r) + (pl && n && UP.bars !== false ? '<span class="bar-mini" title="' + pl + " von " + n + ' Lektionen ausgearbeitet"><i style="width:' + Math.round(pl / n * 100) + '%"></i></span>' : !n && UP.bars !== false ? (() => { const f = reiheFill(r); return '<span class="bar-mini bar-fill" title="' + (f.pc ? "Füllstand: " + f.nd + (f.nd === 1 ? " Dokument" : " Dokumente") + (f.nm ? " in " + f.nm + (f.nm === 1 ? " Materialsammlung" : " Materialsammlungen") : "") + (f.im ? ", " + f.im + " Bilder/Ausschnitte" : "") + (f.tx ? ", Notizen" : "") : "Leer – noch kein Material") + '"><i style="width:' + f.pc + '%"></i></span>'; })() : "") + "</button>";
       };
       let sec = '<section class="jp-col' + (y >= 5 ? " jp-other" : "") + '" data-col="' + y + '"><div class="jp-head"><span class="yr">' + YEAR_SHORT[y] + '</span><span class="sum" title="' + sum + ' Lektionen">· ' + sum + " L</span></div><div class=\"jp-box\" data-box=\"" + y + "\"><div class=\"jp-items\" data-zone=\"act\" data-year=\"" + y + "\">" +
         litSplit(act, itemHtml) + "</div>" +
@@ -6980,12 +6986,12 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       '<button type="button" class="lexp' + (more ? " on" : "") + '" data-lexp="' + key + '" title="Gross öffnen: Kommentare, Notizen, Dokumente (gilt für die Unterreihe)" aria-label="Materialsammlung gross öffnen">+</button>' +
       "</div>" +
       '<input type="text" class="ln-name" data-lnname="' + k + '" value="' + esc(m.name || "") + '" placeholder="Name, z. B. Bilder" aria-label="Name der Materialsammlung"' + (ro ? " readonly" : "") + ">" +
-      matFill(m) + matFoldBtn(m, k) +
+      matFoldBtn(m, k) +
       (lk ? '<span class="mat-link"><button type="button" class="linkbtn" data-goto="' + esc(m.rid) + '" title="Verknüpfte Reihe öffnen">↗ ' + esc(lk.title || "Reihe") + "</button>" + (ro ? "" : '<button type="button" class="x" data-matunlink="' + k + '" title="Verknüpfung lösen" aria-label="Verknüpfung lösen">×</button>') + "</span>"
         : "") +
       '<span class="ms-from">aus ' + esc(ch.title || "Unterreihe") + "</span></div>" +
       cellHtml2('data-rf="cln.' + esc(rid) + "." + k + '" aria-label="Kurzzusammenfassung der Materialsammlung"', m.html || "", { color: m.color, more, cellAttrs: ' data-lesson="' + key + '"' }) +
-      matFoldSum(m, k) + '<div class="ldocs">' + (m.files || []).map((f) => '<button type="button" class="doc" data-open-cfile="' + esc(rid) + "|" + esc(f.id) + '"><span class="tag">' + typeTag(f) + "</span><span>" + esc(f.name) + "</span></button>").join("") + "</div></div>";
+      matFoldSum(m, k) + '<div class="ldocs"><span class="mat-gut" title="Ziehen: Notiz breiter oder schmaler, Dokumente daneben"></span>' + (m.files || []).map((f) => '<button type="button" class="doc" data-open-cfile="' + esc(rid) + "|" + esc(f.id) + '"><span class="tag">' + typeTag(f) + "</span><span>" + esc(f.name) + "</span></button>").join("") + "</div></div>";
   }
   // Abfolge für Klassenkopie und Drucken
   function masterSeq(r) {
@@ -7019,16 +7025,15 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   // Materialsammlung ganz zuklappen (Dokumente und Notiz ausblenden), gemerkt pro Sammlung (m.fold), ohne Wahl offen
   // ohne Wahl zu (m.fold === false = offen); auf/zu gilt für Dokumente und Notiz zusammen
   const matFolded = (m) => m.fold !== false;
-  // Füllstand einer Materialsammlung: Dokumente, Bilder und geschriebener Text auf ihren Seiten, Notiz (voll ab etwa 25 Punkten)
-  function matFill(m) {
-    if (UP.bars === false) return "";
-    const nd = (m.files || []).length; let im = 0, tx = 0;
-    const pages = m.page && Array.isArray(m.page.pages) ? m.page.pages : m.page ? [m.page] : [];
-    pages.forEach((p) => { const h = String(p.html || p.notesHtml || ""); im += (h.match(/<img\b/gi) || []).length + (h.match(/class="nfig ndoc/g) || []).length + (p.items || []).length;
-      const t = h.replace(/<div[^>]*class="nsec[^"]*"[^>]*>[\s\S]*?<\/div>/g, "").replace(/<[^>]+>/g, " ").replace(/&nbsp;|\s+/g, " ").trim(); if (t.length > 15) tx += Math.min(3, Math.ceil(t.length / 200)); });
-    const nt = filled(m.html || "") ? 1 : 0, pts = nd + im + tx + nt; if (!pts) return "";
-    const pc = Math.min(100, Math.round(pts / 25 * 100));
-    return '<span class="bar-mini mat-bar" title="Füllstand: ' + nd + (nd === 1 ? " Dokument" : " Dokumente") + (im ? ", " + im + " Bilder/Ausschnitte" : "") + (tx ? ", Notizen auf den Seiten" : "") + (nt ? ", Kurznotiz" : "") + '"><i style="width:' + pc + '%"></i></span>';
+  // Füllstand (für «Fortschritt» in der Jahresansicht bei Reihen ohne Lektionen): Dokumente, Bilder/Ausschnitte und Text auf Seiten, Kurznotizen
+  function pagePts(pages) { let im = 0, tx = 0; (pages || []).forEach((p) => { const h = String(p.html || p.notesHtml || ""); im += (h.match(/<img\b/gi) || []).length + (h.match(/class="nfig ndoc/g) || []).length + (p.items || []).length;
+    const t = h.replace(/<div[^>]*class="nsec[^"]*"[^>]*>[\s\S]*?<\/div>/g, "").replace(/<[^>]+>/g, " ").replace(/&nbsp;|\s+/g, " ").trim(); if (t.length > 15) tx += Math.min(3, Math.ceil(t.length / 200)); }); return { im, tx }; }
+  function reiheFill(r) {
+    let nd = (r.files || []).length + (r.mainFiles || []).length, im = 0, tx = 0, nm = 0;
+    const add = (pages) => { const q = pagePts(pages); im += q.im; tx += q.tx; };
+    if (r.ueb) add(Array.isArray(r.ueb.pages) ? r.ueb.pages : [r.ueb]);
+    (r.lnItems || []).forEach((m) => { if (!m || !m.mat) return; nm++; nd += (m.files || []).length; if (m.page) add(Array.isArray(m.page.pages) ? m.page.pages : [m.page]); if (filled(m.html || "")) tx++; });
+    const pts = nd + im + tx; return { nd, im, tx, nm, pc: Math.min(100, Math.round(pts / 60 * 100)) };
   }
   const matFoldBtn = (m, k) => matFolded(m) ? "" : '<button type="button" class="linkbtn mat-fold-tog" data-matfold="' + k + '" aria-expanded="' + !matFolded(m) + '" title="' + (matFolded(m) ? "Materialsammlung aufklappen: Dokumente und Notiz zeigen" : "Materialsammlung zuklappen: nur Anzahl Dokumente und Notiz zeigen") + '">' + (matFolded(m) ? "▸ Aufklappen" : "▾ Zuklappen") + "</button>";
   const matFoldSum = (m, k) => { const n = (m.files || []).length, nt = filled(m.html || "");
@@ -7042,11 +7047,11 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         return '<div class="lesson ln-row mat-row' + (matFolded(m) ? " mat-fold" : "") + '" data-li="' + key + '"><div class="lh"><div class="lh-top"><b' + (' class="l-drag" draggable="true" data-mdrag="' + k + '" data-mnum="' + k + '" title="Ziehen = verschieben (zwischen Lektionen oder andere Materialsammlungen) · Klick = Nummer ändern"') + ">M" + matNo(r, k) + "</b>" + '<button type="button" class="lexp' + (more ? " on" : "") + '" data-lexp="' + key + '" title="Gross öffnen: Kommentare, Notizen, Dokumente" aria-label="Materialsammlung gross öffnen">+</button>' +
           "</div>" +
           '<input type="text" class="ln-name" data-lnname="' + k + '" value="' + esc(m.name || "") + '" placeholder="Name, z. B. Bilder" aria-label="Name der Materialsammlung">' +
-          matFill(m) + matFoldBtn(m, k) +
+          matFoldBtn(m, k) +
           (lk ? '<span class="mat-link"><button type="button" class="linkbtn" data-goto="' + esc(m.rid) + '" title="Verknüpfte Reihe öffnen">↗ ' + esc(lk.title || "Reihe") + '</button><button type="button" class="x" data-matunlink="' + k + '" title="Verknüpfung lösen" aria-label="Verknüpfung lösen">×</button></span>'
               : "") + "</div>" +
           cellHtml2('data-rf="lnItems.' + k + '.html" id="l-' + key + '" aria-label="Kurzzusammenfassung der Materialsammlung"', m.html || "", { color: m.color, more, cellAttrs: ' data-lesson="' + key + '"' }) +
-          matFoldSum(m, k) + '<div class="ldocs">' + filesHtml(m.files, key) + "</div></div>";
+          matFoldSum(m, k) + '<div class="ldocs"><span class="mat-gut" title="Ziehen: Notiz breiter oder schmaler, Dokumente daneben"></span>' + filesHtml(m.files, key) + "</div></div>";
   }
   // Wo eine Materialsammlung steht: nach welcher Lektion (Blockanfang), -1 = vor L1, sonst am Ende
   function matPlace(r, bl) {
@@ -7188,31 +7193,25 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   function pgCopy(pg, files, defName, done) {
     reihePicker(null, (tid) => {
       const t0 = U.reihen[tid]; if (!t0) return;
-      const mats = (t0.lnItems || []).map((m, k) => [m, k]).filter(([m]) => m && m.mat);
-      openModal('<h3>Seite «' + esc(pg.name || "Seite") + '» kopieren</h3><p class="msg">nach «' + esc(t0.title || "Reihe") + '»' + (mats.length ? " – in welche Materialsammlung?" : "") + '</p>' +
-        (mats.length ? '<div class="fp-list" id="pc-list">' + mats.map(([m, k]) => '<button type="button" data-pc="' + k + '">M' + matNo(t0, k) + " " + esc(m.name || "Materialsammlung") + "</button>").join("") + "</div>" : "") +
-        '<div class="field" style="margin-top:10px"><span class="lbl">' + (mats.length ? "Oder neue Materialsammlung" : "Neue Materialsammlung") + ' (mit Seite «Übersicht» zuerst)</span><div class="nsm-own"><input type="text" id="pc-name" style="flex:1;min-width:0" maxlength="80" value="' + esc(defName) + '" aria-label="Name der neuen Materialsammlung"><button type="button" class="btn primary" id="pc-new">Neu anlegen und kopieren</button></div></div>' +
-        '<div class="actions"><span></span><div class="right"><button type="button" class="btn" id="pc-cancel">Abbrechen</button></div></div>', (root) => {
-        const go = (k, name) => {
-          const t = U.reihen[tid]; if (!t) return; closeModal();
-          const cp = JSON.parse(JSON.stringify(pg)); cp.id = uebId();
-          const need = new Set([pg.doc, ...[...String(pg.html || "").matchAll(/data-doc="([\w-]+)"/g)].map((x) => x[1])].filter(Boolean));
-          const add = files.filter((f) => need.has(f.id)).map((f) => ({ ...f }));
-          t.lnItems = (t.lnItems || []).slice(); let m;
-          if (k == null) { m = { mat: true, name: name || defName || "Material", html: "", page: { pages: [uebNorm({ id: uebId(), name: "Übersicht" }), cp] }, files: add }; t.lnItems.push(m); k = t.lnItems.length - 1; }
-          else {
-            m = { ...t.lnItems[k] }; if (!m.page) m.page = { notesHtml: m.notesHtml != null ? m.notesHtml : plainToHtml(m.details || "") };
-            m.page = uebPg(m.page); m.page.pages.push(cp); m.files = [...(m.files || [])];
-            add.forEach((f) => { const ex = m.files.find((x) => x.id === f.id || (f.path && x.path === f.path)); if (!ex) m.files.push(f); else if (ex.id !== f.id) { if (cp.doc === f.id) cp.doc = ex.id; cp.html = String(cp.html || "").split('data-doc="' + f.id + '"').join('data-doc="' + ex.id + '"'); } });
-            t.lnItems[k] = m;
-          }
-          saveReihe(tid, 0); uStatus("Seite kopiert nach «" + (t.title || "Reihe") + "», M" + matNo(t, k) + " " + (m.name || ""));
-          if (done) done("✓ Seite kopiert nach «" + (t.title || "Reihe") + "» · M" + matNo(t, k) + " " + (m.name || "") + ". Die Notizen dort sind eine eigene Kopie.");
-        };
-        const l = root.querySelector("#pc-list"); if (l) l.addEventListener("click", (e) => { const b = e.target.closest("[data-pc]"); if (b) go(+b.dataset.pc); });
-        root.querySelector("#pc-new").onclick = () => go(null, root.querySelector("#pc-name").value.trim());
-        root.querySelector("#pc-cancel").onclick = closeModal;
-      });
+      // immer zuerst in die Materialsammlung «Gesamt» der Reihe (wird bei Bedarf angelegt)
+      const gk = (t0.lnItems || []).findIndex((m) => m && m.mat && /^\s*gesamt\s*$/i.test(m.name || ""));
+      const go = (k, name) => {
+        const t = U.reihen[tid]; if (!t) return;
+        const cp = JSON.parse(JSON.stringify(pg)); cp.id = uebId();
+        const need = new Set([pg.doc, ...[...String(pg.html || "").matchAll(/data-doc="([\w-]+)"/g)].map((x) => x[1])].filter(Boolean));
+        const add = files.filter((f) => need.has(f.id)).map((f) => ({ ...f }));
+        t.lnItems = (t.lnItems || []).slice(); let m;
+        if (k == null) { m = { mat: true, name: name || defName || "Material", html: "", page: { pages: [uebNorm({ id: uebId(), name: "Übersicht" }), cp] }, files: add }; t.lnItems.push(m); k = t.lnItems.length - 1; }
+        else {
+          m = { ...t.lnItems[k] }; if (!m.page) m.page = { notesHtml: m.notesHtml != null ? m.notesHtml : plainToHtml(m.details || "") };
+          m.page = uebPg(m.page); m.page.pages.push(cp); m.files = [...(m.files || [])];
+          add.forEach((f) => { const ex = m.files.find((x) => x.id === f.id || (f.path && x.path === f.path)); if (!ex) m.files.push(f); else if (ex.id !== f.id) { if (cp.doc === f.id) cp.doc = ex.id; cp.html = String(cp.html || "").split('data-doc="' + f.id + '"').join('data-doc="' + ex.id + '"'); } });
+          t.lnItems[k] = m;
+        }
+        saveReihe(tid, 0); uStatus("Seite kopiert nach «" + (t.title || "Reihe") + "», M" + matNo(t, k) + " " + (m.name || ""));
+        if (done) done("✓ Seite kopiert nach «" + (t.title || "Reihe") + "» · M" + matNo(t, k) + " " + (m.name || "") + ". Die Notizen dort sind eine eigene Kopie.");
+      };
+      go(gk >= 0 ? gk : null, "Gesamt");
     }, "In welche Reihe kopieren?");
   }
   // Rückgängig: Zustände einer Reihe vor jeder gespeicherten Änderung (nur in dieser Sitzung)
@@ -7716,6 +7715,15 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const ex = e.target.closest(".ucell .exp");
     if (ex) { const c = ex.closest("[data-lesson]"); if (c) openLessonDetail(keyOfLesson(c.dataset.lesson), mrOf(c)); }
   });
+  // Breite Notiz/Dokumente in offenen Materialsammlungen ziehen
+  try { const w0 = localStorage.getItem("zp-mdw"); if (w0) document.documentElement.style.setProperty("--mdw", w0); } catch (e) {}
+  uEl.addEventListener("pointerdown", (e) => {
+    const g = e.target.closest && e.target.closest(".mat-gut"); if (!g || e.button !== 0) return;
+    e.preventDefault(); e.stopPropagation(); g.setPointerCapture(e.pointerId); g.classList.add("on"); const row = g.closest(".lesson");
+    const mv = (ev) => { const rc = row.getBoundingClientRect(), w = Math.max(200, Math.min(rc.width - 170 - 140, rc.right - ev.clientX)); document.documentElement.style.setProperty("--mdw", w + "px"); };
+    const up = () => { g.removeEventListener("pointermove", mv); g.removeEventListener("pointerup", up); g.classList.remove("on"); try { localStorage.setItem("zp-mdw", getComputedStyle(document.documentElement).getPropertyValue("--mdw").trim()); } catch (err) {} };
+    g.addEventListener("pointermove", mv); g.addEventListener("pointerup", up);
+  }, true);
   uEl.addEventListener("contextmenu", (e) => {
     { const mb = e.target.closest("[data-mnum]"); if (mb) { e.preventDefault(); matNoMenu(mb, +mb.dataset.mnum); return; } }
     { const cb = e.target.closest("[data-cmatm]"); if (cb) { e.preventDefault(); matNoMenu(cb, +cb.dataset.cmatm, cb.closest("[data-mrid]").dataset.mrid); return; } }
