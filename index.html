@@ -5404,16 +5404,44 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     try { await load(); }
     catch (e) { console.error(e); scroll.innerHTML = '<div class="empty">Das Dokument konnte nicht geöffnet werden: ' + esc(e.message || e) + "</div>"; setMsg(""); }
   }
+  // Seiten in Materialsammlungen, denen dieses Dokument zugeordnet ist (📌, gleiche Datei) – in allen Reihen
+  function docPages(f) {
+    const out = []; if (!f) return out;
+    Object.entries(U.reihen).forEach(([rid, r]) => { if (!r || r.klasse) return; (r.lnItems || []).forEach((m, k) => {
+      if (!m || !m.mat || !m.page || !Array.isArray(m.page.pages)) return;
+      m.page.pages.forEach((pp, j) => { if (!pp.doc) return; const f2 = (m.files || []).find((x) => x.id === pp.doc); if (!f2 || !(f2.id === f.id || (f.path && f2.path === f.path))) return;
+        out.push({ rid, k, pid: pp.id, fid: f2.id, title: r.title || "Reihe", mat: "M" + matNo(r, k) + (m.name ? " " + m.name : ""), page: pp.name || "Seite " + (j + 1) }); });
+    }); });
+    return out;
+  }
+  function openDocPage(x) {
+    const o = U.reihen[x.rid]; if (!o) return;
+    const ufl = document.getElementById("ufl"); if (ufl && ufl._close) ufl._close(true);
+    if (U.sel !== x.rid) { U.sel = x.rid; U.year = firstYear(o); }
+    if (typeof renderU === "function") renderU();
+    UEBS.pg = UEBS.pg || {}; UEBS.pg[x.rid + "|ln" + x.k] = x.pid; uebsSave();
+    UFL.docs = true; UFL.doc = UFL.doc || {}; UFL.doc[x.rid + "|ln" + x.k] = x.fid; try { localStorage.setItem("zp-ufl", JSON.stringify(UFL)); } catch (e) {}
+    setTimeout(() => openLessonDetail(keyOfLesson("ln" + x.k), x.rid), 60);
+  }
   async function openViewer(f, edit, rm) {
     let root = document.getElementById("viewerRoot");
     if (!root) { root = document.createElement("div"); root.id = "viewerRoot"; document.body.appendChild(root); }
     root.innerHTML = '<div class="overlay vw-ov" id="vw-ov"><div class="panel viewer" role="dialog" aria-modal="true" aria-label="' + esc(f.name) + '">' +
-      '<div class="vw-head"><h3>' + esc(f.name) + '</h3><div class="right"><span class="msg" id="vw-msg"></span><button class="btn" type="button" id="vw-edit" hidden>Bearbeiten</button><button class="btn" type="button" id="vw-saveas" hidden>Speichern unter …</button>' + (window.ZLOCAL && /^(docx?|xlsx?|pptx?|pptm|pdf|odt)$/i.test(extOf(f)) ? '<button class="btn primary" type="button" id="vw-word" title="Das Dokument im Ordner der Reihe direkt bearbeiten">' + ({ doc: "In Word bearbeiten", docx: "In Word bearbeiten", xls: "In Excel bearbeiten", xlsx: "In Excel bearbeiten", ppt: "In PowerPoint bearbeiten", pptx: "In PowerPoint bearbeiten", pptm: "In PowerPoint bearbeiten" }[extOf(f).toLowerCase()] || "Im Programm öffnen") + "</button>" : "") + (U.reihen[U.sel] && U.reihen[U.sel].klasse && U.reihen[U.sel].kfolder && U.reihen[U.reihen[U.sel].src] && window.ZLOCAL && window.ZLOCAL.write ? '<button class="btn" type="button" id="vw-promote" title="Diese Fassung aus der Klasse wird zum Original im Unterricht">Als Original übernehmen</button>' : "") + '<button class="btn" type="button" id="vw-dl">Herunterladen</button>' + (rm ? '<button class="btn ghost danger" type="button" id="vw-rm" title="Das Dokument aus dieser Liste in Semper entfernen (die Datei im Ordner bleibt erhalten)">🗑 Entfernen</button>' : "") + '<button class="btn primary" type="button" id="vw-close">Schliessen</button></div></div>' +
+      '<div class="vw-head"><h3>' + esc(f.name) + '</h3><div class="right"><span class="msg" id="vw-msg"></span><button class="btn" type="button" id="vw-edit" hidden>Bearbeiten</button><button class="btn" type="button" id="vw-saveas" hidden>Speichern unter …</button>' + (window.ZLOCAL && /^(docx?|xlsx?|pptx?|pptm|pdf|odt)$/i.test(extOf(f)) ? '<button class="btn primary" type="button" id="vw-word" title="Das Dokument im Ordner der Reihe direkt bearbeiten">' + ({ doc: "In Word bearbeiten", docx: "In Word bearbeiten", xls: "In Excel bearbeiten", xlsx: "In Excel bearbeiten", ppt: "In PowerPoint bearbeiten", pptx: "In PowerPoint bearbeiten", pptm: "In PowerPoint bearbeiten" }[extOf(f).toLowerCase()] || "Im Programm öffnen") + "</button>" : "") + (U.reihen[U.sel] && U.reihen[U.sel].klasse && U.reihen[U.sel].kfolder && U.reihen[U.reihen[U.sel].src] && window.ZLOCAL && window.ZLOCAL.write ? '<button class="btn" type="button" id="vw-promote" title="Diese Fassung aus der Klasse wird zum Original im Unterricht">Als Original übernehmen</button>' : "") + '' + (docPages(f).length ? '<button class="btn" type="button" id="vw-pages" title="Die eigene Notizseite zu diesem Dokument öffnen: links Notizen, rechts das Dokument">📖 Mit Notizseite' + (docPages(f).length > 1 ? " ▾" : "") + "</button>" : "") + '<button class="btn" type="button" id="vw-dl">Herunterladen</button>' + (rm ? '<button class="btn ghost danger" type="button" id="vw-rm" title="Das Dokument aus dieser Liste in Semper entfernen (die Datei im Ordner bleibt erhalten)">🗑 Entfernen</button>' : "") + '<button class="btn primary" type="button" id="vw-close">Schliessen</button></div></div>' +
       '<div class="vw-bar" id="vw-ask" hidden><span>Sie haben das Dokument bearbeitet. Als neues Dokument speichern? Das Original bleibt unverändert.</span><button class="btn primary" type="button" id="vw-ask-save">Speichern unter …</button><button class="btn ghost danger" type="button" id="vw-ask-drop">Änderungen verwerfen</button><button class="btn ghost" type="button" id="vw-ask-back">Weiter bearbeiten</button></div>' +
       '<div class="vw-bar" id="vw-name" hidden><label for="vw-fname">Name der bearbeiteten Fassung</label><input type="text" id="vw-fname"><button class="btn primary" type="button" id="vw-name-ok">Speichern</button><button class="btn ghost" type="button" id="vw-name-cancel">Abbrechen</button></div>' +
       '<div class="vw-body" id="vw-body"><div class="empty">Lädt …</div></div></div></div>';
     viewerDirty = false;
     $("#vw-close").onclick = () => closeViewer();
+    { const bp = $("#vw-pages"), dps = docPages(f); if (bp) bp.onclick = () => {
+      const go = (x) => { if (viewerDirty) { closeViewer(); return; } closeViewer(); openDocPage(x); };
+      if (dps.length === 1) { go(dps[0]); return; }
+      const old = document.getElementById("vw-pmenu"); if (old) { old.remove(); return; }
+      const m = document.createElement("div"); m.className = "cmenu"; m.id = "vw-pmenu"; m.style.zIndex = 10000; m.innerHTML = '<div class="cm-title">Notizseiten zu diesem Dokument</div>' + dps.map((x, j) => '<button type="button" role="menuitem" data-j="' + j + '"><b>' + esc(x.title) + "</b> · " + esc(x.mat) + " · " + esc(x.page) + "</button>").join("");
+      document.body.appendChild(m); const rc = bp.getBoundingClientRect(); m.style.position = "fixed"; m.style.left = Math.max(8, Math.min(innerWidth - m.offsetWidth - 8, rc.left)) + "px"; m.style.top = rc.bottom + 4 + "px";
+      m.addEventListener("click", (e) => { const b = e.target.closest("[data-j]"); if (!b) return; m.remove(); go(dps[+b.dataset.j]); });
+      setTimeout(() => { const out = (e) => { if (!m.contains(e.target)) { m.remove(); document.removeEventListener("pointerdown", out, true); } }; document.addEventListener("pointerdown", out, true); }, 0);
+    }; }
     if (rm) $("#vw-rm").onclick = (e) => {
       const b = e.currentTarget;
       if (!b.dataset.armed) { b.dataset.armed = "1"; b.textContent = "Wirklich entfernen?"; b.classList.add("armed"); return; }
