@@ -2216,7 +2216,21 @@ main.wrap:has(#u-view-reihen:not([hidden]) .r-layout.ueb-on) { max-width: none; 
 .ufl-btns .btn { padding-top: 3px; padding-bottom: 3px; }
 .ufl-kurz { display: flex; align-items: center; gap: 10px; padding: 6px 12px; border-bottom: 1px solid var(--line); }
 .ufl-kurz .lbl { white-space: nowrap; } .ufl-kurz .rtfield { flex: 1; min-height: 0; padding: 3px 8px; }
-.ufl .ufl-pane { position: static; flex: 1; height: auto; min-height: 0; border: 0; border-radius: 0; }
+.ufl .ufl-pane { position: static; flex: 1; height: auto; min-height: 0; border: 0; border-radius: 0; min-width: 0; }
+.ufl-split { flex: 1; min-height: 0; display: flex; }
+.ufl-split.on > .ufl-pane { flex: 0 0 var(--dw, 50%); }
+.ufl-gut, .ufl-docs { display: none; }
+.ufl-split.on > .ufl-gut { display: block; flex: 0 0 8px; cursor: col-resize; position: relative; touch-action: none; }
+.ufl-split.on > .ufl-gut::after { content: ""; position: absolute; left: 3px; top: 0; bottom: 0; width: 2px; background: var(--line); }
+.ufl-split.on > .ufl-gut:hover::after { background: var(--accent); }
+.ufl-split.on > .ufl-docs { display: flex; flex-direction: column; flex: 1 1 0; min-width: 0; min-height: 0; }
+.ufl-dbar { display: flex; align-items: center; gap: 4px; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+.ufl-dsel { flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 6px; padding: 3px 6px; background: var(--bg); color: var(--ink); font: inherit; font-size: 0.86rem; }
+.ufl-dbar .btn { padding: 2px 8px; font-size: 0.85rem; }
+.ufl-dmsg:empty { display: none; } .ufl-dmsg { padding: 4px 10px; font-size: 0.8rem; }
+.ufl-dbody { flex: 1; overflow: auto; padding: 10px 14px; background: var(--bg); }
+.ufl-dbody .vw-doc { background: var(--surface); padding: 16px 20px; border-radius: 6px; font-size: 0.92rem; }
+html.phone .ufl-split.on { flex-direction: column; } html.phone .ufl-split.on > .ufl-pane { flex-basis: 55%; } html.phone .ufl-gut { display: none !important; }
 .ufl-rs { position: absolute; right: 0; bottom: 0; width: 18px; height: 18px; cursor: nwse-resize; touch-action: none; background: linear-gradient(135deg, transparent 50%, color-mix(in srgb, var(--muted) 55%, transparent) 50% 60%, transparent 60% 70%, color-mix(in srgb, var(--muted) 55%, transparent) 70% 80%, transparent 80%); }
 .ufl.max .ufl-rs { display: none; }
 #uebmenu { z-index: 1000; }
@@ -4393,6 +4407,34 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     } else bytes = new Uint8Array(await res.arrayBuffer());
     if (stale) bytes.stale = stale;
     return bytes;
+  }
+  // Vorschau eines Dokuments in ein beliebiges Feld (z. B. rechts im Fenster der Materialsammlung)
+  async function docPreview(f, body, msg) {
+    const ext = extOf(f);
+    try {
+      const bytes = await fileBytes(f); if (!body.isConnected) return;
+      if (msg) { msg.className = "ufl-dmsg msg" + (bytes.stale ? " warn" : ""); msg.textContent = bytes.stale ? staleText(f, bytes.stale) : ""; }
+      if (ext === "pdf") {
+        await loadScript(LIBS.pdf); await loadScript(LIBS.pdfWorker);
+        const lib = window.pdfjsLib; lib.GlobalWorkerOptions.workerSrc = LIBS.pdfWorker;
+        const pdf = await lib.getDocument({ data: bytes.slice(0) }).promise; body.innerHTML = "";
+        const wd = Math.max(200, Math.min(body.clientWidth - 16, 900)), n = Math.min(pdf.numPages, 40);
+        for (let i = 1; i <= n; i++) {
+          if (!body.isConnected) return;
+          const pg = await pdf.getPage(i), v1 = pg.getViewport({ scale: 1 }), vp = pg.getViewport({ scale: (wd / v1.width) * (window.devicePixelRatio || 1) });
+          const c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height; c.style.width = wd + "px"; c.className = "vw-page"; body.appendChild(c);
+          await pg.render({ canvasContext: c.getContext("2d"), viewport: vp }).promise;
+        }
+      } else if (/^(png|jpe?g|gif|webp|svg|bmp)$/.test(ext) || /^image\//.test(f.type || "")) {
+        body.innerHTML = '<img class="vw-img" alt="' + esc(f.name) + '" src="' + URL.createObjectURL(new Blob([bytes], { type: f.type || "image/" + ext })) + '">';
+      } else if (ext === "docx") {
+        await loadScript(LIBS.docx);
+        const out = await window.mammoth.convertToHtml({ arrayBuffer: bytes.buffer.slice(0) });
+        body.innerHTML = '<div class="vw-doc">' + out.value + "</div>"; body.querySelectorAll("script,iframe,object,embed").forEach((n) => n.remove());
+      } else if (/^(txt|md|json|csv)$/.test(ext)) {
+        body.innerHTML = '<pre class="vw-text"></pre>'; body.firstChild.textContent = new TextDecoder().decode(bytes);
+      } else body.innerHTML = '<div class="empty">Für diese Datei gibt es hier keine Vorschau. «⤢ Öffnen» zeigt sie gross.</div>';
+    } catch (err) { console.error(err); if (body.isConnected) body.innerHTML = '<div class="empty">Die Vorschau hat nicht geklappt' + (err && /nicht gefunden/.test(err.message || "") ? ": " + esc(err.message) : ".") + "</div>"; }
   }
   const staleText = (f, st) => st === "fehlt" ? "Achtung: «" + f.name + "» liegt nicht mehr am gespeicherten Ort (" + wdShort(f.path) + "). Wurde die Datei umbenannt oder verschoben? Angezeigt wird eine ältere Kopie." : "Achtung: OneDrive war nicht erreichbar. Angezeigt wird eine ältere Kopie, vielleicht nicht die neueste Fassung.";
   function docMissNote(f) { try { uStatus("«" + f.name + "» nicht im Ordner gefunden – umbenannt oder verschoben?", true); } catch (e) {} }
@@ -6738,16 +6780,15 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   const uebOn = (r) => uebHas(r) && !r.klasse && !!UEBS.open;
   const uebId = () => "u" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   // r.ueb.pages = [{id, name, html, items, cm, lh, fs}] – Seiten wie ein Büchlein; welche offen ist, merkt sich das Gerät (UEBS.pg)
-  function uebData(r) {
-    const u = r.ueb || (r.ueb = {});
+  function uebData(r) { return uebPg(r.ueb || (r.ueb = {})); }
+  // Seiten anlegen bzw. alte Daten (html usw. direkt im Objekt) zu Seite 1 machen – für Übersichtsseite und Materialsammlungen
+  function uebPg(u) {
     if (!Array.isArray(u.pages) || !u.pages.length) { const p0 = { id: uebId() }; ["html", "notesHtml", "notesLh", "items", "cm", "lh", "fs"].forEach((f) => { if (u[f] != null) p0[f] = u[f]; delete u[f]; }); u.pages = [uebNorm(p0)]; }
     u.pages.forEach(uebNorm);
     return u;
   }
-  function uebCur(r, rid) {
-    const u = uebData(r), id = (UEBS.pg || {})[rid];
-    return u.pages.find((p) => p.id === id) || u.pages[0];
-  }
+  function uebCurOf(u, key) { const id = (UEBS.pg || {})[key]; return u.pages.find((p) => p.id === id) || u.pages[0]; }
+  function uebCur(r, rid) { return uebCurOf(uebData(r), rid); }
   const uebPgHas = (p) => filled(p.html) || /<(img|figure|table)\b/i.test(p.html) || p.items.length || filled(p.cm || "");
   function uebNorm(u) {
     if (typeof u.html !== "string") u.html = u.notesHtml && (filled(u.notesHtml) || /<(img|figure|table)\b/i.test(u.notesHtml)) ? uebSan(u.notesHtml) : "";
@@ -6804,15 +6845,17 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   }
   function uebMount(pane, rid, ctx) {
     const r = U.reihen[rid]; if (!r && !ctx) return;
-    const u0 = ctx ? uebNorm(ctx.data()) : uebCur(r, rid), pages = ctx ? null : uebData(r).pages;
-    const sigOf = (u) => JSON.stringify(ctx ? [u.html, u.items, u.lh || 0, u.fs || 0, u.cm || ""] : [u.id, uebData(R()).pages.map((p) => [p.id, p.name || ""]), u.html, u.items, u.lh || 0, u.fs || 0, u.cm || ""]);
-    const R = () => U.reihen[rid];
+    const R = () => U.reihen[rid], pgKey = ctx ? rid + "|" + (ctx.key || "") : rid;
+    const box = () => { if (ctx) { const d = ctx.data(); return d ? uebPg(d) : null; } const rr = R(); return rr ? uebData(rr) : null; };
+    const saveAll = () => { if (ctx) ctx.save(); else saveReihe(rid, 0); };
+    const u0 = uebCurOf(box(), pgKey), pages = box().pages;
+    const sigOf = (u) => JSON.stringify([u.id, (box() || { pages: [] }).pages.map((p) => [p.id, p.name || ""]), u.html, u.items, u.lh || 0, u.fs || 0, u.cm || ""]);
     pane.dataset.rid = rid; pane.dataset.sig = sigOf(u0);
     const pgName = (p, i) => p.name || "Seite " + (i + 1);
-    const tabsHtml = ctx ? "" : '<span class="ueb-pgs" role="tablist" aria-label="Seiten">' + (pages.length > 1 ? pages.map((p, i) => '<button type="button" class="ueb-pg' + (p.id === u0.id ? " on" : "") + '" role="tab" aria-selected="' + (p.id === u0.id) + '" draggable="true" data-upg="' + esc(p.id) + '" title="' + (p.id === u0.id ? "Klick: umbenennen, verschieben oder löschen. Ziehen: Reihenfolge ändern" : "Diese Seite öffnen. Markierten Text hierher ziehen = unten an diese Seite anhängen") + '">' + esc(pgName(p, i)) + "</button>" + (p.id === u0.id ? '<button type="button" class="ueb-pgx" id="ueb-pgdel" title="Diese Seite löschen" aria-label="Seite löschen">×</button>' : "")).join("") : "") +
+    const tabsHtml = '<span class="ueb-pgs" role="tablist" aria-label="Seiten">' + (pages.length > 1 ? pages.map((p, i) => '<button type="button" class="ueb-pg' + (p.id === u0.id ? " on" : "") + '" role="tab" aria-selected="' + (p.id === u0.id) + '" draggable="true" data-upg="' + esc(p.id) + '" title="' + (p.id === u0.id ? "Klick: umbenennen, verschieben oder löschen. Ziehen: Reihenfolge ändern" : "Diese Seite öffnen. Markierten Text hierher ziehen = unten an diese Seite anhängen") + '">' + esc(pgName(p, i)) + "</button>" + (p.id === u0.id ? '<button type="button" class="ueb-pgx" id="ueb-pgdel" title="Diese Seite löschen" aria-label="Seite löschen">×</button>' : "")).join("") : "") +
       '<button type="button" class="ueb-pg ueb-pgadd" id="ueb-pgadd" title="Neue Seite anlegen (wie in einem Büchlein)">+ Seite</button></span>';
     const TB = (cmd, label, title, cls) => '<button type="button" class="nb' + (cls ? " " + cls : "") + '" data-ucmd="' + cmd + '" title="' + title + '" aria-label="' + title + '">' + label + "</button>";
-    pane.innerHTML = '<div class="ueb-in"><div class="ueb-bar">' + (ctx ? '<span class="ueb-name">' + esc(ctx.name || "Seite") + "</span>" : '<div class="ueb-top"><span class="ueb-name">Übersichtsseite</span>' + tabsHtml + '<span class="ueb-right"><button type="button" class="btn ghost" id="ueb-solo"></button><button type="button" class="btn ghost" id="ueb-close" title="Übersichtsseite einklappen – die Reihenliste erscheint wieder">✕ Einklappen</button></span></div>') + '<span class="ueb-tools">' +
+    pane.innerHTML = '<div class="ueb-in"><div class="ueb-bar">' + (ctx ? '<div class="ueb-top"><span class="ueb-name">' + esc(ctx.name || "Seite") + "</span>" + tabsHtml + (ctx.right || "") + "</div>" : '<div class="ueb-top"><span class="ueb-name">Übersichtsseite</span>' + tabsHtml + '<span class="ueb-right"><button type="button" class="btn ghost" id="ueb-solo"></button><button type="button" class="btn ghost" id="ueb-close" title="Übersichtsseite einklappen – die Reihenliste erscheint wieder">✕ Einklappen</button></span></div>') + '<span class="ueb-tools">' +
       '<button type="button" class="nb" id="ueb-undo"' + (ctx ? " hidden" : "") + ' title="Letzte Änderung rückgängig machen" aria-label="Rückgängig">↶</button><span class="nsep"></span>' +
       '<button type="button" class="nb nimg ueb-free" id="ueb-free" aria-pressed="false" title="Frei schreiben: irgendwo hinklicken und schreiben, Bilder frei hinlegen (wie in OneNote). Ausgeschaltet: normale Seite">✥ Frei schreiben</button><span class="nsep"></span>' +
       TB("bold", "<b>F</b>", "Fett (Strg+B)") + TB("italic", "<i>K</i>", "Kursiv (Strg+I)") + TB("underline", "<u>U</u>", "Unterstrichen (Strg+U)") + '<span class="nsep"></span>' +
@@ -6830,7 +6873,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const HINT_F = "Frei schreiben: irgendwo hinklicken und schreiben, Screenshot = Stelle anklicken, dann Strg+V. Grauer Rand oben = verschieben, Ecke = Grösse.";
     let last = null, saveT = null, kText = {};
     const say = (t) => { msg.textContent = t; };
-    const U_ = ctx ? () => { const d = ctx.data(); return d ? uebNorm(d) : null; } : () => { const rr = R(); return rr ? uebCur(rr, rid) : null; };
+    const U_ = () => { const b = box(); return b ? uebCurOf(b, pgKey) : null; };
     const itemOf = (el) => { const u = U_(); return u && u.items.find((q) => q.id === el.dataset.id); };
     const blocks = () => [...page.children];
     const kOf = (k) => (k ? page.querySelector(':scope > [data-k="' + k + '"]') : null);
@@ -6975,12 +7018,12 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     // Seiten: wechseln, Reihenfolge per Ziehen, markierten Text auf eine Seite ziehen = dort unten anhängen
     let pgDragT = 0, pgDrag = null, txtRange = null;
     const pgDel = () => {
-      save(true); const ps2 = uebData(R()).pages, j = ps2.findIndex((p) => p.id === u0.id); if (j < 0) return;
+      save(true); const ps2 = box().pages, j = ps2.findIndex((p) => p.id === u0.id); if (j < 0) return;
       if (!confirm(uebPgHas(ps2[j]) ? "«" + pgName(ps2[j], j) + "» enthält Notizen. Wirklich löschen? (Mit «↶ Rückgängig» lässt sie sich wiederherstellen.)" : "«" + pgName(ps2[j], j) + "» löschen?")) return;
-      ps2.splice(j, 1); if (!ps2.length) ps2.push(uebNorm({ id: uebId() })); saveReihe(rid, 0); pgGo(ps2[Math.max(0, j - 1)].id);
+      ps2.splice(j, 1); if (!ps2.length) ps2.push(uebNorm({ id: uebId() })); saveAll(); pgGo(ps2[Math.max(0, j - 1)].id);
     };
-    const pgGo = (id) => { UEBS.pg = UEBS.pg || {}; UEBS.pg[rid] = id; uebsSave(); uebMount(pane, rid); };
-    if (!ctx) {
+    const pgGo = (id) => { UEBS.pg = UEBS.pg || {}; UEBS.pg[pgKey] = id; uebsSave(); uebMount(pane, rid, ctx); };
+    {
       const pgs = pane.querySelector(".ueb-pgs");
       page.addEventListener("dragstart", (e) => { const sl = getSelection(); txtRange = sl.rangeCount && !sl.isCollapsed && page.contains(sl.anchorNode) ? sl.getRangeAt(0).cloneRange() : null; });
       root.addEventListener("dragend", () => { setTimeout(() => { txtRange = null; }, 0); pgs.querySelectorAll(".ddrop").forEach((x) => x.classList.remove("ddrop")); });
@@ -6989,12 +7032,12 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       pgs.addEventListener("dragleave", (e) => { const t = e.target.closest("[data-upg]"); if (t && !t.contains(e.relatedTarget)) t.classList.remove("ddrop"); });
       pgs.addEventListener("drop", (e) => {
         const t = e.target.closest("[data-upg]"); if (!t) return; e.preventDefault(); t.classList.remove("ddrop"); pgDragT = Date.now();
-        const ps = uebData(R()).pages, ti = ps.findIndex((p) => p.id === t.dataset.upg); if (ti < 0) return;
-        if (pgDrag) { const fi = ps.findIndex((p) => p.id === pgDrag); pgDrag = null; if (fi < 0 || fi === ti) return; save(true); ps.splice(ti, 0, ps.splice(fi, 1)[0]); saveReihe(rid, 0); uebMount(pane, rid); return; }
+        const ps = box().pages, ti = ps.findIndex((p) => p.id === t.dataset.upg); if (ti < 0) return;
+        if (pgDrag) { const fi = ps.findIndex((p) => p.id === pgDrag); pgDrag = null; if (fi < 0 || fi === ti) return; save(true); ps.splice(ti, 0, ps.splice(fi, 1)[0]); saveAll(); uebMount(pane, rid, ctx); return; }
         if (!txtRange || t.dataset.upg === u0.id) return;
-        const box = document.createElement("div"); box.appendChild(txtRange.cloneContents()); box.querySelectorAll("[data-k]").forEach((x) => x.removeAttribute("data-k"));
-        if (!filled(box.innerHTML) && !box.querySelector("img")) return;
-        const tp = ps[ti]; tp.html = uebSan((tp.html || "") + box.innerHTML);
+        const frag = document.createElement("div"); frag.appendChild(txtRange.cloneContents()); frag.querySelectorAll("[data-k]").forEach((x) => x.removeAttribute("data-k"));
+        if (!filled(frag.innerHTML) && !frag.querySelector("img")) return;
+        const tp = ps[ti]; tp.html = uebSan((tp.html || "") + frag.innerHTML);
         page.focus(); const sl = getSelection(); sl.removeAllRanges(); sl.addRange(txtRange); document.execCommand("delete"); txtRange = null;
         { const cb = curBlock(); if (cb && page.children.length > 1 && !cb.textContent.trim() && !cb.querySelector("img,figure,table")) cb.remove(); }
         norm(); place(); save(true); say("Unten an «" + pgName(tp, ti) + "» angehängt.");
@@ -7082,20 +7125,20 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     pane.querySelector(".ueb-bar").addEventListener("click", (e) => {
       const b = e.target.closest("button"); if (!b) return;
       if (b.id === "ueb-close") { save(true); UEBS.open = false; uebsSave(); renderU(); return; }
-      if (b.id === "ueb-pgadd") { save(true); const rr = R(); if (!rr) return; const ps = uebData(rr).pages, np = uebNorm({ id: uebId() }), ci = ps.findIndex((p) => p.id === u0.id); ps.splice(ci + 1, 0, np); pgGo(np.id); saveReihe(rid, 0); return; }
+      if (b.id === "ueb-pgadd") { save(true); const bx = box(); if (!bx) return; const ps = bx.pages, np = uebNorm({ id: uebId() }), ci = ps.findIndex((p) => p.id === u0.id); ps.splice(ci + 1, 0, np); saveAll(); pgGo(np.id); return; }
       if (b.id === "ueb-pgdel") { pgDel(); return; }
       if (b.dataset.upg) {
         if (Date.now() - pgDragT < 300) return;
         if (b.dataset.upg !== u0.id) { save(true); pgGo(b.dataset.upg); return; }
-        const ps = uebData(R()).pages, i = ps.findIndex((p) => p.id === u0.id);
+        const ps = box().pages, i = ps.findIndex((p) => p.id === u0.id);
         menu(b, '<div class="cm-title">Seite</div><div class="nsm-own"><input type="text" maxlength="60" value="' + esc(ps[i].name || "") + '" placeholder="Seite ' + (i + 1) + '" aria-label="Name der Seite"><button type="button" class="btn primary" data-um="ok">Umbenennen</button></div>' +
           (i > 0 ? '<button type="button" role="menuitem" data-um="l">← Nach vorne schieben</button>' : "") + (i < ps.length - 1 ? '<button type="button" role="menuitem" data-um="r">Nach hinten schieben →</button>' : "") + '<hr><button type="button" role="menuitem" data-um="del">Seite löschen</button>', (k, v) => {
-          const ps2 = uebData(R()).pages, j = ps2.findIndex((p) => p.id === u0.id); if (j < 0) return;
+          const ps2 = box().pages, j = ps2.findIndex((p) => p.id === u0.id); if (j < 0) return;
           if (k === "ok") { if (v) ps2[j].name = v; else delete ps2[j].name; }
           else if (k === "l" || k === "r") { const t = j + (k === "l" ? -1 : 1); if (t < 0 || t >= ps2.length) return; ps2.splice(t, 0, ps2.splice(j, 1)[0]); }
           else if (k === "del") { pgDel(); return; }
           else return;
-          save(true); uebMount(pane, rid);
+          save(true); uebMount(pane, rid, ctx);
         });
         return;
       }
@@ -7925,18 +7968,47 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const m0 = item(); if (!m0) return;
     // in «Als Lektionsplanung» geänderte Notizen übernehmen
     if (!m0.page) m0.page = { notesHtml: m0.notesHtml != null ? m0.notesHtml : plainToHtml(m0.details || "") };
-    else if (m0.notesHtml != null && typeof m0.page.html === "string" && sanitizeNotes(m0.notesHtml) !== sanitizeNotes(m0.page.html)) m0.page.html = uebSan(m0.notesHtml);
+    { const p1 = uebPg(m0.page).pages[0]; if (m0.notesHtml != null && sanitizeNotes(m0.notesHtml) !== sanitizeNotes(p1.html || "")) p1.html = uebSan(m0.notesHtml); }
     dirtyU.add(id);
     const w = document.createElement("div"); w.className = "ufl" + (UFL.max ? " max" : ""); w.id = "ufl"; w.setAttribute("role", "dialog"); w.setAttribute("aria-label", "Materialsammlung");
     const vw = innerWidth, vh = innerHeight, W = Math.min(UFL.w || Math.round(vw * 0.72), vw - 16), H = Math.min(UFL.h || Math.round(vh * 0.82), vh - 16);
     w.style.width = W + "px"; w.style.height = H + "px"; w.style.left = Math.max(8, Math.min(vw - W - 8, UFL.x != null ? UFL.x : Math.round((vw - W) / 2))) + "px"; w.style.top = Math.max(8, Math.min(vh - H - 8, UFL.y != null ? UFL.y : Math.round((vh - H) / 2))) + "px";
     w.innerHTML = '<div class="ufl-head"><span class="ufl-t">' + esc(r.title || "Reihe") + "<small>" + esc(lnLabel(r, i)) + '</small></span><span class="d-modes" role="group" aria-label="Materialsammlung öffnen als"><button type="button" data-umode="m" aria-pressed="true" title="Seite für Material: Screenshots, Bilder mit Namen, Notizen, frei schreiben">Materialsammlung</button><button type="button" data-umode="l" aria-pressed="false" title="Wie eine Lektion planen: Lernziele, Lektionsplanung, Notizen («Alias-Lektion»)">Als Lektionsplanung</button></span>' +
       '<span class="ufl-btns"><button type="button" class="btn ghost" data-ufl="max" title="Ganzer Bildschirm bzw. wieder als Fenster">⤢</button><button type="button" class="btn primary" data-ufl="close">Fertig</button></span></div>' +
-      '<div class="ufl-kurz"><span class="lbl">Kurzzusammenfassung</span><div class="rich rtfield" contenteditable="true" role="textbox" aria-label="Kurzzusammenfassung (erscheint in der Reihe)" data-ph="erscheint in der Reihe">' + sanitize(m0.html || "") + '</div></div><section class="ueb-pane ufl-pane"></section><div class="ufl-rs" title="Ziehen für die Grösse"></div>';
+      '<div class="ufl-kurz"><span class="lbl">Kurzzusammenfassung</span><div class="rich rtfield" contenteditable="true" role="textbox" aria-label="Kurzzusammenfassung (erscheint in der Reihe)" data-ph="erscheint in der Reihe">' + sanitize(m0.html || "") + '</div></div><div class="ufl-split" style="--dw:' + (UFL.dw || 50) + '%"><section class="ueb-pane ufl-pane"></section><div class="ufl-gut" title="Ziehen, um die Breite zu ändern"></div><section class="ufl-docs" aria-label="Dokumente der Materialsammlung"></section></div><div class="ufl-rs" title="Ziehen für die Grösse"></div>';
     document.body.appendChild(w);
     let t = null;
-    const save = () => { const m = item(); if (!m) return; if (m.page) { const h = sanitizeNotes(m.page.html || ""); if (filled(h) || /<(img|figure|table)\b/.test(h)) { m.notesHtml = h; m.details = notesPlain(h); } else { delete m.notesHtml; m.details = ""; } } saveReihe(id, 300); };
-    uebMount(w.querySelector(".ufl-pane"), id, { name: "Material", data: () => { const m = item(); return m ? m.page || (m.page = {}) : null; }, save });
+    const save = () => { const m = item(); if (!m) return; if (m.page) { const h = sanitizeNotes(uebPg(m.page).pages[0].html || ""); if (filled(h) || /<(img|figure|table)\b/.test(h)) { m.notesHtml = h; m.details = notesPlain(h); } else { delete m.notesHtml; m.details = ""; } } saveReihe(id, 300); };
+    // geteilter Bildschirm: links die Seite(n) mit Notizen, rechts die Dokumente der Sammlung zum Lesen
+    const docsOn = () => UFL.docs !== false && ((item() || {}).files || []).length > 0;
+    const split = w.querySelector(".ufl-split"), dp = w.querySelector(".ufl-docs");
+    const right = '<span class="ueb-right"><button type="button" class="btn ghost" id="ufl-docs" title="Dokumente der Sammlung rechts daneben zeigen bzw. ausblenden"></button></span>';
+    const setDocs = () => { const on = docsOn(); split.classList.toggle("on", on); const b = w.querySelector("#ufl-docs"); if (b) { b.hidden = !((item() || {}).files || []).length; b.textContent = on ? "◨ Dokumente ausblenden" : "◧ Dokumente daneben"; } if (on && !dp.dataset.on) docsPane(); setTimeout(() => fit(), 0); };
+    let curDoc = null;
+    function docsPane() {
+      dp.dataset.on = "1"; const fs = (item() || {}).files || []; if (!fs.length) { dp.innerHTML = ""; return; }
+      if (!curDoc || !fs.some((f) => f.id === curDoc)) curDoc = (UFL.doc && UFL.doc[id + "|" + k] && fs.some((f) => f.id === UFL.doc[id + "|" + k])) ? UFL.doc[id + "|" + k] : fs[0].id;
+      const short = (n) => String(n || "").replace(/\.[^.]+$/, "");
+      dp.innerHTML = '<div class="ufl-dbar"><select class="ufl-dsel" aria-label="Dokument wählen">' + fs.map((f) => '<option value="' + esc(f.id) + '"' + (f.id === curDoc ? " selected" : "") + ">" + esc(short(f.name)) + "</option>").join("") + '</select><button type="button" class="btn ghost" data-dnav="-1" title="Vorheriges Dokument" aria-label="Vorheriges Dokument">‹</button><button type="button" class="btn ghost" data-dnav="1" title="Nächstes Dokument" aria-label="Nächstes Dokument">›</button><button type="button" class="btn ghost" data-dbig title="Gross öffnen (mit Bearbeiten, Herunterladen …)">⤢ Öffnen</button></div><div class="ufl-dmsg msg"></div><div class="ufl-dbody"><div class="empty">Lädt …</div></div>';
+      const f = fs.find((x) => x.id === curDoc); UFL.doc = UFL.doc || {}; UFL.doc[id + "|" + k] = curDoc; try { localStorage.setItem("zp-ufl", JSON.stringify(UFL)); } catch (e) {}
+      docPreview(f, dp.querySelector(".ufl-dbody"), dp.querySelector(".ufl-dmsg"));
+    }
+    dp.addEventListener("change", (e) => { if (e.target.classList.contains("ufl-dsel")) { curDoc = e.target.value; docsPane(); } });
+    dp.addEventListener("click", (e) => {
+      const b = e.target.closest("button"); if (!b) return; const fs = (item() || {}).files || [];
+      if (b.dataset.dnav) { const j = fs.findIndex((f) => f.id === curDoc), n = j + +b.dataset.dnav; if (n >= 0 && n < fs.length) { curDoc = fs[n].id; docsPane(); } return; }
+      if (b.dataset.dbig != null) { const f = fs.find((x) => x.id === curDoc); if (f) openViewer(f); }
+    });
+    { const g = w.querySelector(".ufl-gut"); g.addEventListener("pointerdown", (e) => {
+      e.preventDefault(); g.setPointerCapture(e.pointerId); const rc = split.getBoundingClientRect();
+      const mv = (ev) => { const v = Math.max(25, Math.min(80, Math.round(((ev.clientX - rc.left) / rc.width) * 100))); UFL.dw = v; split.style.setProperty("--dw", v + "%"); fit(); };
+      const up = () => { g.removeEventListener("pointermove", mv); g.removeEventListener("pointerup", up); try { localStorage.setItem("zp-ufl", JSON.stringify(UFL)); } catch (err) {} };
+      g.addEventListener("pointermove", mv); g.addEventListener("pointerup", up); }); }
+    const pane = w.querySelector(".ufl-pane");
+    pane.addEventListener("click", (e) => { if (e.target.closest("#ufl-docs")) { UFL.docs = !docsOn(); try { localStorage.setItem("zp-ufl", JSON.stringify(UFL)); } catch (err) {} setDocs(); } });
+    new MutationObserver(() => { const b = pane.querySelector("#ufl-docs"); if (b && !b.textContent) setDocs(); }).observe(pane, { childList: true });
+    uebMount(pane, id, { name: "Material", key: "ln" + k, right, data: () => { const m = item(); return m ? m.page || (m.page = {}) : null; }, save });
+    setDocs();
     const kz = w.querySelector(".ufl-kurz .rtfield");
     kz.addEventListener("input", () => { const m = item(); if (!m) return; m.html = sanitize(kz.innerHTML); clearTimeout(t); t = setTimeout(() => saveReihe(id, 300), 500); });
     kz.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); lineBreak(); } });
