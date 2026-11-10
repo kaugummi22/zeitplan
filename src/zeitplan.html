@@ -1693,6 +1693,7 @@ main.wrap:has(#u-view-reihen:not([hidden]) .r-layout.ueb-on) { max-width: none; 
 .ufl-dbar { display: flex; align-items: center; gap: 4px; padding: 6px 8px; border-bottom: 1px solid var(--line); }
 .ufl-dsel { flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 6px; padding: 3px 6px; background: var(--bg); color: var(--ink); font: inherit; font-size: 0.86rem; }
 .ufl-dbar .btn { padding: 2px 8px; font-size: 0.85rem; }
+.ufl-pin[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
 .ufl-dmsg:empty { display: none; } .ufl-dmsg { padding: 4px 10px; font-size: 0.8rem; }
 .ufl-dbody { flex: 1; overflow: auto; padding: 10px 14px; background: var(--bg); }
 .ufl-dbody .vw-doc { background: var(--surface); padding: 16px 20px; border-radius: 6px; font-size: 0.92rem; }
@@ -6333,6 +6334,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       "</div>" +
       '<div class="ueb-scroll"><div class="ueb-sheet"><div class="ueb-mline" aria-hidden="true"></div><div class="notes-ed ueb-cm" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Kommentare im Rand" data-ph="Kommentare, Stichpunkte … auf der gewünschten Höhe hineinklicken."></div><button type="button" class="ueb-tab" id="ueb-tab"></button><div class="notes-ed ueb-page" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Übersichtsseite" data-ph="Notizen zur Reihe: was alles hinein muss, Gedanken, wo welches Material ist … Screenshots mit Strg+V.">' + u0.html + '</div></div></div>' +
       '<div class="ueb-hint" id="ueb-msg"></div></div>';
+    if (ctx && ctx.onPage) ctx.onPage(u0);
     const root = pane.firstElementChild; // Ereignisse hier anhängen: das Feld selbst bleibt beim Neuaufbau bestehen
     const sheet = pane.querySelector(".ueb-sheet"), page = pane.querySelector(".ueb-page"), sc = pane.querySelector(".ueb-scroll"), msg = pane.querySelector("#ueb-msg");
     const HINT_N = "Normale Seite: einfach schreiben. «✥ Frei schreiben» einschalten, um irgendwo daneben, dazwischen oder darunter zu schreiben.";
@@ -7450,19 +7452,22 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const split = w.querySelector(".ufl-split"), dp = w.querySelector(".ufl-docs");
     const right = '<span class="ueb-right"><button type="button" class="btn ghost" id="ufl-docs" title="Dokumente der Sammlung rechts daneben zeigen bzw. ausblenden"></button></span>';
     const setDocs = () => { const on = docsOn(); split.classList.toggle("on", on); const b = w.querySelector("#ufl-docs"); if (b) { b.hidden = !((item() || {}).files || []).length; b.textContent = on ? "◨ Dokumente ausblenden" : "◧ Dokumente daneben"; } if (on && !dp.dataset.on) docsPane(); setTimeout(() => fit(), 0); };
-    let curDoc = null;
+    let curDoc = null, curPg = null;
+    const pinBtn = () => { const b = dp.querySelector("[data-dpin]"); if (!b) return; const on = !!(curPg && curPg.doc && curPg.doc === curDoc); b.setAttribute("aria-pressed", String(on)); b.title = on ? "Dieses Dokument öffnet sich zuerst, wenn Sie diese Seite aufschlagen. Klick: Zuordnung lösen" : "Dieses Dokument der offenen Seite zuordnen: es öffnet sich dann zuerst"; b.textContent = on ? "📌 Zur Seite" : "📌"; };
+    const onPage = (pg) => { curPg = pg; const fs = (item() || {}).files || []; if (pg && pg.doc && fs.some((f) => f.id === pg.doc) && pg.doc !== curDoc) { curDoc = pg.doc; if (dp.dataset.on) docsPane(); } else pinBtn(); };
     function docsPane() {
       dp.dataset.on = "1"; const fs = (item() || {}).files || []; if (!fs.length) { dp.innerHTML = ""; return; }
       if (!curDoc || !fs.some((f) => f.id === curDoc)) curDoc = (UFL.doc && UFL.doc[id + "|" + k] && fs.some((f) => f.id === UFL.doc[id + "|" + k])) ? UFL.doc[id + "|" + k] : fs[0].id;
       const short = (n) => String(n || "").replace(/\.[^.]+$/, "");
-      dp.innerHTML = '<div class="ufl-dbar"><select class="ufl-dsel" aria-label="Dokument wählen">' + fs.map((f) => '<option value="' + esc(f.id) + '"' + (f.id === curDoc ? " selected" : "") + ">" + esc(short(f.name)) + "</option>").join("") + '</select><button type="button" class="btn ghost" data-dnav="-1" title="Vorheriges Dokument" aria-label="Vorheriges Dokument">‹</button><button type="button" class="btn ghost" data-dnav="1" title="Nächstes Dokument" aria-label="Nächstes Dokument">›</button><button type="button" class="btn ghost" data-dbig title="Gross öffnen (mit Bearbeiten, Herunterladen …)">⤢ Öffnen</button></div><div class="ufl-dmsg msg"></div><div class="ufl-dbody"><div class="empty">Lädt …</div></div>';
+      dp.innerHTML = '<div class="ufl-dbar"><select class="ufl-dsel" aria-label="Dokument wählen">' + fs.map((f) => '<option value="' + esc(f.id) + '"' + (f.id === curDoc ? " selected" : "") + ">" + esc(short(f.name)) + "</option>").join("") + '</select><button type="button" class="btn ghost" data-dnav="-1" title="Vorheriges Dokument" aria-label="Vorheriges Dokument">‹</button><button type="button" class="btn ghost" data-dnav="1" title="Nächstes Dokument" aria-label="Nächstes Dokument">›</button><button type="button" class="btn ghost ufl-pin" data-dpin aria-pressed="false">📌</button><button type="button" class="btn ghost" data-dbig title="Gross öffnen (mit Bearbeiten, Herunterladen …)">⤢ Öffnen</button></div><div class="ufl-dmsg msg"></div><div class="ufl-dbody"><div class="empty">Lädt …</div></div>';
       const f = fs.find((x) => x.id === curDoc); UFL.doc = UFL.doc || {}; UFL.doc[id + "|" + k] = curDoc; try { localStorage.setItem("zp-ufl", JSON.stringify(UFL)); } catch (e) {}
-      docPreview(f, dp.querySelector(".ufl-dbody"), dp.querySelector(".ufl-dmsg"));
+      pinBtn(); docPreview(f, dp.querySelector(".ufl-dbody"), dp.querySelector(".ufl-dmsg"));
     }
     dp.addEventListener("change", (e) => { if (e.target.classList.contains("ufl-dsel")) { curDoc = e.target.value; docsPane(); } });
     dp.addEventListener("click", (e) => {
       const b = e.target.closest("button"); if (!b) return; const fs = (item() || {}).files || [];
       if (b.dataset.dnav) { const j = fs.findIndex((f) => f.id === curDoc), n = j + +b.dataset.dnav; if (n >= 0 && n < fs.length) { curDoc = fs[n].id; docsPane(); } return; }
+      if (b.dataset.dpin != null) { const m = item(); if (!curPg || !m || !m.page) return; const pg = uebPg(m.page).pages.find((x) => x.id === curPg.id); if (!pg) return; if (pg.doc === curDoc) delete pg.doc; else pg.doc = curDoc; curPg = pg; save(); pinBtn(); return; }
       if (b.dataset.dbig != null) { const f = fs.find((x) => x.id === curDoc); if (f) openViewer(f); }
     });
     { const g = w.querySelector(".ufl-gut"); g.addEventListener("pointerdown", (e) => {
@@ -7473,7 +7478,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const pane = w.querySelector(".ufl-pane");
     pane.addEventListener("click", (e) => { if (e.target.closest("#ufl-docs")) { UFL.docs = !docsOn(); try { localStorage.setItem("zp-ufl", JSON.stringify(UFL)); } catch (err) {} setDocs(); } });
     new MutationObserver(() => { const b = pane.querySelector("#ufl-docs"); if (b && !b.textContent) setDocs(); }).observe(pane, { childList: true });
-    uebMount(pane, id, { name: "Material", key: "ln" + k, right, data: () => { const m = item(); return m ? m.page || (m.page = {}) : null; }, save });
+    uebMount(pane, id, { name: "Material", key: "ln" + k, right, onPage, data: () => { const m = item(); return m ? m.page || (m.page = {}) : null; }, save });
     setDocs();
     const kz = w.querySelector(".ufl-kurz .rtfield");
     kz.addEventListener("input", () => { const m = item(); if (!m) return; m.html = sanitize(kz.innerHTML); clearTimeout(t); t = setTimeout(() => saveReihe(id, 300), 500); });
