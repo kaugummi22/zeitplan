@@ -5651,7 +5651,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     box.querySelectorAll(":scope > .nsec").forEach((d) => {
       d.querySelectorAll(".nsec-x").forEach((e) => e.remove());
       if (!info) return;
-      const id = d.dataset.id || "", tt = (d.querySelector(".nsec-t") || d).textContent.trim(), ph = (info.ph[id] || []).filter((t) => t !== tt && !tt.endsWith(t) && !t.endsWith(" · " + tt)), dc = (d.dataset.docs || "").split(" ").filter(Boolean), c = info.col[id];
+      const id = d.dataset.id || "", tt = (d.querySelector(".nsec-t") || d).textContent.trim(), ph = info.ph[id] || [] /* Phase immer zeigen, auch wenn der Titel gleich heisst (z. B. «Einstieg») */, dc = (d.dataset.docs || "").split(" ").filter(Boolean), c = info.col[id];
       d.style.setProperty("--sc", c || "transparent"); d.classList.toggle("nsec-c", !!c); d.classList.add("nsec-L");
       const noPh = !(info.ph[id] || []).length && info.canPh;
       if (!ph.length && !dc.length && !noPh) return;
