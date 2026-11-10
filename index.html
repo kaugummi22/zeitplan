@@ -1977,7 +1977,6 @@ body:not(.lk-take) .lk-plantext .lk-ptab { padding-top: 0; }
 .panel.wide.lfull { width: min(1760px, 100%); }
 .panel.wide.lfull.lnarrow:not(.wsp) { width: min(1080px, 100%); }
 .panel.lfull .nbar { top: calc(var(--dth, 50px) - 2px); }
-.panel.lfull .d-title { box-shadow: 0 -40px 0 0 var(--surface); }
 @media (min-width: 900px) { .panel.lfull .d-split.ws > .d-ws, .panel.lfull .d-split.rail > .d-rail { top: calc(var(--dth, 50px) + 4px); } .panel.lfull .d-split.ws > .d-ws { height: calc(100vh - 5vh - 32px - var(--dth, 50px)); } }
 .panel.lfull .d-title { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; position: sticky; top: -1px; z-index: 40; background: var(--surface); padding: 6px 0 8px; margin-top: -6px; }
 .panel.lfull .d-title small { margin-left: 0; }
@@ -6094,7 +6093,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       });
       tab.addEventListener("click", () => {
         const on = nw.classList.toggle("shut"); try { localStorage.setItem("zp-dcm", on ? "0" : "1"); } catch (e) {}
-        tab.textContent = on ? "◂ Kommentare" + (filled(x.notesCm || "") ? " ●" : "") : "▸"; if (!on) cm.focus();
+        tab.textContent = on ? "◂" + (filled(x.notesCm || "") ? " ●" : "") : "▸"; if (!on) cm.focus();
       });
     }
     // --- Arbeitsblatt rechts ---
@@ -6329,7 +6328,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       PAB = { secs: () => { const nd = document.getElementById("d-notes"); if (nd && nd._secs) return nd._secs(); const t = document.createElement("template"); t.innerHTML = x.notesHtml || ""; return [...t.content.children].filter((d) => d.classList.contains("nsec") && d.getAttribute("data-id")).map((d) => ({ id: d.getAttribute("data-id"), t: d.textContent.trim() })); },
         col: (id) => secColOf(opt.plan, id) || "#c3cad2" };
       const cmHas = filled(x.notesCm || ""), cmOn = dCm(cmHas);
-      notesF = notesF.replace('<div class="notes-ed"', '<div class="d-nw' + (cmOn ? "" : " shut") + '"><div class="notes-ed"').replace('</div><div class="links" id="d-links">', '</div><div class="d-cmw"><button type="button" class="d-cmtab" id="d-cmtab" title="Kommentare ein- bzw. ausblenden (für die Vorbereitung; werden nur auf Wunsch gedruckt)">' + (cmOn ? "▸" : "◂ Kommentare" + (cmHas ? " ●" : "")) + '</button><div class="d-cm" id="d-cm" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Kommentare" data-ph="Kommentare, Ideen für die Vorbereitung … (dort klicken, wo der Kommentar hin soll)">' + sanitize(x.notesCm || "") + '</div></div></div><div class="links" id="d-links">');
+      notesF = notesF.replace('<div class="notes-ed"', '<div class="d-nw' + (cmOn ? "" : " shut") + '"><div class="notes-ed"').replace('</div><div class="links" id="d-links">', '</div><div class="d-cmw"><button type="button" class="d-cmtab" id="d-cmtab" title="Kommentare ein- bzw. ausblenden (für die Vorbereitung; werden nur auf Wunsch gedruckt)">' + (cmOn ? "▸" : "◂" + (cmHas ? " ●" : "")) + '</button><div class="d-cm" id="d-cm" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Kommentare" data-ph="Kommentare, Ideen für die Vorbereitung … (dort klicken, wo der Kommentar hin soll)">' + sanitize(x.notesCm || "") + '</div></div></div><div class="links" id="d-links">');
       body = '<div class="d-toggles" role="group" aria-label="Weitere Angaben">' + secs.map(([k, l, , has]) => '<button type="button" class="d-tog' + (has ? " has" : "") + '" data-dtog="' + k + '" aria-expanded="' + !!openSet[k] + '">' + esc(l) + "</button>").join("") +
         '<span class="d-ur"><button type="button" id="d-undo" disabled title="Rückgängig (Strg+Z): Lektionsplanung, Lernziele, Kurzeintrag und Notizen">↶ Rückgängig</button><button type="button" id="d-redo" disabled title="Wiederholen (Strg+Y)" aria-label="Wiederholen">↷</button></span>' +
         '<button type="button" class="d-tog d-wsb" id="d-wsb" aria-pressed="' + wsOn + '"' + (wsHas ? "" : " hidden") + ' title="Arbeitsblatt bzw. Dokument rechts neben den Notizen zeigen (wird auf diesem Gerät gemerkt)">Arbeitsblatt</button></div>' +
