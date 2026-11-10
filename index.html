@@ -666,8 +666,8 @@ html.phone .k-vbar { flex-wrap: wrap; gap: 8px; }
 .lk-layout.side-off { grid-template-columns: 34px minmax(0, 1fr) 250px; }
 .lk-layout.docs-off { grid-template-columns: 240px minmax(0, 1fr) 34px; }
 .lk-layout.side-off.docs-off { grid-template-columns: 34px minmax(0, 1fr) 34px; }
-.lk-layout.wide { grid-template-columns: 240px minmax(0, 1fr) minmax(300px, var(--rvw, 42%)); }
-.lk-layout.wide.side-off { grid-template-columns: 34px minmax(0, 1fr) minmax(300px, var(--rvw, 42%)); }
+.lk-layout.wide { grid-template-columns: 220px minmax(0, 1fr) minmax(320px, var(--rvw, 46%)); }
+.lk-layout.wide.side-off { grid-template-columns: 34px minmax(0, 1fr) minmax(320px, var(--rvw, 50%)); }
 .lk-layout.nodocs { grid-template-columns: 240px minmax(0, 1fr); }
 .lk-layout.nodocs.side-off { grid-template-columns: 34px minmax(0, 1fr); }
 .lk-layout.nodocs .lk-docs, .lk-layout.nodocs .lk-rail.r { display: none; }
@@ -1922,7 +1922,8 @@ table.tt-moving { opacity: 0.45; }
   .d-split.rail > .d-rail { flex-direction: column; writing-mode: vertical-rl; position: sticky; top: 0; min-height: 220px; align-self: start; }
   .d-split.rail > .d-rail .d-rarr { writing-mode: horizontal-tb; }
   .d-split.rail.peek > .d-sl { display: grid; position: absolute; z-index: 30; left: 42px; top: 0; width: min(1100px, calc(100% - 60px)); background: var(--surface); border: 1px solid var(--accent); border-radius: 10px; padding: 10px 12px; box-shadow: 0 14px 40px rgba(0, 0, 0, 0.22); }
-  .d-split.rail.peek > .d-sl .d-pbtns { display: none; }
+  .d-split.rail.peek:not(.pin) > .d-sl .d-pbtns { display: none; }
+  .d-split.rail.pin > .d-rail { border-color: var(--accent); background: var(--accent-soft); }
   .d-split.on.ws { grid-template-columns: minmax(340px, 31%) 14px minmax(0, 1fr) 14px minmax(280px, min(var(--wsw, 40%), 32%)); }
   .d-split.on.ws .ptable-wrap { overflow-x: auto; }
   .d-split.on.ws .ptable { font-size: 0.86rem; }
@@ -1931,7 +1932,22 @@ table.tt-moving { opacity: 0.45; }
   .d-split.on .ptable td:first-child .pcell, .d-split.on .ptable th:first-child .pcell { white-space: nowrap; }
   .d-split.on .ptable col { width: auto !important; }
 }
-@media (max-width: 899px) { .d-split.rail > .d-rail { width: 100%; justify-content: flex-start; } .d-split.on .d-pbtns #d-ptop, .d-split:not(.on) .d-pbtns #d-ptop { display: none; } }
+@media (max-width: 899px) { .d-split.rail > .d-rail { width: 100%; justify-content: flex-start; } }
+/* Lektionsfenster: immer volle Breite, schlanke Kopfzeile mit Menü «Angaben», ↶ ↷, Arbeitsblatt, Drucken, ✕ */
+.panel.wide.lfull { width: min(1760px, 100%); }
+.panel.lfull .d-title { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; position: sticky; top: -1px; z-index: 40; background: var(--surface); padding: 6px 0 8px; margin-top: -6px; }
+.panel.lfull .d-title small { margin-left: 0; }
+.panel.lfull .d-toggles { display: none; }
+.d-tbar { display: flex; align-items: center; gap: 6px; flex: 1 1 auto; flex-wrap: wrap; font-size: 0.9rem; }
+.d-tbar .d-tsp { flex: 1 1 auto; }
+.d-tbar .d-tmenu, .d-tbar .d-tb { font: inherit; font-size: 0.85rem; font-weight: 600; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 3px 12px; cursor: pointer; white-space: nowrap; }
+.d-tbar .d-tmenu:hover, .d-tbar .d-tb:hover:not(:disabled) { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.d-tbar .d-tb:disabled { opacity: 0.4; cursor: default; }
+.d-tbar .d-ur { margin-left: 0; } .d-tbar .d-ur button { padding: 3px 9px; }
+.d-tbar .d-wsb { margin: 0; } .d-tbar .d-wsb::before { content: "◨ "; } .d-tbar .d-wsb[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.d-tbar .d-tx { font-size: 1.05rem; padding: 2px 10px; }
+.d-tbar .d-tmenu .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-left: 4px; vertical-align: 2px; }
+.d-tmenu-m button .ck { width: 1.1em; color: var(--accent); font-weight: 700; }
 .notes-ed mark, .notes mark { color: inherit; border-radius: 2px; padding: 0 1px; }
 mark.hl-y { background: #fff1a6; } mark.hl-g { background: #d3f2c4; } mark.hl-b { background: #cfe4ff; }
 :root[data-theme="dark"] mark.hl-y, :root[data-theme="dark"] mark.hl-g, :root[data-theme="dark"] mark.hl-b { color: #111; }
@@ -2336,6 +2352,7 @@ html.phone .r-lf { grid-template-columns: 1fr; } html.phone .r-lf > .lbl { width
 .ueb-open { padding-top: 2px; padding-bottom: 2px; font-weight: 400; color: var(--muted); }
 .ueb-open.has { font-weight: 700; color: var(--accent); }
 main.wrap:has(#u-view-reihen:not([hidden]) .r-layout.ueb-on) { max-width: none; }
+main.wrap:has(#view-lektion:not([hidden])) { max-width: none; }
 .r-layout.ueb-on { grid-template-columns: minmax(300px, var(--uw, 50%)) 8px minmax(0, 1fr); gap: 0; }
 .r-layout.ueb-on > .r-side { display: none; }
 .r-layout.ueb-on.ueb-solo { grid-template-columns: minmax(0, 1fr); }
@@ -2789,7 +2806,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       <button type="button" class="lk-rail l" id="lk-sideopen" title="Klassen und Lektionen zeigen">▸ Klasse &amp; Lektion</button>
       <aside class="lk-side"><div class="lk-shead"><span class="lbl">Klasse</span><button type="button" class="lk-fold" id="lk-sidefold" title="Leiste einklappen">◂</button></div><div class="lk-classes" id="lk-classes"></div><span class="lbl">Lektion</span><div class="lk-list" id="lk-list"></div></aside>
       <div class="lk-main" id="lk-main"></div>
-      <button type="button" class="lk-rail r" id="lk-docsopen" title="Dokumente der Lektion zeigen">◂ Dokumente</button>
+      <button type="button" class="lk-rail r" id="lk-docsopen" title="Lektionsplanung bzw. Dokumente der Lektion rechts zeigen">◂ Planung</button>
       <aside class="lk-docs" id="lk-docs"></aside>
     </div>
   </section>
@@ -5787,7 +5804,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
 
   // Lektion: Lektionsplanung links, Notizen rechts (Wahl und Breite pro Gerät)
   // Lage der Lektionsplanung im Lektionsfenster: "rail" = links eingeklappt (Standard), "left" = Spalte links, "top" = oben
-  const pTab = () => { try { const v = localStorage.getItem("zp-ptab"); return v === "left" || v === "top" ? v : "rail"; } catch (e) { return "rail"; } };
+  const pTab = () => { try { const v = localStorage.getItem("zp-ptab"); return v === "top" ? v : "rail"; } catch (e) { return "rail"; } };
   const dSide = () => pTab() === "left";
   const pFold = () => { try { return localStorage.getItem("zp-pfold") === "1"; } catch (e) { return false; } };
   const dWs = () => { try { return localStorage.getItem("zp-dws") !== "0"; } catch (e) { return true; } };
@@ -5795,19 +5812,22 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   const dCm = (has) => { try { const v = localStorage.getItem("zp-dcm"); return v == null ? !!has : v === "1"; } catch (e) { return !!has; } };
   const dSideW = () => { let v = 55; try { v = +localStorage.getItem("zeitplan-dsidew") || 55; } catch (e) {} return Math.max(25, Math.min(75, v)); };
   function bindSide(root, plan) {
-    const sp = root.querySelector("#d-split"), g = root.querySelector("#d-gut"), rail = root.querySelector("#d-rail"), sl = sp && sp.querySelector(".d-sl"), tb = root.querySelector("#d-ptop");
+    const sp = root.querySelector("#d-split"), g = root.querySelector("#d-gut"), rail = root.querySelector("#d-rail"), sl = sp && sp.querySelector(".d-sl"), tb = root.querySelector("#d-ptop"), cl = root.querySelector("#d-pclose");
     if (!sp || !rail) return;
     const wide = () => innerWidth >= 900;
+    // "rail" = eingeklappt (Klick blendet die Tabelle über den Notizen ein, bis ✕), "top" = fest oben über den Notizen
     const set = (v) => {
-      if (v === "left" && !wide()) v = "top";
-      sp.classList.toggle("rail", v === "rail"); sp.classList.toggle("on", v === "left"); sp.classList.remove("peek");
-      if (tb) { tb.textContent = v === "left" ? "⤒ Nach oben" : "⇤ Nach links"; tb.title = v === "left" ? "Tabelle oben über die ganze Breite zeigen" : "Tabelle als Spalte links neben den Notizen zeigen"; }
+      if (v !== "top") v = "rail";
+      sp.classList.toggle("rail", v === "rail"); sp.classList.remove("on", "peek", "pin");
       try { localStorage.setItem("zp-ptab", v); } catch (e) {}
-      // wenig Platz: Tabelle links und Arbeitsblatt zusammen wären zu eng
-      if (v === "left" && innerWidth < 1250 && sp.classList.contains("ws")) { const wb = root.querySelector("#d-wsb"); if (wb) wb.click(); }
-      hint();
+      btns(); hint();
     };
-    root._ptab = { set, get: () => (sp.classList.contains("rail") ? "rail" : sp.classList.contains("on") ? "left" : "top") };
+    const btns = () => {
+      const top = !sp.classList.contains("rail");
+      if (tb) { tb.textContent = top ? "◂ Einklappen" : "⤒ Oben anheften"; tb.title = top ? "Tabelle wieder einklappen (links als Leiste)" : "Tabelle fest oben über den Notizen zeigen"; }
+      if (cl) cl.hidden = top || !wide();
+    };
+    root._ptab = { set, get: () => (sp.classList.contains("rail") ? "rail" : "top") };
     // Kleiner Hinweis an der eingeklappten Leiste: Tabelle leer oder Abschnitte ohne Zeile
     const hint = () => {
       const h = rail.querySelector(".d-rhint"); if (!h) return;
@@ -5818,15 +5838,18 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     };
     const tick = setInterval(() => { if (!root.isConnected) { clearInterval(tick); return; } if (sp.classList.contains("rail")) hint(); }, 1500);
     setTimeout(hint, 400);
-    rail.addEventListener("click", () => set(wide() ? "left" : "top"));
-    root.querySelector("#d-pclose").addEventListener("click", () => set("rail"));
-    if (tb) tb.addEventListener("click", () => set(sp.classList.contains("on") ? "top" : "left"));
+    const pin = (v) => { sp.classList.toggle("peek", v); sp.classList.toggle("pin", v); rail.setAttribute("aria-expanded", String(v)); };
+    rail.addEventListener("click", () => { if (!wide()) { set("top"); return; } pin(!sp.classList.contains("pin")); });
+    if (cl) cl.addEventListener("click", () => pin(false));
+    if (tb) tb.addEventListener("click", () => set(sp.classList.contains("rail") ? "top" : "rail"));
+    root.addEventListener("keydown", (e) => { if (e.key === "Escape" && sp.classList.contains("pin")) { e.stopPropagation(); pin(false); } }, true);
     // Kurz zeigen: mit der Maus auf die eingeklappte Leiste – die Tabelle erscheint, solange die Maus dort bleibt
     let pt = 0;
-    const peek = (v) => { clearTimeout(pt); pt = setTimeout(() => { if (sp.classList.contains("rail")) sp.classList.toggle("peek", v); }, v ? 120 : 280); };
+    const peek = (v) => { clearTimeout(pt); pt = setTimeout(() => { if (sp.classList.contains("rail") && !sp.classList.contains("pin")) sp.classList.toggle("peek", v); }, v ? 120 : 280); };
     rail.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse" && wide()) peek(true); });
     rail.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") peek(false); });
     if (sl) { sl.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse" && sp.classList.contains("peek")) clearTimeout(pt); }); sl.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") peek(false); }); }
+    btns();
     g.addEventListener("pointerdown", (e) => {
       e.preventDefault(); try { g.setPointerCapture(e.pointerId); } catch (err) {}
       g.classList.add("active"); document.body.classList.add("col-resizing");
@@ -6030,7 +6053,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       cb("ziele", "Kurzeintrag und Lernziele") + cb("ls", "Lehrerschrift (Lösungen)") + cb("cm", "Kommentare" + (has ? "" : " (keine)"), !has) + cb("sheets", "Ganze Arbeitsblätter am Schluss" + (fl.length ? " (" + fl.length + ")" : " (keine)"), !fl.length) +
       '<p class="help pm-help">Der Ausdruck spart Tinte: Phasen als einfache Überschrift, Lehrerschrift kursiv, auch schwarz-weiss gut lesbar.</p><div class="pm-act"><button type="button" class="btn" data-pm="x">Abbrechen</button><button type="button" class="btn primary" data-pm="go">Drucken</button></div>';
     document.body.appendChild(m);
-    const r = btn.getBoundingClientRect(); m.style.left = Math.max(8, Math.min(innerWidth - m.offsetWidth - 8, r.left)) + "px"; m.style.top = Math.max(8, r.top - m.offsetHeight - 6) + "px";
+    const r = btn.getBoundingClientRect(); m.style.left = Math.max(8, Math.min(innerWidth - m.offsetWidth - 8, r.left)) + "px"; let tp = r.top - m.offsetHeight - 6; if (tp < 8) tp = r.bottom + 6; m.style.top = Math.max(8, Math.min(innerHeight - m.offsetHeight - 8, tp)) + "px";
     const close = () => { m.remove(); document.removeEventListener("pointerdown", out, true); };
     const out = (e) => { if (!m.contains(e.target) && e.target !== btn) close(); };
     setTimeout(() => document.addEventListener("pointerdown", out, true), 0);
@@ -6040,6 +6063,33 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       m.querySelectorAll("[data-po]").forEach((c) => { if (!c.disabled) po[c.dataset.po] = c.checked; });
       try { localStorage.setItem("zp-popt", JSON.stringify(po)); } catch (er) {}
       close(); opt.onPrint({ ziele: po.ziele, ls: po.ls, cm: po.cm && has, sheets: po.sheets ? fl : [] });
+    });
+  }
+  // Lektionsfenster: Kopfzeile schlank – Lernziele, Kurzeintrag, Farbe, Dokumente im Menü «Angaben ▾», dazu ↶ ↷, Arbeitsblatt, Drucken, ✕
+  function lessonHead(root) {
+    const pn = root.querySelector(".panel"), tt = root.querySelector(".d-title"), tg = root.querySelector(".d-toggles"); if (!pn || !tt || !tg) return;
+    pn.classList.add("lfull");
+    const bar = document.createElement("span"); bar.className = "d-tbar";
+    const mb = document.createElement("button"); mb.type = "button"; mb.className = "d-tmenu"; mb.id = "d-tmenu"; mb.setAttribute("aria-haspopup", "menu"); mb.title = "Lernziele, Kurzeintrag, Farbe und Dokumente ein- bzw. ausblenden";
+    const lab = () => { mb.innerHTML = "Angaben" + ([...tg.querySelectorAll(".d-tog.has[data-dtog]")].length ? '<span class="dot"></span>' : "") + " ▾"; };
+    lab(); bar.appendChild(mb);
+    const sp = document.createElement("span"); sp.className = "d-tsp"; bar.appendChild(sp);
+    const ur = tg.querySelector(".d-ur"); if (ur) { bar.appendChild(ur); const u = ur.querySelector("#d-undo"); if (u) { u.textContent = "↶"; u.setAttribute("aria-label", "Rückgängig"); } }
+    const ws = tg.querySelector("#d-wsb"); if (ws) { ws.classList.add("d-tb"); bar.appendChild(ws); }
+    const pr = root.querySelector("#d-print"); if (pr) { const b = document.createElement("button"); b.type = "button"; b.className = "d-tb"; b.textContent = "🖨"; b.title = "Drucken"; b.setAttribute("aria-label", "Drucken"); b.addEventListener("click", () => { pr._anchor = b; pr.click(); pr._anchor = null; }); bar.appendChild(b); }
+    const x = document.createElement("button"); x.type = "button"; x.className = "d-tb d-tx"; x.textContent = "✕"; x.title = "Schliessen (alles ist schon gespeichert)"; x.setAttribute("aria-label", "Schliessen");
+    x.addEventListener("click", () => { const c = root.querySelector("#d-close"); if (c) c.click(); }); bar.appendChild(x);
+    tt.appendChild(bar);
+    mb.addEventListener("click", () => {
+      const old = document.getElementById("d-tmenu-m"); if (old) { old.remove(); return; }
+      const m = document.createElement("div"); m.className = "cmenu d-tmenu-m"; m.id = "d-tmenu-m"; m.setAttribute("role", "menu"); m.style.zIndex = "3000";
+      m.innerHTML = [...tg.querySelectorAll(".d-tog[data-dtog]")].map((b) => '<button type="button" role="menuitemcheckbox" aria-checked="' + (b.getAttribute("aria-expanded") === "true") + '" data-tm="' + b.dataset.dtog + '"><span class="ck">' + (b.getAttribute("aria-expanded") === "true" ? "✓" : "") + "</span><span>" + esc(b.textContent) + (b.classList.contains("has") ? " ●" : "") + "</span></button>").join("");
+      document.body.appendChild(m);
+      const r = mb.getBoundingClientRect(); m.style.left = Math.max(8, Math.min(innerWidth - m.offsetWidth - 8, r.left)) + "px"; m.style.top = r.bottom + 4 + "px";
+      const close = () => { m.remove(); document.removeEventListener("pointerdown", out, true); };
+      const out = (e) => { if (!m.contains(e.target) && !mb.contains(e.target)) close(); };
+      setTimeout(() => document.addEventListener("pointerdown", out, true), 0);
+      m.addEventListener("click", (e) => { const b = e.target.closest("[data-tm]"); if (!b) return; const t = tg.querySelector('[data-dtog="' + b.dataset.tm + '"]'); close(); if (t) t.click(); lab(); });
     });
   }
   function openDetailBox(opt) {
@@ -6087,7 +6137,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         '<span class="d-ur"><button type="button" id="d-undo" disabled title="Rückgängig (Strg+Z): Lektionsplanung, Lernziele, Kurzeintrag und Notizen">↶ Rückgängig</button><button type="button" id="d-redo" disabled title="Wiederholen (Strg+Y)" aria-label="Wiederholen">↷</button></span>' +
         '<button type="button" class="d-tog d-wsb" id="d-wsb" aria-pressed="' + wsOn + '"' + (wsHas ? "" : " hidden") + ' title="Arbeitsblatt bzw. Dokument rechts neben den Notizen zeigen (wird auf diesem Gerät gemerkt)">Arbeitsblatt</button></div>' +
         secs.map(([k, , h]) => '<div class="d-sec" data-dsec="' + k + '"' + (openSet[k] ? "" : " hidden") + ">" + h + "</div>").join("") +
-        '<div class="d-split' + (pt === "left" ? " on" : pt === "rail" ? " rail" : "") + (wsOn ? " ws" : "") + '" id="d-split" style="--dl:' + dSideW() + ";--wsw:" + dWsW() + '%"><button type="button" class="d-rail" id="d-rail" title="Lektionsplanung: Maus darauf = kurz zeigen, Klick = offen lassen"><span class="d-rarr">▸</span><span class="d-rl">Lektionsplanung</span><span class="d-rhint" hidden></span></button><div class="d-sl"><div class="field" id="d-pfield"><div class="d-phead"><span class="lbl">Lektionsplanung</span><span class="d-pbtns"><button type="button" class="btn ghost" id="d-ptop"></button><button type="button" class="btn ghost" id="d-pclose" title="Tabelle links einklappen (mit der Maus auf die Leiste = kurz zeigen)">◂ Einklappen</button></span></div><div class="ptable-wrap"><table class="ptable" id="p-table">' + planTableInner(opt.plan) + "</table></div>" +
+        '<div class="d-split' + (pt === "left" ? " on" : pt === "rail" ? " rail" : "") + (wsOn ? " ws" : "") + '" id="d-split" style="--dl:' + dSideW() + ";--wsw:" + dWsW() + '%"><button type="button" class="d-rail" id="d-rail" aria-expanded="false" aria-label="Lektionsplanung einblenden"><span class="d-rarr">▸</span><span class="d-rl">Lektionsplanung</span><span class="d-rhint" hidden></span></button><div class="d-sl"><div class="field" id="d-pfield"><div class="d-phead"><span class="lbl">Lektionsplanung</span><span class="d-pbtns"><button type="button" class="btn ghost" id="d-ptop"></button><button type="button" class="btn ghost" id="d-pclose" title="Tabelle ausblenden (Esc)" aria-label="Tabelle ausblenden">✕</button></span></div><div class="ptable-wrap"><table class="ptable" id="p-table">' + planTableInner(opt.plan) + "</table></div>" +
         '<div class="ptools"><button class="btn ghost" type="button" id="p-addrow">+ Zeile</button><details class="hint"><summary title="Hilfe anzeigen">ⓘ Hilfe</summary><p class="help">Spaltentitel lassen sich anklicken und umbenennen. Die Trennlinie zwischen zwei Titeln ziehen, um die Breite zu ändern. Zeilen am Griff ⠿ rechts nach oben oder unten ziehen. Rechtsklick (Tablet: lange drücken auf den Titel): Spalten und Zeilen verschieben, einfügen, löschen. Jede Zeile hat ihre Farbe; die Abschnitte in den Notizen übernehmen sie.</p></details></div></div></div>' +
         '<div class="d-gut" id="d-gut" title="Ziehen, um die Breite der beiden Seiten zu ändern" aria-hidden="true"></div><div class="d-sr">' + notesF + '</div><div class="d-gut2" id="d-gut2" title="Ziehen, um die Breite des Arbeitsblatts zu ändern" aria-hidden="true"></div><section class="d-ws" id="d-ws" aria-label="Arbeitsblatt"></section></div>' + actionsF;
     } else body = textF + (opt.todo ? '<div class="field d-todof"><button type="button" class="btn ghost tdb" id="d-tdb" title="Die Zeile mit der Schreibmarke bekommt ein Kästchen zum Abhaken (oder verliert es). Enter = nächstes To-do, Enter in einem leeren To-do = fertig.">'+'<span class="tdq"></span> To-do</button></div>' : "") + (opt.time ? '<div class="field d-timef"><span class="lbl">Zeit (freiwillig)</span><div class="d-time"><input type="time" id="d-from" value="' + esc(x.from || "") + '" aria-label="von"><span>bis</span><input type="time" id="d-to" value="' + esc(x.to || "") + '" aria-label="bis"><button type="button" class="btn ghost" id="d-tclr" title="Zeit entfernen">×</button>' + (x.split ? '<span class="msg">(erster Teil)</span>' : "") + "</div>" +
@@ -6137,7 +6187,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
           }, true);
         }
         if (opt.page) root.querySelector(".panel").classList.add("wide", "ueb-panel");
-        if (opt.plan) { root.querySelector(".panel").classList.add("wide"); root.querySelector(".panel").classList.toggle("side", dSide()); bindPlan(root, opt.plan, () => opt.changed()); bindSide(root, opt.plan); root._ptab && root._ptab.set(pTab());
+        if (opt.plan) { lessonHead(root); root.querySelector(".panel").classList.add("wide"); root.querySelector(".panel").classList.toggle("side", dSide()); bindPlan(root, opt.plan, () => opt.changed()); bindSide(root, opt.plan); root._ptab && root._ptab.set(pTab());
           // § in einer Zeile der Lektionsplanung: zum Abschnitt in den Notizen springen bzw. ihn anlegen
           const psecMark = () => { const nd = root.querySelector("#d-notes"); if (!nd) return; const have = new Set([...nd.querySelectorAll(":scope > .nsec")].map((d) => (d.querySelector(".nsec-t") || d).textContent.trim())); const ph = planPhases(opt.plan); root.querySelectorAll("[data-psec]").forEach((b) => { const q = ph.find((y) => y.ri === +b.dataset.psec); b.classList.toggle("has", !!(q && (have.has(q.label) || (q.ph && have.has(q.ph))))); }); };
           root.addEventListener("click", (e) => {
@@ -6159,7 +6209,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
             row.querySelector(".pc").onclick = () => { f.value = ""; t.value = ""; up(); };
           });
         }
-        if (opt.onPrint) $("#d-print").onclick = (e) => { opt.changed(); if (opt.plan) printMenu(e.currentTarget, x, opt); else opt.onPrint(); };
+        if (opt.onPrint) $("#d-print").onclick = (e) => { opt.changed(); if (opt.plan) printMenu(e.currentTarget._anchor || e.currentTarget, x, opt); else opt.onPrint(); };
         const changed = () => opt.changed();
         tText.addEventListener("input", () => { x.html = sanitize(tText.innerHTML); x.text = htmlToPlain(x.html); changed(); });
         root.querySelectorAll(".d-part").forEach((el) => el.addEventListener("input", () => { const sf = sfx(+el.dataset.dp); x["html" + sf] = sanitize(el.innerHTML); x["text" + sf] = htmlToPlain(x["html" + sf]); changed(); }));
@@ -11557,7 +11607,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     return [...(m.files || []), ...(r.mainFiles || [])].filter((f) => f && !f.folder);
   }
   const lkIsProj = () => document.documentElement.classList.contains("lk-proj");
-  function lkLayout() { const L = $("#lk-layout"), P = lkIsProj(); if (!L) return; L.classList.toggle("side-off", !(P ? LK.pside : LK.side)); L.classList.toggle("docs-off", !(P ? LK.pdocs : LK.docs)); L.classList.toggle("wide", !P && !!LK.rv && !!LK.docs); const v = $("#view-lektion"); if (v) v.style.setProperty("--pz", LK.pz || 1.35); }
+  function lkLayout() { const L = $("#lk-layout"), P = lkIsProj(); if (!L) return; L.classList.toggle("side-off", !(P ? LK.pside : LK.side)); L.classList.toggle("docs-off", !(P ? LK.pdocs : LK.docs)); L.classList.toggle("wide", !P && !!LK.docs); const v = $("#view-lektion"); if (v) v.style.setProperty("--pz", LK.pz || 1.35); }
   // Beim Öffnen der Unterrichtsseite: Klasse und Lektion, die gerade läuft oder als Nächstes kommt.
   // Eine eigene Wahl bleibt, bis die nächste Lektion beginnt.
   LK.wantAuto = true;
@@ -11595,8 +11645,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const r = U.reihen[x.u.rid] || {}, docs = lkDocs(x.u.rid, x.u.i), ids = new Set(docs.map((f) => f.id));
     const row = (f) => '<div class="lk-drow"><button type="button" class="doc" data-lkopen="' + esc(f.id) + '" title="Öffnen – dort können Sie es auch bearbeiten"><span class="tag">' + typeTag(f) + "</span><span>" + esc(f.name) + '</span></button>' + (lkCanPick(f) ? '<button type="button" class="btn ghost lk-ins" data-lkpick="' + esc(f.id) + '" title="' + (LK_IMG.test(extOf(f)) ? "Bild in die Seite einfügen (danach können Sie hineinschreiben)" : "Einzelne Folien bzw. Seiten als Bild in die Seite holen (danach können Sie hineinschreiben)") + '">🖼</button>' : "") + '<button type="button" class="btn ghost lk-ins" data-lkins="' + esc(f.id) + '" title="Als Verweis in die Seite einfügen">＋</button></div>';
     const more = (r.files || []).filter((f) => f && !f.folder && !ids.has(f.id));
-    const all = [...docs, ...more], rv = LK.rv === "plan" ? "plan" : all.some((f) => f.id === LK.rv) ? LK.rv : "", cur = rv && rv !== "plan" ? all.find((f) => f.id === rv) : null;
-    const head = '<div class="lk-shead"><button type="button" class="lk-rvsel" id="lk-rv" title="Wählen, was hier rechts steht: die Liste der Dokumente, die Lektionsplanung oder ein einzelnes Dokument gross">' + (rv === "plan" ? "Lektionsplanung" : cur ? esc(cur.name) : "Dokumente") + ' <span aria-hidden="true">▾</span></button><span class="lk-rvbtns">' +
+    const all = [...docs, ...more], rv = all.some((f) => f.id === LK.rv) ? LK.rv : "plan", cur = rv && rv !== "plan" ? all.find((f) => f.id === rv) : null;
+    const head = '<div class="lk-shead"><button type="button" class="lk-rvsel" id="lk-rv" title="Wählen, was hier rechts steht: die Lektionsplanung oder ein Dokument der Lektion gross">' + (rv === "plan" ? "Lektionsplanung" : cur ? esc(cur.name) : "Lektionsplanung") + ' <span aria-hidden="true">▾</span></button><span class="lk-rvbtns">' +
       (rv === "plan" ? '<button type="button" class="btn ghost" id="lk-planedit" title="Lernziele, Ablauf und Notizen dieser Lektion bearbeiten">✎ Bearbeiten</button>' : "") +
       '<button type="button" class="lk-fold" id="lk-docsfold" title="Rechte Seite einklappen">▸</button></span></div>';
     if (rv === "plan") return head + '<div class="lk-planbox" id="lk-planbox"></div>';
@@ -11611,9 +11661,10 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const old = document.getElementById("lk-rvmenu"); if (old) { old.remove(); return; }
     const x = lkLessons(LK.kid).find((y) => y.key === LK.sel); if (!x) return;
     const r = U.reihen[x.u.rid] || {}, docs = lkDocs(x.u.rid, x.u.i), ids = new Set(docs.map((f) => f.id)), more = (r.files || []).filter((f) => f && !f.folder && !ids.has(f.id));
-    const it = (v, label, tag) => '<button type="button" role="menuitemradio" aria-checked="' + ((LK.rv || "") === v) + '" data-lkrv="' + esc(v) + '">' + (tag ? '<span class="tag">' + tag + "</span>" : "") + "<span>" + label + "</span></button>";
+    const it = (v, label, tag) => '<button type="button" role="menuitemradio" aria-checked="' + (cv === v) + '" data-lkrv="' + esc(v) + '">' + (tag ? '<span class="tag">' + tag + "</span>" : "") + "<span>" + label + "</span></button>";
     const m = document.createElement("div"); m.className = "cmenu lk-rvmenu"; m.id = "lk-rvmenu"; m.setAttribute("role", "menu");
-    m.innerHTML = it("", "☰ Dokumente (Liste)") + it("plan", "📋 Lektionsplanung") +
+    const cv = LK.rv && LK.rv !== "plan" && [...docs, ...more].some((f) => f.id === LK.rv) ? LK.rv : "plan";
+    m.innerHTML = it("plan", "📋 Lektionsplanung") +
       (docs.length ? '<hr><div class="cm-title">Dokumente der Lektion</div>' + docs.map((f) => it(f.id, esc(f.name), typeTag(f))).join("") : "") +
       (more.length ? '<hr><div class="cm-title">Materialsammlung der Reihe</div>' + more.map((f) => it(f.id, esc(f.name), typeTag(f))).join("") : "");
     $("#view-lektion").appendChild(m);
