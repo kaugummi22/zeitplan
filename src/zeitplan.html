@@ -3842,12 +3842,12 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     if (!Array.isArray(p.cols) || !p.cols.length) p.cols = DEF_COLS.slice();
     // frühere Aufteilung „Sozialform | Material“ zu einer Spalte zusammenführen, dafür Notizen / Kommentare
     if (p.cols.length === 5 && p.cols[3] === "Sozialform" && p.cols[4] === "Material") {
-      p.rows = (p.rows || []).map((r) => [r[0] || "", r[1] || "", r[2] || "", [r[3], r[4]].filter(filled).join("<br>")]);
+      p.rows = (p.rows || []).map((r) => [r[0] || "", r[1] || "", r[2] || "", [r[3], r[4]].filter(filled).join("<br>"), ...r.slice(5)]);
       p.cols = DEF_COLS.slice(); p.widths = DEF_W.slice();
     }
     // bisherige 5 Spalten: «Sozialform / Material» und «Notizen» zu einem grösseren Feld zusammenführen
     if (p.cols.length === 5 && p.cols.every((c, j) => c === OLD_COLS[j])) {
-      p.rows = (p.rows || []).map((r) => [r[0] || "", r[1] || "", r[2] || "", [r[3], r[4]].filter(filled).join("<br>")]);
+      p.rows = (p.rows || []).map((r) => [r[0] || "", r[1] || "", r[2] || "", [r[3], r[4]].filter(filled).join("<br>"), ...r.slice(5)]);
       p.cols = DEF_COLS.slice(); p.widths = DEF_W.slice();
     }
     if (!Array.isArray(p.rows) || !p.rows.length) p.rows = [0, 1].map(() => p.cols.map(() => ""));
@@ -4074,12 +4074,15 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       // Abschnitte in der Reihenfolge der Lektionsplanung, darüber die Phase als schwarzer Balken (auch schwarz-weiss gut lesbar)
       const done = new Set(), labels = planPhases(p);
       h += '<div class="notes" style="line-height:' + (m.notesLh || 1.4) + '">';
+      // Notizen vor dem ersten Abschnitt (z. B. Kerninhalt) bleiben vorne
+      const fi = sp.list.findIndex((y) => y.sec), lead = (fi < 0 ? [] : sp.list.slice(0, fi)).map((y) => y.html || "").join("");
+      if (filled(lead) || /<(img|figure|table)/.test(lead)) h += '<div class="plead">' + lead + "</div>";
       p.rows.forEach((row, ri) => {
         const ids = abGet(p, ri).filter((id) => sp.secs[id]); if (!ids.length) return;
         const q = labels.find((y) => y.ri === ri), lab = q ? q.label : "Zeile " + (ri + 1); h += '<div class="pph" data-ri="' + ri + '" style="--pc:' + rowCol(ri) + '">' + esc(lab) + "</div>";
         ids.forEach((id) => { const x = sp.secs[id]; if (done.has(id)) { h += '<div class="psec-ref">→ «' + esc(x.t) + "» siehe oben</div>"; return; } done.add(id); const same = x.t === lab || (q && q.ph && x.t === q.ph); h += '<div class="psec" data-sid="' + id + '">' + (same ? "" : "<h4>" + esc(x.t) + "</h4>") + x.h + "</div>"; });
       });
-      const rest = sp.list.map((y) => (y.sec ? (done.has(y.sec.id) ? "" : '<div class="psec"><h4>' + esc(y.sec.t) + "</h4>" + y.sec.h + "</div>") : y.html)).filter((y) => filled(y) || /<(img|figure|table)/.test(y)).join("");
+      const rest = sp.list.slice(Math.max(0, fi)).map((y) => (y.sec ? (done.has(y.sec.id) ? "" : '<div class="psec"><h4>' + esc(y.sec.t) + "</h4>" + y.sec.h + "</div>") : y.html)).filter((y) => filled(y) || /<(img|figure|table)/.test(y)).join("");
       if (rest) h += '<div class="pph pph-rest">Weitere Notizen</div>' + rest;
       h += "</div>";
     } else if (hasNotes) h += '<h3>Notizen</h3><div class="notes" style="line-height:' + (m.notesLh || 1.4) + '">' + lsOff(sanitizeNotes(m.notesHtml)) + "</div>";
