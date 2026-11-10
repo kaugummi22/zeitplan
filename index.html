@@ -1003,7 +1003,7 @@ html.lk-proj .lk-side, html.lk-proj .lk-docs, html.lk-proj .lk-rail { top: 0; ma
 :is(.lk-page, .lk-slide, #lk-printbox) ul.lk-check > li.done::after { content: "✓"; position: absolute; left: 0.22em; top: -0.12em; font-weight: 700; font-size: 1.1em; color: var(--accent); pointer-events: none; }
 :is(.lk-page, .lk-slide) ul.lk-check > li.done { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
 .lk-slide ul.lk-check > li.done { color: #888; }
-:is(.lk-page, .lk-slide, #lk-printbox) table.lk-tab { border-collapse: collapse; width: 100%; table-layout: fixed; overflow-wrap: anywhere; margin: 0.5em 0; font-size: calc(1em * var(--fs, 1)); }
+:is(.lk-page, .lk-slide, #lk-printbox) table.lk-tab { border-collapse: collapse; width: 100%; table-layout: fixed; overflow-wrap: anywhere; margin: 0.5em 0; font-size: calc(1em * var(--fs, 1) * var(--tk, 1)); }
 :is(.lk-page, .lk-slide, #lk-printbox) table.lk-tab :is(td, th) { border: 1px solid color-mix(in srgb, var(--muted) 55%, transparent); padding: 0.3em 0.55em; vertical-align: top; text-align: left; height: 1.5em; min-width: 2em; }
 :is(.lk-page, .lk-slide, #lk-printbox) table.lk-tab th { background: var(--accent-soft); font-weight: 700; }
 :is(.lk-slide, #lk-printbox) table.lk-tab :is(td, th) { border-color: #999; } :is(.lk-slide, #lk-printbox) table.lk-tab th { background: #e9edf2; color: #111; }
@@ -3416,7 +3416,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     if (!cw.every((x) => x)) cw = [];
     const sty = (w ? "width:" + w + "%;" : "") + (h ? "height:" + h + "em;" : "");
     const cap = n.querySelector(":scope > caption"), ct = cap ? cap.textContent.replace(/[ ​]/g, " ").replace(/\s+/g, " ").trim() : "";
-    let out = '<table class="' + base + (pos ? " " + pos : "") + '"' + (sty ? ' style="' + sty + '"' : "") + ">" + (ct ? "<caption>" + esc(ct) + "</caption>" : "") + (cw.length ? "<colgroup>" + cw.map((x) => '<col style="width:' + x + '%">').join("") + "</colgroup>" : "") + "<tbody>";
+    const rw = parseInt(n.getAttribute("data-rw"), 10), rwa = base === "lk-tab" && rw >= 200 && rw <= 4000 ? ' data-rw="' + rw + '"' : "";
+    let out = '<table class="' + base + (pos ? " " + pos : "") + '"' + rwa + (sty ? ' style="' + sty + '"' : "") + ">" + (ct ? "<caption>" + esc(ct) + "</caption>" : "") + (cw.length ? "<colgroup>" + cw.map((x) => '<col style="width:' + x + '%">').join("") + "</colgroup>" : "") + "<tbody>";
     g.rows.forEach((l, ri) => {
       const trh = rows[ri] && rows[ri].style ? parseFloat(rows[ri].style.height) : 0, trs = rows[ri] && /em$/.test(rows[ri].style.height || "") && trh > 0 && trh <= 60 ? ' style="height:' + Math.round(trh * 10) / 10 + 'em"' : "";
       out += "<tr" + trs + ">";
@@ -11982,7 +11983,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       TB("dot", "", "·", "Mittelpunkt einfügen, z. B. «L6 · Die Prozesse»") + POP("emo", "💡", "Symbol einfügen", '<div class="lk-emo">' + LK_EMO.map((x) => '<button type="button" class="lk-sw lk-em" data-lkcmd="emo" data-arg="' + x[0] + '" title="' + x[1] + '">' + x[0] + "</button>").join("") + "</div>") + SEP + TB("hr", "", "<b style=\"color:var(--accent)\">━━</b> Abschnitt", "Abschnittslinie: beim Projizieren beginnt hier eine neue Folie (wird nicht gedruckt)") + TB("hr", "lk-step", "<span style=\"color:var(--muted);letter-spacing:-1px\">┅┅</span> Schritt", "Schrittlinie: beim Projizieren erscheint der Teil darunter erst beim Weiterschalten (wird nicht gedruckt)") + TB("hr", "lk-vis", "<span style=\"opacity:.7\">—</span> Visual", "Visual Line: kurze Linie in der Mitte, um die Seite zu gliedern (wird gedruckt)") + SEP +
       '<label class="lk-tb" title="Bild einfügen">🖼 Bild<input type="file" id="lk-img" accept="image/*" multiple hidden></label></div>' +
       '<div class="lk-page" id="lk-page" contenteditable="true" data-ph="Schreiben Sie hier die Seite für diese Lektion: Ablauf für die Klasse, Aufträge, Bilder, Links zu Dokumenten …"></div>';
-    const pg = $("#lk-page"); pg.innerHTML = lkSanitize((LK.page || {}).html || ""); lkWrapStray(pg); pg.querySelectorAll(".lk-box").forEach((bx) => lkWrapStray(bx)); lkBlank();
+    const pg = $("#lk-page"); pg.innerHTML = lkSanitize((LK.page || {}).html || ""); lkWrapStray(pg);
+    lkTabScale(); if (window.ResizeObserver) { let rt = 0; new ResizeObserver(() => { cancelAnimationFrame(rt); rt = requestAnimationFrame(lkTabScale); }).observe(pg); } pg.querySelectorAll(".lk-box").forEach((bx) => lkWrapStray(bx)); lkBlank();
     if (LK.histPid !== pid) { LK.histPid = pid; LK.undo = []; LK.redo = []; if (lkBeaming()) { PR.s = 0; PR.k = 0; setTimeout(() => lkPrRender(true), 50); } } LK.cur = lkSanitize(pg.innerHTML); LK.lastType = 0;
     if (lkPen) { lkPen.bar.remove(); lkPen = null; document.documentElement.classList.remove("lk-pen"); }
     if (lkZooms.has(document)) lkZooms.get(document).close();
@@ -12051,8 +12053,18 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       LK.range = null; lkStat("Bild in die Seite übernommen. Rechtsklick bzw. lange drücken aufs Bild: Grösse und Lage.");
     });
   }
+  // Tabellen auf der Unterrichtsseite wachsen mit der Seitenbreite mit wie ein Bild (gleiche Umbrüche, gleiches Seitenverhältnis):
+  // data-rw = Breite der Seite, für die die Tabelle gemacht wurde; --tk = jetzige Breite / data-rw
+  function lkTabScale() {
+    const pg = $("#lk-page"); if (!pg) return; const W = pg.clientWidth; if (!W) return;
+    pg.querySelectorAll("table.lk-tab").forEach((t) => {
+      let rw = +t.dataset.rw; if (!(rw >= 200)) { rw = W; t.dataset.rw = String(Math.round(W)); }
+      const k = Math.max(0.35, Math.min(3, W / rw)); t.style.setProperty("--tk", k.toFixed(3));
+    });
+  }
   function lkSave(typing) {
     const pg = $("#lk-page"); if (!pg || !LK.pid) return;
+    lkTabScale();
     lkBlank();
     const html = lkSanitize(pg.innerHTML);
     if (LK.cur != null && html !== LK.cur) {
