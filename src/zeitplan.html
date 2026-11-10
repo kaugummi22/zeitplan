@@ -1442,6 +1442,7 @@ body:not(.lk-take) .lk-plantext .lk-ptab { padding-top: 0; }
 /* Lektionsfenster: immer volle Breite, schlanke Kopfzeile mit Menü «Angaben», ↶ ↷, Arbeitsblatt, Drucken, ✕ */
 .panel.wide.lfull { width: min(1760px, 100%); }
 .panel.wide.lfull.lnarrow:not(.wsp) { width: min(1080px, 100%); }
+.panel.nosec #d-nsec, .panel.nosec #d-neye, .panel.nosec [data-wpin], .panel.nosec .nsec-dc, .panel.nosec .nsec-x { display: none !important; }
 .panel.lfull .nbar { top: calc(var(--dth, 50px) - 2px); }
 @media (min-width: 900px) { .panel.lfull .d-split.ws > .d-ws, .panel.lfull .d-split.rail > .d-rail { top: calc(var(--dth, 50px) + 4px); } .panel.lfull .d-split.ws > .d-ws { height: calc(100vh - 5vh - 32px - var(--dth, 50px)); } }
 .panel.lfull .d-title { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; position: sticky; top: -1px; z-index: 40; background: var(--surface); padding: 6px 0 8px; margin-top: -6px; }
@@ -3990,6 +3991,10 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   // Farben: jede Zeile (Phase) der Lektionsplanung hat ihre Farbe, ein Abschnitt die Farbe seiner ersten Zeile
   const rowCol = (ri) => SEC_COL[ri % SEC_COL.length];
   const secColOf = (p, id) => { const r = abOf(p, id); return r.length ? rowCol(r[0]) : ""; };
+  // Abschnitte in der Lektionsplanung (Spalte «§», Phasen, Farben, «§ Abschnitt» in den Notizen, Zuordnung von Blättern).
+  // Am 10.11.2026 auf Katharinas Wunsch ausgeschaltet: Sie sammelt zuerst Material und teilt evtl. später ein.
+  // Der Code bleibt; zum Wiedereinschalten SEC_ON = true setzen (bestehende Abschnitte wurden in fette Titel umgewandelt).
+  const SEC_ON = false;
   let PAB = null;
   let CUT = null; // Ausschnitt, der gerade aus dem Arbeitsblatt in die Notizen gezogen wird
   const secId = () => (Math.random().toString(36).slice(2) + "0000000").slice(0, 7);
@@ -4004,7 +4009,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     return colgroup(p, PAB ? 26 : 48, PAB ? "4.6em" : "") + "<thead><tr>" + p.cols.map((c, j) => '<th><div class="pcell" contenteditable="true" data-pc="' + j + '" aria-label="Spaltentitel">' + esc(c) + "</div>" +
       (j < p.cols.length - 1 ? '<span class="crz" data-crz="' + j + '" title="Ziehen, um die Spalte breiter oder schmaler zu machen"></span>' : "") + "</th>").join("") + (PAB ? '<th class="pab-h" title="Abschnitte aus den Notizen, die zu dieser Phase gehören (Farbpunkt: Klick springt hin). Text in den Notizen markieren und «§ Als Abschnitt» wählen, dann hier mit + zuordnen">§</th>' : "") + '<th class="rm"></th></tr></thead><tbody>' +
       p.rows.map((row, ri) => "<tr" + (PAB ? ' style="--pc:' + rowCol(ri) + '"' : "") + ">" + p.cols.map((c, j) => '<td><div class="rich pcell" contenteditable="true" data-pr="' + ri + '" data-pj="' + j + '" aria-label="' + esc(c) + '">' + sanitize(row[j] || "") + "</div></td>").join("") + abCell(p, ri) +
-        '<td class="rm">' + (PAB ? "" : '<button type="button" class="psec" data-psec="' + ri + '" title="Abschnitt in den Notizen zu dieser Zeile: hinspringen bzw. anlegen" aria-label="Abschnitt in den Notizen">§</button>') + '<span class="pgrip" data-pgrip="' + ri + '" title="Ziehen: Zeile nach oben oder unten verschieben. Rechtsklick: Zeile einfügen, löschen …" aria-label="Zeile verschieben">⠿</span></td></tr>').join("") + "</tbody>";
+        '<td class="rm">' + (PAB || !SEC_ON ? "" : '<button type="button" class="psec" data-psec="' + ri + '" title="Abschnitt in den Notizen zu dieser Zeile: hinspringen bzw. anlegen" aria-label="Abschnitt in den Notizen">§</button>') + '<span class="pgrip" data-pgrip="' + ri + '" title="Ziehen: Zeile nach oben oder unten verschieben. Rechtsklick: Zeile einfügen, löschen …" aria-label="Zeile verschieben">⠿</span></td></tr>').join("") + "</tbody>";
   }
   function planHtml(p) {
     ensurePlan(p);
@@ -4216,9 +4221,9 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     if (p && (p.rows || []).some((row) => row.some(filled))) {
       ensurePlan(p);
       const rows = p.rows.map((row, ri) => [row, ri]).filter(([row]) => row.some(filled));
-      anyAb = rows.some(([, ri]) => abGet(p, ri).some((id) => sp.secs[id]));
+      anyAb = SEC_ON && rows.some(([, ri]) => abGet(p, ri).some((id) => sp.secs[id]));
       h += "<h3>Lektionsplanung</h3><table>" + colgroup(p, false, anyAb ? "17%" : "") + "<thead><tr>" + p.cols.map((c) => "<th>" + esc(c) + "</th>").join("") + (anyAb ? '<th class="pab-ph"><span>Abschnitt</span></th>' : "") + "</tr></thead><tbody>" +
-        rows.map(([row, ri]) => '<tr style="--pc:' + rowCol(ri) + '">' + p.cols.map((c, j) => "<td>" + lsOff(sanitize(row[j] || "")) + "</td>").join("") + (anyAb ? '<td class="pab-p">' + abGet(p, ri).filter((id) => sp.secs[id]).map((id) => '<span class="pab-s" data-sref="' + id + '" style="--pc:' + rowCol(ri) + '" title="' + esc(sp.secs[id].t) + '"><span>' + esc(sp.secs[id].t) + "</span></span>").join("") + "</td>" : "") + "</tr>").join("") + "</tbody></table>";
+        rows.map(([row, ri]) => "<tr" + (SEC_ON ? ' style="--pc:' + rowCol(ri) + '"' : "") + ">" + p.cols.map((c, j) => "<td>" + lsOff(sanitize(row[j] || "")) + "</td>").join("") + (anyAb ? '<td class="pab-p">' + abGet(p, ri).filter((id) => sp.secs[id]).map((id) => '<span class="pab-s" data-sref="' + id + '" style="--pc:' + rowCol(ri) + '" title="' + esc(sp.secs[id].t) + '"><span>' + esc(sp.secs[id].t) + "</span></span>").join("") + "</td>" : "") + "</tr>").join("") + "</tbody></table>";
     }
     if (hasNotes && anyAb) {
       // Abschnitte in der Reihenfolge der Lektionsplanung, darüber die Phase als schwarzer Balken (auch schwarz-weiss gut lesbar)
@@ -5459,7 +5464,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const hint = () => {
       const h = rail.querySelector(".d-rhint"); if (!h) return;
       const rows = (plan.rows || []).filter((row) => plan.cols.some((c, j) => filled(row[j] || ""))).length;
-      const nd = root.querySelector("#d-notes"), secs = nd && nd._secs ? nd._secs() : [], free = secs.filter((q) => !abOf(plan, q.id).length).length;
+      const nd = root.querySelector("#d-notes"), secs = SEC_ON && nd && nd._secs ? nd._secs() : [], free = secs.filter((q) => !abOf(plan, q.id).length).length;
       const t = !rows ? "Tabelle noch leer" : free ? free + (free === 1 ? " Abschnitt ohne Zeile" : " Abschnitte ohne Zeile") : "";
       h.textContent = t; h.hidden = !t; rail.classList.toggle("warn", !!t);
     };
@@ -5496,7 +5501,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     // --- Spalte «Abschnitt» ---
     const redraw = () => { const tb = tbl(); if (!tb) return; if (tb.contains(document.activeElement) && document.activeElement.isContentEditable) { tb._abLater = true; return; } tb.innerHTML = planTableInner(p); };
     root.addEventListener("focusout", (e) => { const tb = tbl(); if (tb && tb._abLater && tb.contains(e.target)) { tb._abLater = false; setTimeout(() => { if (!tb.contains(document.activeElement)) tb.innerHTML = planTableInner(p); }, 0); } });
-    ned._secInfo = () => {
+    if (SEC_ON) ned._secInfo = () => {
       const ph = {}, col = {}, labels = planPhases(p), all = ned._secs();
       (p.rows || []).forEach((row, ri) => abGet(p, ri).forEach((id) => { const q = labels.find((y) => y.ri === ri); (ph[id] = ph[id] || []).push(q ? q.label : "Zeile " + (ri + 1)); }));
       all.forEach((q) => { col[q.id] = secColOf(p, q.id) || "#c3cad2"; });
@@ -5724,7 +5729,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   // Lektionsfenster: Kopfzeile schlank – Lernziele, Kurzeintrag, Farbe, Dokumente im Menü «Angaben ▾», dazu ↶ ↷, Arbeitsblatt, Drucken, ✕
   function lessonHead(root) {
     const pn = root.querySelector(".panel"), tt = root.querySelector(".d-title"), tg = root.querySelector(".d-toggles"); if (!pn || !tt || !tg) return;
-    pn.classList.add("lfull");
+    pn.classList.add("lfull"); if (!SEC_ON) pn.classList.add("nosec");
     // Höhe der Titelzeile merken: Werkzeugleiste, Arbeitsblatt und Leiste kleben beim Scrollen darunter (nicht dahinter)
     const dth = () => pn.style.setProperty("--dth", tt.offsetHeight + "px"); dth(); if (window.ResizeObserver) new ResizeObserver(dth).observe(tt);
     const bar = document.createElement("span"); bar.className = "d-tbar";
@@ -5791,7 +5796,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const side = dSide();
       // Arbeitsblatt rechts (Dokumente der Lektion und der Reihe), Spalte «Abschnitt», Kommentarecke
       const wsHas = [...x.files, ...rfl].length > 0, wsOn = wsHas && dWs() && !(side && innerWidth < 1600), pt = pTab();
-      PAB = { secs: () => { const nd = document.getElementById("d-notes"); if (nd && nd._secs) return nd._secs(); const t = document.createElement("template"); t.innerHTML = x.notesHtml || ""; return [...t.content.children].filter((d) => d.classList.contains("nsec") && d.getAttribute("data-id")).map((d) => ({ id: d.getAttribute("data-id"), t: d.textContent.trim() })); },
+      PAB = !SEC_ON ? null : { secs: () => { const nd = document.getElementById("d-notes"); if (nd && nd._secs) return nd._secs(); const t = document.createElement("template"); t.innerHTML = x.notesHtml || ""; return [...t.content.children].filter((d) => d.classList.contains("nsec") && d.getAttribute("data-id")).map((d) => ({ id: d.getAttribute("data-id"), t: d.textContent.trim() })); },
         col: (id) => secColOf(opt.plan, id) || "#c3cad2" };
       const cmHas = filled(x.notesCm || ""), cmOn = dCm(cmHas);
       notesF = notesF.replace('<div class="notes-ed"', '<div class="d-nw' + (cmOn ? "" : " shut") + '"><div class="notes-ed"').replace('</div><div class="links" id="d-links">', '</div><div class="d-cmw"><button type="button" class="d-cmtab" id="d-cmtab" title="Kommentare ein- bzw. ausblenden (für die Vorbereitung; werden nur auf Wunsch gedruckt)">' + (cmOn ? "▸" : "◂" + (cmHas ? " ●" : "")) + '</button><div class="d-cm" id="d-cm" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Kommentare" data-ph="Kommentare, Ideen für die Vorbereitung … (dort klicken, wo der Kommentar hin soll)">' + sanitize(x.notesCm || "") + '</div></div></div><div class="links" id="d-links">');
