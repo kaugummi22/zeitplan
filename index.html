@@ -2250,7 +2250,7 @@ html.phone .ufl { left: 0 !important; top: 0 !important; width: 100vw !important
 .d-modes button { border: 0; background: var(--surface); color: var(--muted); padding: 3px 10px; cursor: pointer; font: inherit; }
 .d-modes button[aria-pressed="true"] { background: var(--accent); color: #fff; }
 .ueb-sheet { position: relative; min-height: 100%; font-family: Calibri, Candara, "Avenir Next", "Segoe UI", "Trebuchet MS", sans-serif; font-size: var(--ufs, 0.92rem); color: var(--ink); --ulh: 1.3; --cmw: 0px; }
-.ueb-sheet.rand { --cmw: 15em; } .ueb-sheet.rand-zu { --cmw: 2.4em; }
+.ueb-sheet.rand { --cmw: 15em; } .ueb-sheet.rand-zu { --cmw: 0px; }
 .ueb-sheet .ueb-page.notes-ed { max-width: calc(52em + var(--cmw)); padding-right: calc(var(--cmw) + 20px); }
 .ueb-mline { position: absolute; top: 14px; width: 3px; border-radius: 2px; background: color-mix(in srgb, var(--accent) 45%, transparent); pointer-events: none; }
 .ueb-sheet.rand .ueb-page.notes-ed { cursor: text; }
@@ -2260,15 +2260,21 @@ html.phone .ufl { left: 0 !important; top: 0 !important; width: 100vw !important
 .ueb-mline.shut { display: none; }
 .ueb-tab { position: absolute; top: 14px; z-index: 2; border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); border-right: 0; background: var(--surface); color: var(--accent); font: inherit; font-size: 0.72rem; font-weight: 700; padding: 1px 4px; border-radius: 6px 0 0 6px; cursor: pointer; line-height: 1.4; }
 .ueb-tab:hover { background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
-/* zu: Reiter rechts am Text */ .ueb-tab.shut { border-radius: 0 6px 6px 0; border-right: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); border-left: 3px solid color-mix(in srgb, var(--accent) 45%, transparent); padding: 4px 8px; }
+/* zu: kleiner Reiter ganz am rechten Rand, nimmt keinen Platz weg */ .ueb-tab.shut { border-radius: 6px 0 0 6px; border-right: 0; padding: 3px 4px; opacity: 0.8; } .ueb-tab.shut:hover { opacity: 1; }
 .ueb-sheet.free { cursor: crosshair; background-color: color-mix(in srgb, var(--accent) 4%, transparent); background-image: radial-gradient(color-mix(in srgb, var(--muted) 25%, transparent) 1px, transparent 1px); background-size: 24px 24px; }
 .ueb-sheet.file-drop { outline: 3px dashed var(--accent); outline-offset: -6px; }
 .ueb-page.notes-ed { min-height: 120px; border: 0; border-radius: 0; background: none; padding: 14px 20px; line-height: var(--ulh); }
 .ueb-page.notes-ed:focus { border: 0; }
 .ueb-sheet.free .ueb-page { cursor: crosshair; }
 .ueb-page .nsec { font-size: 0.95em; color: var(--accent); margin: 14px 0 4px; line-height: 1.4; }
-.ueb-page figure.nfig { margin: 6px 0; } .ueb-page figure.nfig img { max-width: 100%; }
+/* Bilder auf der Seite: ohne Angabe in der Mitte; links/rechts = Text oder ein zweites Bild daneben */
+.ueb-page figure.nfig { margin: 6px auto; } .ueb-page figure.nfig img { max-width: 100%; }
+.ueb-page figure.nfig.p-l { float: left; margin: 3px 16px 8px 0; } .ueb-page figure.nfig.p-r { float: right; margin: 3px 0 8px 16px; }
+.ueb-page figure.nfig:not(.p-l):not(.p-r) figcaption { text-align: center; }
+.ueb-sheet:not(.free) .ueb-page figure.nfig { cursor: grab; }
+.ueb-fdrop { position: absolute; z-index: 5; background: var(--accent); border-radius: 2px; pointer-events: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent); }
 .ueb-page figure.nfig.w33 { width: 33%; } .ueb-page figure.nfig.w50 { width: 50%; } .ueb-page figure.nfig.w75 { width: 75%; }
+.ueb-page figure.nfig.w50:is(.p-l, .p-r) { width: calc(50% - 16px); }
 #ueb-free[aria-pressed="true"] { background: var(--accent); color: #fff; border-radius: 6px; }
 .ueb-it { position: absolute; padding: 10px 4px 4px; border: 1px solid transparent; border-radius: 6px; cursor: auto; }
 .ueb-it:hover, .ueb-it:focus-within, .ueb-it.sel { border-color: var(--line); background: color-mix(in srgb, var(--surface) 92%, transparent); }
@@ -6926,7 +6932,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       cm.hidden = !open; cm.style.left = rx + 8 + "px"; cm.style.lineHeight = plh + "px"; cm.style.minHeight = Math.max(page.offsetHeight - 28, 3 * plh) + "px";
       const ch = open ? cm.offsetTop + cm.offsetHeight : 0; h = Math.max(h, ch);
       mline.style.left = rx + "px"; mline.style.height = Math.max(page.offsetHeight - 28, ch - 14, 40) + "px";
-      tab.style.left = (open ? rx - 17 : rx + 3) + "px"; tab.textContent = open ? "▸" : "◂" + (filled(u.cm || "") ? " ●" : "");
+      tab.style.left = (open ? rx - 17 : page.offsetLeft + page.offsetWidth - tab.offsetWidth) + "px"; tab.textContent = open ? "▸" : "◂" + (filled(u.cm || "") ? " ●" : "");
       tab.title = open ? "Kommentare zuklappen" : "Kommentare im Rand aufklappen"; tab.classList.toggle("shut", !open); mline.classList.toggle("shut", !open);
       sheet.style.minHeight = Math.max(sc.clientHeight - 2, h + 240) + "px";
       let w = 0; sheet.querySelectorAll(".ueb-it:not(.ueb-c)").forEach((el) => { if (!el.hidden) w = Math.max(w, el.offsetLeft + el.offsetWidth); }); sheet.style.minWidth = w ? w + 40 + "px" : "";
@@ -7019,7 +7025,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const x = e.target.closest(".ueb-x"); if (x) { drop(x.closest(".ueb-it")); save(true); say("Entfernt. «↶» holt es zurück."); return; }
       const tg = e.target.closest(".nsec-tg"); if (tg && page.contains(tg)) { e.preventDefault(); const d = tg.closest(".nsec"); if (d.dataset.c === "1") delete d.dataset.c; else d.dataset.c = "1"; nsecDeco(page); place(); save(true); return; }
       const st = e.target.closest(".nsec-t"); if (st && page.contains(st)) { e.preventDefault(); secMenu(st.closest(".nsec"), st); return; }
-      const fg = e.target.closest("figure.nfig"); if (fg && page.contains(fg)) { e.preventDefault(); figMenu(fg); }
+      const fg = e.target.closest("figure.nfig"); if (fg && page.contains(fg)) { e.preventDefault(); if (Date.now() - figDragT < 400) return; figMenu(fg); }
     });
     page.addEventListener("mousedown", (e) => { if (e.target.closest(".nsec")) e.preventDefault(); });
     // Abschnitt = Trennstrich mit Titel bis zum nächsten Trennstrich
@@ -7082,10 +7088,45 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       nsecDeco(page); place(); save(true);
       if (k === "up" || k === "down") { d.scrollIntoView({ block: "nearest" }); d.classList.add("flash"); setTimeout(() => d.classList.remove("flash"), 900); }
     });
-    const figMenu = (fg) => menu(fg, '<div class="cm-title">Bild</div><div class="nsm-own"><input type="text" maxlength="160" placeholder="Name bzw. Bildunterschrift" value="' + esc(((fg.querySelector("figcaption") || {}).textContent || "").trim()) + '" aria-label="Name des Bildes"><button type="button" class="btn primary" data-um="ok">OK</button></div><hr><button type="button" role="menuitem" data-um="w33">Klein</button><button type="button" role="menuitem" data-um="w50">Mittel</button><button type="button" role="menuitem" data-um="w75">Gross</button><button type="button" role="menuitem" data-um="w0">Ganze Breite</button><hr><button type="button" role="menuitem" class="cm-danger" data-um="del">🗑 Entfernen</button>', (k, v) => {
+    const figMenu = (fg) => menu(fg, '<div class="cm-title">Bild</div><div class="nsm-own"><input type="text" maxlength="160" placeholder="Name bzw. Bildunterschrift" value="' + esc(((fg.querySelector("figcaption") || {}).textContent || "").trim()) + '" aria-label="Name des Bildes"><button type="button" class="btn primary" data-um="ok">OK</button></div><hr><button type="button" role="menuitem" data-um="w33">Klein</button><button type="button" role="menuitem" data-um="w50">Mittel</button><button type="button" role="menuitem" data-um="w75">Gross</button><button type="button" role="menuitem" data-um="w0">Ganze Breite</button><hr><button type="button" role="menuitem" data-um="pl" title="Bild links, Text oder ein weiteres Bild rechts daneben">◧ Links</button><button type="button" role="menuitem" data-um="pc" title="Bild allein in der Mitte">▣ Mitte</button><button type="button" role="menuitem" data-um="pr" title="Bild rechts, Text oder ein weiteres Bild links daneben">Rechts ◨</button><hr><button type="button" role="menuitem" class="cm-danger" data-um="del">🗑 Entfernen</button>', (k, v) => {
+      if (k === "pl" || k === "pc" || k === "pr") { fg.classList.remove("p-l", "p-r", "p-c"); fg.classList.add("p-" + k[1]); place(); save(true); return; }
       if (k === "ok") { let fc = fg.querySelector("figcaption"); if (v) { if (!fc) { fc = document.createElement("figcaption"); fg.appendChild(fc); } fc.textContent = v; } else if (fc) fc.remove(); place(); save(true); return; }
       if (k === "del") fg.remove(); else { fg.classList.remove("w25", "w33", "w50", "w75", "w100"); if (k !== "w0") fg.classList.add(k); }
       place(); save(true);
+    });
+    // Bilder in der Seite ziehen: in der Mitte = zwischen die Absätze; am linken/rechten Rand = neben Text oder neben ein anderes Bild
+    let figDragT = 0;
+    page.addEventListener("pointerdown", (e) => {
+      const fg = e.target.closest && e.target.closest("figure.nfig"); if (!fg || !page.contains(fg) || e.button !== 0 || UEBS.free) return;
+      e.preventDefault(); const x0 = e.clientX, y0 = e.clientY; let on = false, tg = null;
+      const ind = document.createElement("div"); ind.className = "ueb-fdrop";
+      const aim = (ev) => {
+        const pr = page.getBoundingClientRect(), cs = getComputedStyle(page), L = pr.left + parseFloat(cs.paddingLeft), R = pr.right - parseFloat(cs.paddingRight), W = R - L, sr = sheet.getBoundingClientRect();
+        const bs = [...page.children].filter((b) => b !== fg && b.getClientRects().length); if (!bs.length) return null;
+        let b = bs.find((k) => ev.clientY < k.getBoundingClientRect().bottom) || bs[bs.length - 1];
+        const r = b.getBoundingClientRect(); let z = ev.clientX < L + W * 0.28 ? "l" : ev.clientX > R - W * 0.28 ? "r" : "c";
+        if (b.contains(fg)) z = "c";
+        const after = z === "c" ? ev.clientY > r.top + r.height / 2 : false;
+        if (z === "c") Object.assign(ind.style, { left: L - sr.left + "px", width: W + "px", top: (after ? r.bottom : r.top) - sr.top - 2 + "px", height: "4px" });
+        else Object.assign(ind.style, { left: (z === "l" ? L - 8 : R + 4) - sr.left + "px", width: "4px", top: r.top - sr.top + "px", height: Math.max(36, r.height) + "px" });
+        return { b, z, after };
+      };
+      const mv = (ev) => {
+        if (!on) { if (Math.abs(ev.clientX - x0) + Math.abs(ev.clientY - y0) < 6) return; on = true; fg.classList.add("moving"); sheet.appendChild(ind); document.body.style.cursor = "grabbing"; }
+        tg = aim(ev); ind.hidden = !tg;
+      };
+      const narrow = (f) => { if (!/\bw(25|33|50)\b/.test(f.className)) { f.classList.remove("w75", "w100"); f.classList.add("w50"); } };
+      const up = () => {
+        document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); document.removeEventListener("pointercancel", up);
+        if (!on) return; figDragT = Date.now(); fg.classList.remove("moving"); ind.remove(); document.body.style.cursor = "";
+        if (!tg) return; const { b, z, after } = tg;
+        fg.classList.remove("p-l", "p-r", "p-c");
+        if (z === "c") { if (after) b.after(fg); else b.before(fg); fg.classList.add("p-c"); }
+        else if (b.matches("figure.nfig")) { b.classList.remove("p-l", "p-r", "p-c"); b.classList.add(z === "l" ? "p-r" : "p-l"); if (z === "l") b.before(fg); else b.after(fg); narrow(b); narrow(fg); fg.classList.add("p-" + z); }
+        else { if (b.classList.contains("nsec")) b.after(fg); else b.before(fg); fg.classList.add("p-" + z); }
+        deco(); place(); save(true); say(z === "c" ? "Bild verschoben (Mitte)." : "Bild verschoben: " + (z === "l" ? "links" : "rechts") + ", daneben ist Platz für Text oder ein weiteres Bild.");
+      };
+      document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up); document.addEventListener("pointercancel", up);
     });
     // Verschieben (oberer Rand bzw. Bild) und Grösse (Ecke unten rechts)
     sheet.addEventListener("pointerdown", (e) => {
@@ -7111,8 +7152,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
           const src = await upload(f);
           if (inPage) {
             page.focus(); const sl = getSelection(); sl.removeAllRanges(); if (rg) sl.addRange(rg); else { const r3 = document.createRange(); r3.selectNodeContents(page); r3.collapse(false); sl.addRange(r3); }
-            document.execCommand("insertHTML", false, '<figure class="nfig w50" contenteditable="false"><img src="' + src + '" alt=""></figure><div><br></div>');
-            deco(); norm(); place(); save(true); say("Bild eingefügt. Ein Klick aufs Bild: Grösse oder entfernen.");
+            document.execCommand("insertHTML", false, '<figure class="nfig w50 p-c" contenteditable="false"><img src="' + src + '" alt=""></figure><div><br></div>');
+            deco(); norm(); place(); save(true); say("Bild eingefügt (Mitte). Am Bild ziehen = verschieben, auch neben Text oder ein anderes Bild. Ein Klick aufs Bild: Grösse, links/rechts.");
           } else {
             const w = Math.max(120, Math.min(420, sheet.clientWidth - p.x - 24)), q = { id: uebId(), t: "img", w, src }; anchor(q, p.x, y);
             const el = add(q); sel(el); y += Math.round(w * 0.6) + 16; save(true); say("Bild eingefügt. Am Bild ziehen = verschieben, Ecke unten rechts = Grösse.");
