@@ -6899,7 +6899,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         const lk = m.rid && U.reihen[m.rid];
         // Notizteil klein: Dokumente nutzen die ganze Breite und stehen in Spalten (ohne eigene Wahl ab 7 Dokumenten)
         const slim = typeof m.slim === "boolean" ? m.slim : (m.files || []).length > 0;
-        return '<div class="lesson ln-row mat-row' + (slim ? " mat-slim" : "") + (m.fold ? " mat-fold" : "") + '" data-li="' + key + '"><div class="lh"><div class="lh-top"><b' + (' class="l-drag" draggable="true" data-mdrag="' + k + '" title="Ziehen, um die Materialsammlung zwischen die Lektionen zu verschieben"') + ">M" + matNo(r, k) + "</b>" + '<button type="button" class="lexp' + (more ? " on" : "") + '" data-lexp="' + key + '" title="Gross öffnen: Kommentare, Notizen, Dokumente" aria-label="Materialsammlung gross öffnen">+</button>' +
+        return '<div class="lesson ln-row mat-row' + (slim ? " mat-slim" : "") + (m.fold ? " mat-fold" : "") + '" data-li="' + key + '"><div class="lh"><div class="lh-top"><b' + (' class="l-drag" draggable="true" data-mdrag="' + k + '" data-mnum="' + k + '" title="Ziehen = verschieben (zwischen Lektionen oder andere Materialsammlungen) · Klick = Nummer ändern"') + ">M" + matNo(r, k) + "</b>" + '<button type="button" class="lexp' + (more ? " on" : "") + '" data-lexp="' + key + '" title="Gross öffnen: Kommentare, Notizen, Dokumente" aria-label="Materialsammlung gross öffnen">+</button>' +
           '<button type="button" class="ln-rm" data-lnrm="' + k + '" title="Diese Materialsammlung entfernen" aria-label="Materialsammlung entfernen">×</button></div>' +
           '<input type="text" class="ln-name" data-lnname="' + k + '" value="' + esc(m.name || "") + '" placeholder="Name, z. B. Bilder" aria-label="Name der Materialsammlung">' +
           matFoldBtn(m, k) + (m.fold ? "" : '<button type="button" class="linkbtn mat-slim-tog" data-matslim="' + k + '" title="' + (slim ? "Notizfeld wieder breit zeigen" : "Notizfeld klein machen, Dokumente in Spalten über die ganze Breite") + '">' + (slim ? "▸ Notiz zeigen" : "◂ Notiz klein") + "</button>") +
@@ -7499,6 +7499,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const n = uNeighbour(t, 1); (n || t).focus();
   });
   uEl.addEventListener("click", (e) => {
+    { const mb = e.target.closest("[data-mnum]"); if (mb) { e.preventDefault(); matNoMenu(mb, +mb.dataset.mnum); return; } }
     const t = e.target.closest(".ucell .inp"); if (t && uLastPointer === "touch") uStart(t, e);
     const lx = e.target.closest("[data-lexp]"); if (lx) { openLessonDetail(keyOfLesson(lx.dataset.lexp), mrOf(lx)); return; }
     const clx = e.target.closest("[data-clexp]"); if (clx) { const [rid, ci] = clx.dataset.clexp.split("|"); openChildLessonDetail(rid, +ci); return; }
@@ -7957,6 +7958,26 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     (r.lnItems || []).forEach((m, k) => { if (m && m.mat) { slots.push(k); mats.push(m); } });
     mats.map((m, j) => [m, j]).sort((x, y) => pos(x[0]) - pos(y[0]) || x[1] - y[1]).forEach(([m], j) => { r.lnItems[slots[j]] = m; });
   }
+  // Materialsammlung auf Nummer N setzen: dorthin, wo jetzt M<N> steht
+  function matSetNo(r, k, no) {
+    const mats = (r.lnItems || []).filter((m) => m && m.mat), it = r.lnItems[k]; if (!it || !it.mat) return false;
+    no = Math.max(1, Math.min(mats.length, Math.round(no))); const cur = mats.indexOf(it); if (cur === no - 1) return false;
+    const tgt = mats[no - 1], n = { ...it }; if (tgt.after == null) delete n.after; else n.after = tgt.after;
+    r.lnItems = r.lnItems.slice(); r.lnItems.splice(k, 1); let at = r.lnItems.indexOf(tgt); if (no - 1 > cur) at++; r.lnItems.splice(at, 0, n);
+    matReorder(r); return true;
+  }
+  function matNoMenu(b, k) {
+    closeMenu(); const r = U.reihen[U.sel]; if (!r || !r.lnItems[k]) return; const n = (r.lnItems || []).filter((m) => m && m.mat).length;
+    const m = document.createElement("div"); m.className = "cmenu"; m.id = "cmenu"; m.setAttribute("role", "menu");
+    m.innerHTML = '<div class="cm-title">Nummer der Materialsammlung</div><div class="nsm-own" style="display:flex;align-items:center;gap:6px;padding:4px 10px 6px">M <input type="number" min="1" max="' + n + '" value="' + matNo(r, k) + '" aria-label="Nummer" style="width:64px"><button type="button" class="btn primary" data-mn="ok">Setzen</button></div><div class="help" style="padding:0 10px 8px;margin:0">Die anderen rücken nach. Ziehen am «M» geht auch.</div>';
+    document.body.appendChild(m);
+    const rc = b.getBoundingClientRect(); m.style.left = Math.max(8, Math.min(innerWidth - m.offsetWidth - 8, rc.left)) + "px"; m.style.top = Math.min(innerHeight - m.offsetHeight - 8, rc.bottom + 4) + "px";
+    const inp = m.querySelector("input"); inp.focus(); inp.select();
+    const go = () => { const v = parseInt(inp.value, 10); closeMenu(); if (!(v >= 1)) return; const rr = U.reihen[U.sel]; if (rr && matSetNo(rr, k, v)) { saveReihe(U.sel, 0); renderU(); } };
+    m.querySelector("[data-mn]").onclick = go;
+    inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); go(); } else if (e.key === "Escape") closeMenu(); });
+    setTimeout(() => { const out = (e) => { if (!m.isConnected) { document.removeEventListener("pointerdown", out, true); return; } if (!m.contains(e.target)) { closeMenu(); document.removeEventListener("pointerdown", out, true); } }; document.addEventListener("pointerdown", out, true); }, 0);
+  }
   function dropAfter(r, t, before) {
     const bl = blocksOf(r);
     if (t.classList.contains("ln-add")) return undefined;
@@ -8007,6 +8028,9 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const bl = blocksOf(r), rows = [...uEl.querySelectorAll("#r-lessons .lesson, .lesson")].filter((x) => x.closest("#r-detail") || true);
       const after = dropAfter(r, t, !!tb); if (after === null) return;
       r.lnItems = r.lnItems.slice(); const n = { ...it }; if (after === undefined) delete n.after; else n.after = after; r.lnItems[k] = n;
+      // auf eine andere Materialsammlung: direkt davor bzw. dahinter einreihen (die Nummern ergeben sich aus der Reihenfolge)
+      const tj = /^ln\d+$/.test(t.dataset.li || "") ? +t.dataset.li.slice(2) : -1;
+      if (tj >= 0 && tj !== k && r.lnItems[tj] && r.lnItems[tj].mat) { const tm = r.lnItems[tj]; r.lnItems.splice(k, 1); let at = r.lnItems.indexOf(tm); if (!tb) at++; r.lnItems.splice(at, 0, n); }
       matReorder(r);
       const ae = document.activeElement; if (ae && ae !== document.body && uEl.contains(ae)) ae.blur();
       saveReihe(U.sel, 0); renderU();
