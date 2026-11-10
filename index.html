@@ -1570,6 +1570,8 @@ html.jpw main.wrap:has(#view-unterricht:not([hidden])) { max-width: none; }
 .mat-slim-tog { justify-self: start; font-size: 0.78rem; margin-top: 2px; }
 .mat-fold-tog { justify-self: start; font-size: 0.78rem; margin-top: 2px; font-weight: 700; }
 .mat-foldsum { display: none; }
+.mat-row .mat-bar { display: block; justify-self: stretch; height: 4px; margin: 3px 0 1px; border-radius: 2px; background: color-mix(in srgb, var(--muted) 18%, transparent); overflow: hidden; }
+.mat-row .mat-bar > i { display: block; height: 100%; background: color-mix(in srgb, var(--accent) 55%, var(--c-gruen)); }
 .lesson.mat-fold .cell, .lesson.mat-fold .ldocs { display: none !important; }
 .lesson.mat-fold .mat-foldsum { display: flex; align-items: center; gap: 6px; grid-column: 2 / -1; padding: 6px 12px; color: var(--muted); font-size: 0.85rem; }
 .mat-foldsum button { border: 0; background: none; font: inherit; color: inherit; padding: 2px 4px; border-radius: 6px; cursor: pointer; }
@@ -7023,11 +7025,11 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const t = e.target.closest && e.target.closest(".ueb-txt, .ueb-page, .ueb-cm");
       if (t && e.key === "Escape") { e.preventDefault(); t.blur(); return; }
       if (t && e.key.toLowerCase() === "l" && e.ctrlKey && e.shiftKey) { e.preventDefault(); lsToggle(t); return; }
-      if (!t && (e.key === "Delete" || e.key === "Backspace")) { const s = sheet.querySelector(".ueb-it.sel"); if (s) { e.preventDefault(); drop(s); save(true); } }
+      if (!t && (e.key === "Delete" || e.key === "Backspace")) { const s = sheet.querySelector(".ueb-it.sel"); if (s) { e.preventDefault(); if (!confirm("Das markierte Element wirklich entfernen?")) return; drop(s); save(true); } }
     });
-    root.addEventListener("keydown", (e) => { if (e.target === pane || e.target === sc) { const s = sheet.querySelector(".ueb-it.sel"); if (s && (e.key === "Delete" || e.key === "Backspace")) { e.preventDefault(); drop(s); save(true); } } });
+    root.addEventListener("keydown", (e) => { if (e.target === pane || e.target === sc) { const s = sheet.querySelector(".ueb-it.sel"); if (s && (e.key === "Delete" || e.key === "Backspace")) { e.preventDefault(); if (!confirm("Das markierte Element wirklich entfernen?")) return; drop(s); save(true); } } });
     sheet.addEventListener("click", (e) => {
-      const x = e.target.closest(".ueb-x"); if (x) { drop(x.closest(".ueb-it")); save(true); say("Entfernt. «↶» holt es zurück."); return; }
+      const x = e.target.closest(".ueb-x"); if (x) { if (!confirm("Diese freie Notiz bzw. dieses Bild wirklich entfernen?")) return; drop(x.closest(".ueb-it")); save(true); say("Entfernt. «↶» holt es zurück."); return; }
       const tg = e.target.closest(".nsec-tg"); if (tg && page.contains(tg)) { e.preventDefault(); const d = tg.closest(".nsec"); if (d.dataset.c === "1") delete d.dataset.c; else d.dataset.c = "1"; nsecDeco(page); place(); save(true); return; }
       const st = e.target.closest(".nsec-t"); if (st && page.contains(st)) { e.preventDefault(); secMenu(st.closest(".nsec"), st); return; }
       const fg = e.target.closest("figure.nfig"); if (fg && page.contains(fg)) { e.preventDefault(); if (Date.now() - figDragT < 400) return; figMenu(fg); }
@@ -7096,7 +7098,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const figMenu = (fg) => menu(fg, '<div class="cm-title">Bild</div><div class="nsm-own"><input type="text" maxlength="160" placeholder="Name bzw. Bildunterschrift" value="' + esc(((fg.querySelector("figcaption") || {}).textContent || "").trim()) + '" aria-label="Name des Bildes"><button type="button" class="btn primary" data-um="ok">OK</button></div><hr><button type="button" role="menuitem" data-um="w33">Klein</button><button type="button" role="menuitem" data-um="w50">Mittel</button><button type="button" role="menuitem" data-um="w75">Gross</button><button type="button" role="menuitem" data-um="w0">Ganze Breite</button><hr><button type="button" role="menuitem" data-um="pl" title="Bild links, Text oder ein weiteres Bild rechts daneben">◧ Links</button><button type="button" role="menuitem" data-um="pc" title="Bild allein in der Mitte">▣ Mitte</button><button type="button" role="menuitem" data-um="pr" title="Bild rechts, Text oder ein weiteres Bild links daneben">Rechts ◨</button><hr><button type="button" role="menuitem" class="cm-danger" data-um="del">🗑 Entfernen</button>', (k, v) => {
       if (k === "pl" || k === "pc" || k === "pr") { fg.classList.remove("p-l", "p-r", "p-c"); fg.classList.add("p-" + k[1]); place(); save(true); return; }
       if (k === "ok") { let fc = fg.querySelector("figcaption"); if (v) { if (!fc) { fc = document.createElement("figcaption"); fg.appendChild(fc); } fc.textContent = v; } else if (fc) fc.remove(); place(); save(true); return; }
-      if (k === "del") fg.remove(); else { fg.classList.remove("w25", "w33", "w50", "w75", "w100"); if (k !== "w0") fg.classList.add(k); }
+      if (k === "del") { if (!confirm("Dieses Bild wirklich von der Seite entfernen?")) return; fg.remove(); } else { fg.classList.remove("w25", "w33", "w50", "w75", "w100"); if (k !== "w0") fg.classList.add(k); }
       place(); save(true);
     });
     // Bilder in der Seite ziehen: in der Mitte = zwischen die Absätze; am linken/rechten Rand = neben Text oder neben ein anderes Bild
@@ -7508,11 +7510,11 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const rid = it.c.rid, ch = U.reihen[rid], k = it.k, m = (ch.lnItems || [])[k] || {}, key = "ln" + k, ro = !!r.klasse;
     const more = !!(m.details || filled(m.notesHtml) || (m.files && m.files.length) || hasPlan(m.plan)), lk = m.rid && U.reihen[m.rid];
     const slim = typeof m.slim === "boolean" ? m.slim : (m.files || []).length > 0;
-    return '<div class="lesson ln-row mat-row ms-mat' + (matFolded(m) ? " mat-fold" : "") + '" data-crid="' + esc(rid) + '" data-mrid="' + esc(rid) + '" data-cmat="' + k + '"><div class="lh"><div class="lh-top"><b>' + it.L + "·M" + matNo(ch, k) + "</b>" +
+    return '<div class="lesson ln-row mat-row ms-mat' + (matFolded(m) ? " mat-fold" : "") + '" data-crid="' + esc(rid) + '" data-mrid="' + esc(rid) + '" data-cmat="' + k + '"><div class="lh"><div class="lh-top"><b' + (ro ? "" : ' data-cmatm="' + k + '" title="Rechtsklick: Materialsammlung löschen"') + ">" + it.L + "·M" + matNo(ch, k) + "</b>" +
       '<button type="button" class="lexp' + (more ? " on" : "") + '" data-lexp="' + key + '" title="Gross öffnen: Kommentare, Notizen, Dokumente (gilt für die Unterreihe)" aria-label="Materialsammlung gross öffnen">+</button>' +
-      (ro ? "" : '<button type="button" class="ln-rm" data-lnrm="' + k + '" title="Diese Materialsammlung aus der Unterreihe entfernen" aria-label="Materialsammlung entfernen">×</button>') + "</div>" +
+      "</div>" +
       '<input type="text" class="ln-name" data-lnname="' + k + '" value="' + esc(m.name || "") + '" placeholder="Name, z. B. Bilder" aria-label="Name der Materialsammlung"' + (ro ? " readonly" : "") + ">" +
-      matFoldBtn(m, k) +
+      matFill(m) + matFoldBtn(m, k) +
       (lk ? '<span class="mat-link"><button type="button" class="linkbtn" data-goto="' + esc(m.rid) + '" title="Verknüpfte Reihe öffnen">↗ ' + esc(lk.title || "Reihe") + "</button>" + (ro ? "" : '<button type="button" class="x" data-matunlink="' + k + '" title="Verknüpfung lösen" aria-label="Verknüpfung lösen">×</button>') + "</span>"
         : "") +
       '<span class="ms-from">aus ' + esc(ch.title || "Unterreihe") + "</span></div>" +
@@ -7551,7 +7553,18 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   // Materialsammlung ganz zuklappen (Dokumente und Notiz ausblenden), gemerkt pro Sammlung (m.fold), ohne Wahl offen
   // ohne Wahl zu (m.fold === false = offen); auf/zu gilt für Dokumente und Notiz zusammen
   const matFolded = (m) => m.fold !== false;
-  const matFoldBtn = (m, k) => '<button type="button" class="linkbtn mat-fold-tog" data-matfold="' + k + '" aria-expanded="' + !matFolded(m) + '" title="' + (matFolded(m) ? "Materialsammlung aufklappen: Dokumente und Notiz zeigen" : "Materialsammlung zuklappen: nur Anzahl Dokumente und Notiz zeigen") + '">' + (matFolded(m) ? "▸ Aufklappen" : "▾ Zuklappen") + "</button>";
+  // Füllstand einer Materialsammlung: Dokumente, Bilder und geschriebener Text auf ihren Seiten, Notiz (voll ab etwa 25 Punkten)
+  function matFill(m) {
+    if (UP.bars === false) return "";
+    const nd = (m.files || []).length; let im = 0, tx = 0;
+    const pages = m.page && Array.isArray(m.page.pages) ? m.page.pages : m.page ? [m.page] : [];
+    pages.forEach((p) => { const h = String(p.html || p.notesHtml || ""); im += (h.match(/<img\b/gi) || []).length + (h.match(/class="nfig ndoc/g) || []).length + (p.items || []).length;
+      const t = h.replace(/<div[^>]*class="nsec[^"]*"[^>]*>[\s\S]*?<\/div>/g, "").replace(/<[^>]+>/g, " ").replace(/&nbsp;|\s+/g, " ").trim(); if (t.length > 15) tx += Math.min(3, Math.ceil(t.length / 200)); });
+    const nt = filled(m.html || "") ? 1 : 0, pts = nd + im + tx + nt; if (!pts) return "";
+    const pc = Math.min(100, Math.round(pts / 25 * 100));
+    return '<span class="bar-mini mat-bar" title="Füllstand: ' + nd + (nd === 1 ? " Dokument" : " Dokumente") + (im ? ", " + im + " Bilder/Ausschnitte" : "") + (tx ? ", Notizen auf den Seiten" : "") + (nt ? ", Kurznotiz" : "") + '"><i style="width:' + pc + '%"></i></span>';
+  }
+  const matFoldBtn = (m, k) => matFolded(m) ? "" : '<button type="button" class="linkbtn mat-fold-tog" data-matfold="' + k + '" aria-expanded="' + !matFolded(m) + '" title="' + (matFolded(m) ? "Materialsammlung aufklappen: Dokumente und Notiz zeigen" : "Materialsammlung zuklappen: nur Anzahl Dokumente und Notiz zeigen") + '">' + (matFolded(m) ? "▸ Aufklappen" : "▾ Zuklappen") + "</button>";
   const matFoldSum = (m, k) => { const n = (m.files || []).length, nt = filled(m.html || "");
     return '<div class="mat-foldsum"><button type="button" class="mat-fs-docs" data-matfold="' + k + '" title="Aufklappen: Dokumente und Notiz zeigen">' + (n ? n + (n === 1 ? " Dokument" : " Dokumente") : "keine Dokumente") + "</button>" +
       '<span class="mat-fs-sep">+</span><button type="button" class="mat-nt' + (nt ? " has" : "") + '" data-matnote="' + k + '" title="' + (nt ? "Notiz bearbeiten" : "Eine Notiz schreiben") + '">' + (nt ? "📝 Notiz" : "Notiz schreiben") + (nt ? '<span class="mat-ntp">' + sanitize(m.html) + "</span>" : "") + "</button></div>"; };
@@ -7561,9 +7574,9 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         // Notizteil klein: Dokumente nutzen die ganze Breite und stehen in Spalten (ohne eigene Wahl ab 7 Dokumenten)
         const slim = typeof m.slim === "boolean" ? m.slim : (m.files || []).length > 0;
         return '<div class="lesson ln-row mat-row' + (matFolded(m) ? " mat-fold" : "") + '" data-li="' + key + '"><div class="lh"><div class="lh-top"><b' + (' class="l-drag" draggable="true" data-mdrag="' + k + '" data-mnum="' + k + '" title="Ziehen = verschieben (zwischen Lektionen oder andere Materialsammlungen) · Klick = Nummer ändern"') + ">M" + matNo(r, k) + "</b>" + '<button type="button" class="lexp' + (more ? " on" : "") + '" data-lexp="' + key + '" title="Gross öffnen: Kommentare, Notizen, Dokumente" aria-label="Materialsammlung gross öffnen">+</button>' +
-          '<button type="button" class="ln-rm" data-lnrm="' + k + '" title="Diese Materialsammlung entfernen" aria-label="Materialsammlung entfernen">×</button></div>' +
+          "</div>" +
           '<input type="text" class="ln-name" data-lnname="' + k + '" value="' + esc(m.name || "") + '" placeholder="Name, z. B. Bilder" aria-label="Name der Materialsammlung">' +
-          matFoldBtn(m, k) +
+          matFill(m) + matFoldBtn(m, k) +
           (lk ? '<span class="mat-link"><button type="button" class="linkbtn" data-goto="' + esc(m.rid) + '" title="Verknüpfte Reihe öffnen">↗ ' + esc(lk.title || "Reihe") + '</button><button type="button" class="x" data-matunlink="' + k + '" title="Verknüpfung lösen" aria-label="Verknüpfung lösen">×</button></span>'
               : "") + "</div>" +
           cellHtml2('data-rf="lnItems.' + k + '.html" id="l-' + key + '" aria-label="Kurzzusammenfassung der Materialsammlung"', m.html || "", { color: m.color, more, cellAttrs: ' data-lesson="' + key + '"' }) +
@@ -8238,6 +8251,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     if (ex) { const c = ex.closest("[data-lesson]"); if (c) openLessonDetail(keyOfLesson(c.dataset.lesson), mrOf(c)); }
   });
   uEl.addEventListener("contextmenu", (e) => {
+    { const mb = e.target.closest("[data-mnum]"); if (mb) { e.preventDefault(); matNoMenu(mb, +mb.dataset.mnum); return; } }
+    { const cb = e.target.closest("[data-cmatm]"); if (cb) { e.preventDefault(); matNoMenu(cb, +cb.dataset.cmatm, cb.closest("[data-mrid]").dataset.mrid); return; } }
     const it = e.target.closest(".jp-item");
     if (it) { e.preventDefault(); prioMenu(e.clientX, e.clientY, it.dataset.open, +it.dataset.from, +it.dataset.from); return; }
     // Rechtsklick auf eine Unterreihen-Lektion in der Masterreihe: herausnehmen oder verschieben
@@ -8697,15 +8712,23 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     r.lnItems = r.lnItems.slice(); r.lnItems.splice(k, 1); let at = r.lnItems.indexOf(tgt); if (no - 1 > cur) at++; r.lnItems.splice(at, 0, n);
     matReorder(r); return true;
   }
-  function matNoMenu(b, k) {
-    closeMenu(); const r = U.reihen[U.sel]; if (!r || !r.lnItems[k]) return; const n = (r.lnItems || []).filter((m) => m && m.mat).length;
+  function matNoMenu(b, k, rid) {
+    closeMenu(); const own = !rid || rid === U.sel; rid = rid || U.sel; const r = U.reihen[rid]; if (!r || !r.lnItems || !r.lnItems[k]) return; const n = (r.lnItems || []).filter((m) => m && m.mat).length;
     const m = document.createElement("div"); m.className = "cmenu"; m.id = "cmenu"; m.setAttribute("role", "menu");
-    m.innerHTML = '<div class="cm-title">Nummer der Materialsammlung</div><div class="nsm-own" style="display:flex;align-items:center;gap:6px;padding:4px 10px 6px">M <input type="number" min="1" max="' + n + '" value="' + matNo(r, k) + '" aria-label="Nummer" style="width:64px"><button type="button" class="btn primary" data-mn="ok">Setzen</button></div><div class="help" style="padding:0 10px 8px;margin:0">Die anderen rücken nach. Ziehen am «M» geht auch.</div>';
+    m.innerHTML = (own ? '<div class="cm-title">Nummer der Materialsammlung</div><div class="nsm-own" style="display:flex;align-items:center;gap:6px;padding:4px 10px 6px">M <input type="number" min="1" max="' + n + '" value="' + matNo(r, k) + '" aria-label="Nummer" style="width:64px"><button type="button" class="btn primary" data-mn="ok">Setzen</button></div><div class="help" style="padding:0 10px 8px;margin:0">Die anderen rücken nach. Ziehen am «M» geht auch.</div><hr>' : "") +
+      '<button type="button" role="menuitem" class="cm-danger" data-mn="del">🗑 Materialsammlung löschen …</button>';
+    m.querySelector("[data-mn=del]").onclick = () => {
+      closeMenu(); const rr = U.reihen[rid], it = rr && rr.lnItems && rr.lnItems[k]; if (!it) return;
+      const nf = (it.files || []).length, np = it.page && Array.isArray(it.page.pages) ? it.page.pages.length : 0;
+      if (!confirm("Materialsammlung «M" + matNo(rr, k) + (it.name ? " " + it.name : "") + "» wirklich löschen?\n\nSie enthält " + nf + (nf === 1 ? " Dokument" : " Dokumente") + (np ? " und " + np + (np === 1 ? " Seite" : " Seiten") + " Notizen" : "") + ". Die Dateien im Ordner bleiben erhalten. Mit «↶ Rückgängig» lässt sich das Löschen zurücknehmen.")) return;
+      rr.lnItems = rr.lnItems.filter((_, j) => j !== k); saveReihe(rid, 0); renderU();
+    };
     document.body.appendChild(m);
     const rc = b.getBoundingClientRect(); m.style.left = Math.max(8, Math.min(innerWidth - m.offsetWidth - 8, rc.left)) + "px"; m.style.top = Math.min(innerHeight - m.offsetHeight - 8, rc.bottom + 4) + "px";
     const inp = m.querySelector("input"); inp.focus(); inp.select();
     const go = () => { const v = parseInt(inp.value, 10); closeMenu(); if (!(v >= 1)) return; const rr = U.reihen[U.sel]; if (rr && matSetNo(rr, k, v)) { saveReihe(U.sel, 0); renderU(); } };
-    m.querySelector("[data-mn]").onclick = go;
+    if (!own) { setTimeout(() => { const out = (e) => { if (!m.isConnected) { document.removeEventListener("pointerdown", out, true); return; } if (!m.contains(e.target)) { closeMenu(); document.removeEventListener("pointerdown", out, true); } }; document.addEventListener("pointerdown", out, true); }, 0); return; }
+    m.querySelector("[data-mn=ok]").onclick = go;
     inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); go(); } else if (e.key === "Escape") closeMenu(); });
     setTimeout(() => { const out = (e) => { if (!m.isConnected) { document.removeEventListener("pointerdown", out, true); return; } if (!m.contains(e.target)) { closeMenu(); document.removeEventListener("pointerdown", out, true); } }; document.addEventListener("pointerdown", out, true); }, 0);
   }
@@ -9189,7 +9212,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     if (b.dataset.lnadd != null && r0) { r0.lnItems = [...(r0.lnItems || []), { name: (r0.lnItems || []).length ? "" : r0.ln || "", html: "" }]; saveReihe(U.sel, 0); renderLessonsOnly(r0); return; }
     if (b.dataset.lnrm != null && m0) {
       const k = +b.dataset.lnrm, it = (m0.lnItems || [])[k] || {}, used = filled(it.html) || hasPlan(it.plan) || filled(it.notesHtml) || (it.files || []).length;
-      if (used && !b.dataset.armed) { b.dataset.armed = "1"; b.textContent = "Wirklich?"; b.classList.add("armed"); return; }
+      if (!b.dataset.armed) { b.dataset.armed = "1"; b.textContent = "Wirklich?"; b.classList.add("armed"); setTimeout(() => { if (b.isConnected) { delete b.dataset.armed; b.textContent = "×"; b.classList.remove("armed"); } }, 4000); return; }
       m0.lnItems = m0.lnItems.filter((_, j) => j !== k); saveReihe(mid0, 0); renderLessonsOnly(r0); return;
     }
     if (b.dataset.rfmenu && r0) { rfMenu(b, r0, b.dataset.rfmenu); return; }
