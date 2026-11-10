@@ -749,9 +749,10 @@ html.mob .lk-main.split > .lk-planbox { grid-column: 1 / -1; position: static; m
 html:not(.ls-on).lk-proj .lk-page .ls:not(.lk-sp .ls), .ls-x { visibility: hidden; }
 /* Abdecken (wie Spoiler): Sie sehen den Text durch den dunklen Balken, beim Zeigen ist er schwarz; Klick deckt auf */
 .lk-sp { background: #26282c; color: #f3f3f3; border-radius: 3px; padding: 0 3px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
-.lk-sp .ls { color: #ffab9c; }
+.lk-sp .ls, .ls .lk-sp { color: #ffab9c; }
+html.lk-proj .lk-page .lk-sp { visibility: visible; }
 .lk-sp.open { background: none; color: inherit; outline: 1.5px dashed #9aa3ad; outline-offset: 1px; }
-.lk-sp.open .ls { color: #c8402c; }
+.lk-sp.open .ls, .ls .lk-sp.open { color: #c8402c; }
 html.lk-presenting .lk-page .lk-sp, html.lk-proj .lk-page .lk-sp, .lk-slide .lk-sp { cursor: pointer; }
 html.lk-proj .lk-page .lk-sp:not(.open), .lk-slide .lk-sp:not(.open) { background: #111; color: transparent !important; outline: 0; }
 html.lk-proj .lk-page .lk-sp:not(.open) *, .lk-slide .lk-sp:not(.open) * { color: transparent !important; visibility: visible; }
@@ -3181,6 +3182,39 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     walk(tpl.content);
     return out.replace(/<(b|i|u|s)><\/\1>/g, "").replace(/<span class="(ls|ff-[a-z])"><\/span>/g, "").replace(/(<br>)+$/, "");
   }
+  // Abdecken (Unterricht und Notizen): jedes markierte Textstück einzeln in einen Balken packen – so bleiben Tabellen, Listen und Absätze heil.
+  // Schreibmarke (ohne Markierung) in einem Balken = diesen Balken entfernen. Gibt false zurück, wenn nichts markiert war.
+  function spWrap(root) {
+    const sl = getSelection(); if (!sl.rangeCount) return false;
+    const rg = sl.getRangeAt(0); if (!root.contains(rg.commonAncestorContainer)) return false;
+    const unwrap = (x) => { const p = x.parentNode; while (x.firstChild) p.insertBefore(x.firstChild, x); x.remove(); p.normalize(); };
+    if (rg.collapsed) { const a = rg.startContainer, el = a.nodeType === 1 ? a : a.parentElement, sp = el && el.closest(".lk-sp"); if (sp && root.contains(sp)) { unwrap(sp); return true; } return false; }
+    const ca = rg.commonAncestorContainer, host = ca.nodeType === 1 ? ca : ca.parentElement;
+    // ganz in einem Balken markiert: Balken entfernen
+    const inSp = host.closest(".lk-sp"); if (inSp && root.contains(inSp)) { unwrap(inSp); return true; }
+    const tw = document.createTreeWalker(host, NodeFilter.SHOW_TEXT), list = [];
+    let n; while ((n = tw.nextNode())) if (rg.intersectsNode(n) && n.nodeValue.trim() && !(n.parentElement && n.parentElement.closest(".lk-sp, .nsec, .nend, figure, .lk-doc, a"))) list.push(n);
+    if (!list.length) return false;
+    const sc = rg.startContainer, so = rg.startOffset, ec = rg.endContainer, eo = rg.endOffset;
+    let first = null, last = null;
+    list.forEach((t) => {
+      let a = 0, b = t.nodeValue.length;
+      if (t === sc) a = so; if (t === ec) b = eo;
+      if (b <= a || !t.nodeValue.slice(a, b).trim()) return;
+      if (b < t.nodeValue.length) t.splitText(b);
+      const mid = a > 0 ? t.splitText(a) : t;
+      let sp = document.createElement("span"); sp.className = "lk-sp"; mid.before(sp); sp.appendChild(mid);
+      // Balken nach aussen schieben, wenn er eine Formatierung (z. B. Lehrerschrift) ganz ausfüllt: <span class="lk-sp"><span class="ls">…</span></span>
+      let par = sp.parentElement;
+      while (par && par !== root && /^(SPAN|B|I|U|MARK|FONT|S|STRONG|EM)$/.test(par.tagName) && !par.classList.contains("lk-sp") && par.textContent.trim() === sp.textContent.trim() && ![...par.childNodes].some((k) => k !== sp && (k.nodeType === 1 ? k.tagName !== "BR" : k.nodeValue.trim()))) {
+        const out = document.createElement("span"); out.className = "lk-sp"; par.before(out); out.appendChild(par); sp.replaceWith(...sp.childNodes); sp = out; par = sp.parentElement;
+      }
+      if (!first) first = sp; last = sp;
+    });
+    if (!last) return false;
+    const r2 = document.createRange(); r2.setStartAfter(last); r2.collapse(true); sl.removeAllRanges(); sl.addRange(r2);
+    return true;
+  }
   function htmlToPlain(html) {
     const tpl = document.createElement("template"); tpl.innerHTML = (html || "").replace(/<br>/g, "\n");
     return tpl.content.textContent;
@@ -3266,18 +3300,20 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         const b = tag === "B" || tag === "STRONG" || +st.fontWeight >= 600 || st.fontWeight === "bold";
         const i = tag === "I" || tag === "EM" || st.fontStyle === "italic";
         const u = tag === "U" || /underline/.test(st.textDecoration || st.textDecorationLine || "");
-        const hl = hlOf(n), fs = fsOf(n), ls = isLs(n), ff = ffOf(n);
+        const hl = hlOf(n), fs = fsOf(n), ls = isLs(n), ff = ffOf(n), spc = tag === "SPAN" && n.classList.contains("lk-sp");
+        if (spc) out += '<span class="lk-sp">';
         if (ff) out += '<span class="ff-' + ff + '">'; if (ls) out += '<span class="ls">'; if (fs) out += '<span class="fs-' + fs + '">'; if (hl) out += '<mark class="hl-' + hl + '">';
         if (b) out += "<b>"; if (i) out += "<i>"; if (u) out += "<u>";
         walk(n);
         if (u) out += "</u>"; if (i) out += "</i>"; if (b) out += "</b>";
         if (hl) out += "</mark>"; if (fs) out += "</span>"; if (ls) out += "</span>"; if (ff) out += "</span>";
+        if (spc) out += "</span>";
         if (blockOpen) out += "</" + blockOpen + ">";
         if (tag === "TD" || tag === "TH") out += "  ";
       }
     }
     walk(tpl.content);
-    let prev; do { prev = out; out = out.replace(/<(b|i|u)><\/\1>/g, "").replace(/<mark class="hl-[ygb]"><\/mark>/g, "").replace(/<span class="fs-(s|l|xl)"><\/span>/g, "").replace(/<span class="(ls|ff-[a-z])"><\/span>/g, ""); } while (out !== prev);
+    let prev; do { prev = out; out = out.replace(/<(b|i|u)><\/\1>/g, "").replace(/<span class="lk-sp"><\/span>/g, "").replace(/<mark class="hl-[ygb]"><\/mark>/g, "").replace(/<span class="fs-(s|l|xl)"><\/span>/g, "").replace(/<span class="(ls|ff-[a-z])"><\/span>/g, ""); } while (out !== prev);
     out = out.replace(/<div( class="(?:al-[crj]|lhn-[1-4])(?: lhn-[1-4])?")?><\/div>/g, "<div$1><br></div>").replace(/<div class="ncol"><\/div>/g, '<div class="ncol"><br></div>').replace(/<div class="ncols"><\/div>/g, "").replace(/<(ul|ol)><\/\1>/g, "");
     return out.replace(/(<br>)+$/, "");
   }
@@ -3306,6 +3342,17 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const v = (el.style && el.style.width) || "", m = /^([\d.]+)(pt|px|cm|mm|in)$/.exec(v.trim());
     if (m) return +m[1] * { pt: 1, px: 0.75, cm: 28.35, mm: 2.835, in: 72 }[m[2]];
     const a = el.getAttribute && el.getAttribute("width"); return a && /^\d+(\.\d+)?$/.test(a) ? +a * 0.75 : 0;
+  }
+  // Tabelle übernehmen, wie sie gerade aussieht: Spaltenbreiten aus der Anzeige als Prozent festhalten (falls keine eigenen gesetzt sind)
+  function tabKeepW(tb) {
+    const c = tb.cloneNode(true);
+    if (tb.querySelector(":scope > colgroup > col[style*='width']")) return c;
+    const rows = [...tb.rows], g = tGrid(rows), N = g.n, W = tb.getBoundingClientRect().width; if (!W || N < 2) return c;
+    const a = Array(N).fill(0); g.rows.forEach((l) => l.forEach((x) => { if (x.span === 1 && !a[x.start]) a[x.start] = x.cell.getBoundingClientRect().width; }));
+    if (!a.every((x) => x > 0)) return c;
+    const sum = a.reduce((p, q) => p + q, 0); c.querySelectorAll(":scope > colgroup").forEach((x) => x.remove());
+    const cg = document.createElement("colgroup"); a.forEach((x) => { const col = document.createElement("col"); col.style.width = (Math.round(x / sum * 1000) / 10) + "%"; cg.appendChild(col); });
+    c.insertBefore(cg, c.firstChild); return c;
   }
   function tabHtml(n, base, inner) {
     const rows = tRows(n);
@@ -6208,7 +6255,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       NB("hl", "y", "", "Gelb markieren", "sw-y") + NB("hl", "g", "", "Grün markieren", "sw-g") + NB("hl", "b", "", "Blau markieren", "sw-b") + NB("hl", "", "✕", "Markierung entfernen", "sw-x") + '<span class="nsep"></span>' +
       NB("size", "2", '<span style="font-size:11px">A</span>', "Kleine Schrift") + NB("size", "3", '<span style="font-size:14px">A</span>', "Normale Schrift") + NB("size", "4", '<span style="font-size:17px">A</span>', "Grosse Schrift") + NB("size", "5", '<span style="font-size:20px">A</span>', "Sehr grosse Schrift") + '<span class="nsep"></span>' +
       NB("justifyLeft", "", '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 3h12M2 6.5h8M2 10h12M2 13.5h8"/></svg>', "Linksbündig") + NB("justifyCenter", "", '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 3h12M4 6.5h8M2 10h12M4 13.5h8"/></svg>', "Zentriert") + NB("justifyRight", "", '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 3h12M6 6.5h8M2 10h12M6 13.5h8"/></svg>', "Rechtsbündig") + NB("justifyFull", "", '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 3h12M2 6.5h12M2 10h12M2 13.5h12"/></svg>', "Blocksatz") + '<span class="nsep"></span>' + NB("insertUnorderedList", "", '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="3" cy="4" r="1" fill="currentColor"/><circle cx="3" cy="8" r="1" fill="currentColor"/><circle cx="3" cy="12" r="1" fill="currentColor"/><path d="M6 4h8M6 8h8M6 12h8"/></svg>', "Aufzählung") + NB("insertOrderedList", "", '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 4h8M6 8h8M6 12h8"/><text x="0.5" y="5.5" font-size="5" fill="currentColor" stroke="none">1</text><text x="0.5" y="9.5" font-size="5" fill="currentColor" stroke="none">2</text><text x="0.5" y="13.5" font-size="5" fill="currentColor" stroke="none">3</text></svg>', "Nummerierte Liste") + '<span class="nsep"></span>' +
-      '<label class="nlh" title="Spalten einfügen, z. B. Fragen links, Antworten rechts">Spalten <select id="d-ncols"><option value="">–</option><option value="2">2 Spalten</option><option value="3">3 Spalten</option><option value="t">Aufgabe | Notizen</option><option value="0">Spalten aufheben</option></select></label>' + '<button type="button" class="nb nimg" id="d-nsec" aria-haspopup="menu" title="Abschnitt einfügen: Trennstrich mit Titel, z. B. eine Phase aus der Lektionsplanung; lässt sich zuklappen">§ Abschnitt</button><button type="button" class="nb nimg" id="d-nmark" title="Markierten Text zu einem Abschnitt machen (erste Zeile wird zum Titel). Danach in der Lektionsplanung mit ＋ einer Zeile zuordnen">§ Als Abschnitt</button><button type="button" class="nb nimg" id="d-ntask" title="Seite teilen: markierte Aufgabe links, rechts Lösungen und Notizen schreiben (Linie dazwischen lässt sich ziehen)">◧ Aufgabe | Notizen</button><button type="button" class="nb" id="d-neye" aria-pressed="true" title="Abschnitte (Trennstriche und § in der Lektionsplanung) zeigen oder ausblenden">👁</button>' + '<span class="nsep"></span>' +
+      '<label class="nlh" title="Spalten einfügen, z. B. Fragen links, Antworten rechts">Spalten <select id="d-ncols"><option value="">–</option><option value="2">2 Spalten</option><option value="3">3 Spalten</option><option value="t">Aufgabe | Notizen</option><option value="0">Spalten aufheben</option></select></label>' + '<button type="button" class="nb nimg" id="d-nsec" aria-haspopup="menu" title="Abschnitt einfügen: Trennstrich mit Titel, z. B. eine Phase aus der Lektionsplanung; lässt sich zuklappen">§ Abschnitt</button><button type="button" class="nb nimg" id="d-nsp" title="Markierte Wörter abdecken (schwarzer Balken): Sie sehen sie, die Klasse beim Zeigen im Unterricht nicht – Klick auf den Balken deckt dort auf. Schreibmarke in einem Balken: Abdeckung entfernen">▮ Abdecken</button><button type="button" class="nb nimg" id="d-ntask" title="Seite teilen: markierte Aufgabe links, rechts Lösungen und Notizen schreiben (Linie dazwischen lässt sich ziehen)">◧ Aufgabe | Notizen</button><button type="button" class="nb" id="d-neye" aria-pressed="true" title="Abschnitte (Trennstriche und § in der Lektionsplanung) zeigen oder ausblenden">👁</button>' + '<span class="nsep"></span>' +
       '<span class="ntab-w"><button type="button" class="nb nimg" id="d-ntabb" aria-expanded="false" title="Tabelle einfügen: Grösse im Raster wählen oder Spalten und Zeilen eingeben">▦ Tabelle</button><div class="ntab-pop" id="d-ntabp" hidden><div class="ntab-grid">' + Array.from({ length: 64 }, (_, k) => '<button type="button" class="ntab-c" data-r="' + (Math.floor(k / 8) + 1) + '" data-c="' + (k % 8 + 1) + '"></button>').join("") + '</div><div class="ntab-lbl">Grösse im Raster wählen</div><div class="ntab-num"><label>Spalten <input type="number" id="d-ntc" min="1" max="20" value="3"></label><label>Zeilen <input type="number" id="d-ntr" min="1" max="60" value="3"></label><button type="button" class="btn primary" id="d-ntok">Einfügen</button></div></div></span>' + '<span class="nsep"></span>' +
       '<span class="nlh">Zeilenabstand <button type="button" class="nb" id="d-nlh" aria-haspopup="menu" title="Zeilenabstand für die markierten Zeilen. Rechtsklick auf einen Abstand im Menü: als Standard für diese Notizen">' + nlhName(x.notesLh) + " ▾</button></span>" + '<span class="nsep"></span>' +
       '<label class="nb nimg" title="Bild oder Screenshot einfügen (auch mit Strg+V)">🖼 Bild<input type="file" id="d-nimg" accept="image/*" multiple hidden></label>' +
@@ -7144,7 +7191,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       if (!dropFirst) setTimeout(() => nsecEdit(d), 0);
       return d;
     };
-    const mk = $("#d-nmark"); if (mk) { mk.addEventListener("mousedown", (e) => e.preventDefault()); mk.addEventListener("click", markSec); }
+    const mk = $("#d-nsp"); if (mk) { mk.addEventListener("mousedown", (e) => e.preventDefault()); mk.addEventListener("click", () => { if (spWrap(ned)) { HIST.brk = true; save(); } else $("#d-nmsg").textContent = "Zuerst die Wörter markieren, die abgedeckt werden sollen."; }); }
     // kleiner Knopf direkt beim markierten Text
     let mpop = null;
     const markPop = (on) => {
@@ -7153,7 +7200,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       if (!mpop) { mpop = document.createElement("div"); mpop.className = "nmark-pop"; mpop.innerHTML = '<button type="button" title="Markierten Text zu einem Abschnitt machen">§ Als Abschnitt</button>'; mpop.addEventListener("mousedown", (e) => e.preventDefault()); mpop.firstChild.addEventListener("click", markSec); document.body.appendChild(mpop); }
       mpop.style.left = Math.max(8, Math.min(innerWidth - 140, r.right - 60)) + "px"; mpop.style.top = Math.min(innerHeight - 40, r.bottom + 6) + "px";
     };
-    if (nopt.phases) {
+    if (false) {
       const chk = () => { if (!ned.isConnected) { markPop(false); return; } const sl = getSelection(); if (sl.rangeCount && !sl.isCollapsed && ned.contains(sl.anchorNode) && ned.contains(sl.focusNode) && sl.toString().trim()) markPop(true); else markPop(false); };
       ned.addEventListener("mouseup", () => setTimeout(chk, 0)); ned.addEventListener("keyup", (e) => { if (e.shiftKey) chk(); });
       document.addEventListener("selectionchange", () => { if (mpop) { const sl = getSelection(); if (!sl.rangeCount || sl.isCollapsed || !ned.contains(sl.anchorNode)) markPop(false); } });
@@ -11739,7 +11786,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const hideLs = !lkLsShow() && /class="[^"]*\bls\b/.test(html || "");
     if (!/lk-note/.test(html || "") && !hideLs) return html || "";
     const t = document.createElement("template"); t.innerHTML = html; t.content.querySelectorAll(".lk-note").forEach((n) => n.remove());
-    if (hideLs) t.content.querySelectorAll(".ls").forEach((n) => { if (n.closest(".lk-sp")) return; n.textContent = "\u00a0".repeat(Math.min(200, Math.max(1, n.textContent.length))); n.classList.add("ls-x"); });
+    if (hideLs) t.content.querySelectorAll(".ls").forEach((n) => { if (n.closest(".lk-sp")) return;
+      if (n.querySelector(".lk-sp")) { const tw = document.createTreeWalker(n, NodeFilter.SHOW_TEXT), ts = []; let q; while ((q = tw.nextNode())) if (!q.parentElement.closest(".lk-sp")) ts.push(q); ts.forEach((q) => { q.nodeValue = "\u00a0".repeat(q.nodeValue.length); }); n.classList.add("ls-x"); n.style.visibility = "visible"; n.style.color = "transparent"; return; } n.textContent = "\u00a0".repeat(Math.min(200, Math.max(1, n.textContent.length))); n.classList.add("ls-x"); });
     t.content.querySelectorAll("ul, ol").forEach((l) => { if (!l.children.length) l.remove(); });
     return t.innerHTML;
   }
@@ -11955,7 +12003,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const sr = e.target.closest("[data-sref]") || (!e.target.closest("button, a") && e.target.closest(".lk-plantext tr") && e.target.closest(".lk-plantext tr").querySelector("[data-sref]"));
       if (sr) { const t = box.querySelector('.psec[data-sid="' + sr.dataset.sref + '"]'); if (t) { const gp = t.closest(".pgrp"); if (gp && gp.classList.contains("shut")) { gp.classList.remove("shut"); if (gp.previousElementSibling) gp.previousElementSibling.classList.remove("shut"); } box.querySelectorAll(".lk-plantext tr.on").forEach((y) => y.classList.remove("on")); const tr = sr.closest("tr"); if (tr) tr.classList.add("on"); t.scrollIntoView({ block: "start", behavior: "smooth" }); t.classList.remove("flash"); void t.offsetWidth; t.classList.add("flash"); } return; }
       const bt = e.target.closest("[data-taketab]");
-      if (bt) { lkInsertBlocks(lkSanitize(bt.parentElement.querySelector("table").outerHTML), LK.range); LK.range = null; lkStat("Tabelle in die Seite übernommen. Unter «▦ Tabelle» lassen sich Zeilen und Spalten ändern."); return; }
+      if (bt) { lkInsertBlocks(lkSanitize(tabKeepW(bt.parentElement.querySelector("table")).outerHTML), LK.range); LK.range = null; lkStat("Tabelle in die Seite übernommen. Unter «▦ Tabelle» lassen sich Zeilen und Spalten ändern."); return; }
       const b = e.target.closest("[data-take]"); if (!b) return;
       const fc = b.parentElement.querySelector("figcaption"), cap = fc ? fc.textContent.trim() : "";
       lkInsertAtRange(lkFigHtml(b.dataset.take) + (cap ? '<p class="fs-2">' + esc(cap) + "</p>" : "<p><br></p>"));
@@ -12638,16 +12686,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     let i = tmp.querySelectorAll(LK_CHK).length; root.querySelectorAll(LK_CHK).forEach((li) => (li.dataset.ci = i++));
     let j = tmp.querySelectorAll(".lk-sp").length; root.querySelectorAll(".lk-sp").forEach((x) => (x.dataset.si = j++));
   }
-  // Abdecken: markierten Text in einen Balken packen; Schreibmarke in einem Balken = Balken entfernen
-  function lkSpWrap(pg) {
-    const sl = getSelection(); if (!sl.rangeCount) return;
-    const rg = sl.getRangeAt(0), an = rg.commonAncestorContainer, el = an.nodeType === 1 ? an : an.parentElement, inSp = el && el.closest(".lk-sp");
-    if (inSp && pg.contains(inSp)) { inSp.replaceWith(...inSp.childNodes); return; }
-    if (rg.collapsed) { lkStat("Zuerst die Wörter markieren, die abgedeckt werden sollen."); return; }
-    const frag = rg.extractContents(); frag.querySelectorAll && frag.querySelectorAll(".lk-sp").forEach((x) => x.replaceWith(...x.childNodes));
-    const sp = document.createElement("span"); sp.className = "lk-sp"; sp.appendChild(frag); rg.insertNode(sp);
-    const r2 = document.createRange(); r2.setStartAfter(sp); r2.collapse(true); sl.removeAllRanges(); sl.addRange(r2);
-  }
+  function lkSpWrap(pg) { if (!spWrap(pg)) lkStat("Zuerst die Wörter markieren, die abgedeckt werden sollen."); }
   const LK_SP = ".lk-sp:not(.lk-note .lk-sp)";
   function lkSpToggleIdx(i) { const pg = $("#lk-page"), x = pg && pg.querySelectorAll(LK_SP)[i]; if (!x) return; x.classList.toggle("open"); lkSave(); }
   function lkCheckToggleIdx(i) { const pg = $("#lk-page"), li = pg && pg.querySelectorAll(LK_CHK)[i]; if (!li) return; li.classList.toggle("done"); lkSave(); }
