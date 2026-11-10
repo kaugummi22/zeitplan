@@ -2288,6 +2288,8 @@ html.phone .ufl { left: 0 !important; top: 0 !important; width: 100vw !important
 .ueb-fdrop { position: absolute; z-index: 5; background: var(--accent); border-radius: 2px; pointer-events: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent); }
 .ueb-page figure.nfig.w33 { width: 33%; } .ueb-page figure.nfig.w50 { width: 50%; } .ueb-page figure.nfig.w75 { width: 75%; }
 .ueb-page figure.nfig.w50:is(.p-l, .p-r) { width: calc(50% - 16px); }
+.ueb-refs { border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); background: var(--accent-soft); color: var(--accent); font: inherit; font-size: 0.78rem; font-weight: 600; padding: 1px 8px; border-radius: 999px; cursor: pointer; margin-left: 6px; white-space: nowrap; }
+.ueb-refs:hover { background: color-mix(in srgb, var(--accent) 18%, var(--surface)); }
 #ueb-free[aria-pressed="true"] { background: var(--accent); color: #fff; border-radius: 6px; }
 .ueb-it { position: absolute; padding: 10px 4px 4px; border: 1px solid transparent; border-radius: 6px; cursor: auto; }
 .ueb-it:hover, .ueb-it:focus-within, .ueb-it.sel { border-color: var(--line); background: color-mix(in srgb, var(--surface) 92%, transparent); }
@@ -6891,8 +6893,11 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const pgName = (p, i) => p.name || "Seite " + (i + 1);
     const tabsHtml = '<span class="ueb-pgs" role="tablist" aria-label="Seiten">' + (pages.length > 1 ? pages.map((p, i) => '<button type="button" class="ueb-pg' + (p.id === u0.id ? " on" : "") + '" role="tab" aria-selected="' + (p.id === u0.id) + '" draggable="true" data-upg="' + esc(p.id) + '" title="' + (p.id === u0.id ? "Klick: umbenennen, verschieben oder löschen. Ziehen: Reihenfolge ändern" : "Diese Seite öffnen. Markierten Text hierher ziehen = unten an diese Seite anhängen") + '">' + esc(pgName(p, i)) + "</button>" + (p.id === u0.id ? '<button type="button" class="ueb-pgx" id="ueb-pgdel" title="Diese Seite löschen" aria-label="Seite löschen">×</button>' : "")).join("") : "") +
       '<button type="button" class="ueb-pg ueb-pgadd" id="ueb-pgadd" title="Neue Seite anlegen (wie in einem Büchlein)">+ Seite</button></span>';
+    const pgFiles = () => { const rr = U.reihen[rid] || {}; return ctx ? (ctx.files ? ctx.files() : []) : [...(rr.mainFiles || []), ...(rr.files || [])]; };
+    const refs = pgRefs(u0, pgFiles(), rid, ctx && ctx.key), nRefs = new Set(refs.map((x) => x.rid)).size;
+    const refsHtml = refs.length ? '<button type="button" class="ueb-refs" id="ueb-refs" title="Diese Seite kommt auch hier vor (Kopien bzw. gleiches Dokument). Klick: Liste aufklappen">↗ auch in ' + nRefs + (nRefs === 1 ? " Reihe" : " Reihen") + " ▾</button>" : "";
     const TB = (cmd, label, title, cls) => '<button type="button" class="nb' + (cls ? " " + cls : "") + '" data-ucmd="' + cmd + '" title="' + title + '" aria-label="' + title + '">' + label + "</button>";
-    pane.innerHTML = '<div class="ueb-in"><div class="ueb-bar">' + (ctx ? '<div class="ueb-top"><span class="ueb-name">' + esc(ctx.name || "Seite") + "</span>" + tabsHtml + (ctx.right || "") + "</div>" : '<div class="ueb-top"><span class="ueb-name">Übersichtsseite</span>' + tabsHtml + '<span class="ueb-right"><button type="button" class="btn ghost" id="ueb-solo"></button><button type="button" class="btn ghost" id="ueb-close" title="Übersichtsseite einklappen – die Reihenliste erscheint wieder">✕ Einklappen</button></span></div>') + '<span class="ueb-tools">' +
+    pane.innerHTML = '<div class="ueb-in"><div class="ueb-bar">' + (ctx ? '<div class="ueb-top"><span class="ueb-name">' + esc(ctx.name || "Seite") + "</span>" + tabsHtml + refsHtml + (ctx.right || "") + "</div>" : '<div class="ueb-top"><span class="ueb-name">Übersichtsseite</span>' + tabsHtml + refsHtml + '<span class="ueb-right"><button type="button" class="btn ghost" id="ueb-solo"></button><button type="button" class="btn ghost" id="ueb-close" title="Übersichtsseite einklappen – die Reihenliste erscheint wieder">✕ Einklappen</button></span></div>') + '<span class="ueb-tools">' +
       '<button type="button" class="nb" id="ueb-undo"' + (ctx ? " hidden" : "") + ' title="Letzte Änderung rückgängig machen" aria-label="Rückgängig">↶</button><span class="nsep"></span>' +
       '<button type="button" class="nb nimg ueb-free" id="ueb-free" aria-pressed="false" title="Frei schreiben: irgendwo hinklicken und schreiben, Bilder frei hinlegen (wie in OneNote). Ausgeschaltet: normale Seite">✥ Frei schreiben</button><span class="nsep"></span>' +
       TB("bold", "<b>F</b>", "Fett (Strg+B)") + TB("italic", "<i>K</i>", "Kursiv (Strg+I)") + TB("underline", "<u>U</u>", "Unterstrichen (Strg+U)") + '<span class="nsep"></span>' +
@@ -7200,6 +7205,16 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     pane.querySelector(".ueb-bar").addEventListener("click", (e) => {
       const b = e.target.closest("button"); if (!b) return;
       if (b.id === "ueb-close") { save(true); UEBS.open = false; uebsSave(); renderU(); return; }
+      if (b.id === "ueb-refs") {
+        menu(b, '<div class="cm-title">Diese Seite kommt auch vor in</div>' + refs.map((x, j) => '<button type="button" role="menuitem" data-um="g' + j + '" title="Dorthin wechseln"><b>' + esc(x.title) + "</b> · " + esc(x.mat) + " · " + esc(x.page) + (x.self ? " (diese Sammlung)" : "") + "</button>").join("") + '<div class="help ndoc-mh">Klick öffnet die Seite dort. Die Notizen sind jeweils eigene Kopien.</div>', (k) => {
+          if (!k || k[0] !== "g") return; const x = refs[+k.slice(1)]; if (!x) return;
+          save(true); const ufl = document.getElementById("ufl"); if (ufl && ufl._close) ufl._close(true);
+          const o = U.reihen[x.rid]; if (!o) return; U.sel = x.rid; U.year = firstYear(o); renderU();
+          UEBS.pg = UEBS.pg || {}; UEBS.pg[x.rid + "|ln" + x.k] = x.pid; uebsSave();
+          setTimeout(() => openLessonDetail(keyOfLesson("ln" + x.k), x.rid), 60);
+        });
+        return;
+      }
       if (b.id === "ueb-pgadd") { save(true); const bx = box(); if (!bx) return; const ps = bx.pages, np = uebNorm({ id: uebId() }), ci = ps.findIndex((p) => p.id === u0.id); ps.splice(ci + 1, 0, np); saveAll(); pgGo(np.id); return; }
       if (b.id === "ueb-pgdel") { if (!b.dataset.armed) { b.dataset.armed = "1"; b.textContent = "Seite löschen?"; b.classList.add("armed"); b.title = "Nochmals klicken = diese Seite löschen"; setTimeout(() => { if (b.isConnected) { delete b.dataset.armed; b.textContent = "×"; b.classList.remove("armed"); } }, 4000); return; } pgDel(true); return; }
       if (b.dataset.upg) {
@@ -7722,6 +7737,19 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       draw(); setTimeout(() => root.querySelector("#rp-q").focus(), 30);
     });
   }
+  // Wo kommt diese Seite (Geschichte) sonst noch vor? Kopien (gleiche Herkunft «from») oder Seiten mit demselben zugeordneten Dokument (gleiche Datei)
+  function pgRefs(pg, files, selfRid, selfKey) {
+    const f0 = pg.doc ? (files || []).find((f) => f.id === pg.doc) : null, root = pg.from || pg.id, out = [];
+    Object.entries(U.reihen).forEach(([rid2, r2]) => { if (!r2 || r2.klasse) return; (r2.lnItems || []).forEach((m, k2) => {
+      if (!m || !m.mat || !m.page || !Array.isArray(m.page.pages)) return;
+      m.page.pages.forEach((pp, j) => { if (pp === pg || pp.id === pg.id) return;
+        let hit = (pp.from || pp.id) === root;
+        if (!hit && f0 && pp.doc) { const f2 = (m.files || []).find((f) => f.id === pp.doc); hit = !!f2 && (f2.id === f0.id || (!!f0.path && f2.path === f0.path)); }
+        if (hit) out.push({ rid: rid2, k: k2, pid: pp.id, title: r2.title || "Reihe", mat: "M" + matNo(r2, k2) + (m.name ? " " + m.name : ""), page: pp.name || "Seite " + (j + 1), self: rid2 === selfRid && "ln" + k2 === selfKey });
+      });
+    }); });
+    return out;
+  }
   // Eine Seite (z. B. eine Stil-Geschichte) als Kopie in eine Materialsammlung einer anderen Reihe legen.
   // Notizen sind danach getrennt; die zugehörigen Dokumente bleiben dieselben Dateien (gleicher Pfad), Word-Änderungen gelten überall.
   function pgCopy(pg, files, defName, done) {
@@ -7731,7 +7759,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const gk = (t0.lnItems || []).findIndex((m) => m && m.mat && /^\s*gesamt\s*$/i.test(m.name || ""));
       const go = (k, name) => {
         const t = U.reihen[tid]; if (!t) return;
-        const cp = JSON.parse(JSON.stringify(pg)); cp.id = uebId();
+        const cp = JSON.parse(JSON.stringify(pg)); cp.id = uebId(); cp.from = pg.from || pg.id;
         const need = new Set([pg.doc, ...[...String(pg.html || "").matchAll(/data-doc="([\w-]+)"/g)].map((x) => x[1])].filter(Boolean));
         const add = files.filter((f) => need.has(f.id)).map((f) => ({ ...f }));
         t.lnItems = (t.lnItems || []).slice(); let m;
