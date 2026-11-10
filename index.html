@@ -2186,10 +2186,20 @@ main.wrap:has(#u-view-reihen:not([hidden]) .r-layout.ueb-on) { max-width: none; 
 .ueb-gut:hover::after { background: var(--accent); }
 .ueb-pane { position: sticky; top: calc(env(safe-area-inset-top, 0px) + var(--hdr) + 8px); height: calc(100vh - var(--hdr) - 76px); display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); min-width: 0; overflow: hidden; }
 .ueb-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 6px 10px; border-bottom: 1px solid var(--line); }
+.ueb-top { flex: 1 1 100%; display: flex; align-items: center; gap: 4px 8px; min-width: 0; }
+.ueb-top > .ueb-name { flex: none; }
+.ueb-pgs { display: flex; align-items: center; gap: 3px; min-width: 0; overflow-x: auto; scrollbar-width: thin; padding: 2px 1px; }
+.ueb-pg { flex: none; white-space: nowrap; }
+.ueb-top > .ueb-right { flex: none; }
+.ueb-pg { border: 1px solid var(--line); background: var(--bg); color: var(--muted); font: inherit; font-size: 0.82rem; padding: 1px 9px; border-radius: 6px; cursor: pointer; line-height: 1.5; }
+.ueb-pg:hover { color: var(--ink); border-color: var(--accent); }
+.ueb-pg.on { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+.ueb-pg.ddrop { outline: 2px dashed var(--accent); outline-offset: 1px; background: var(--accent-soft); color: var(--ink); }
+.ueb-pgadd { border-style: dashed; background: none; }
 .ueb-name { font-weight: 700; color: var(--accent); }
 .ueb-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; }
 .ueb-right { margin-left: auto; display: flex; gap: 4px; }
-.ueb-right .btn { padding-top: 2px; padding-bottom: 2px; font-size: 0.85rem; }
+.ueb-right .btn { padding: 2px 6px; font-size: 0.85rem; white-space: nowrap; }
 .ueb-scroll { flex: 1; overflow: auto; min-height: 0; }
 .ueb-in { display: contents; }
 .ufl { position: fixed; z-index: 900; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 18px 50px rgba(0,0,0,.28); overflow: hidden; min-width: 0; }
@@ -2213,15 +2223,15 @@ html.phone .ufl { left: 0 !important; top: 0 !important; width: 100vw !important
 .ueb-sheet { position: relative; min-height: 100%; font-family: Calibri, Candara, "Avenir Next", "Segoe UI", "Trebuchet MS", sans-serif; font-size: var(--ufs, 0.92rem); color: var(--ink); --ulh: 1.3; --cmw: 0px; }
 .ueb-sheet.rand { --cmw: 15em; } .ueb-sheet.rand-zu { --cmw: 7em; }
 .ueb-sheet .ueb-page.notes-ed { max-width: calc(52em + var(--cmw)); padding-right: calc(var(--cmw) + 20px); }
-.ueb-mline { position: absolute; top: 14px; width: 3px; border-radius: 2px; background: color-mix(in srgb, #d63384 45%, transparent); pointer-events: none; }
+.ueb-mline { position: absolute; top: 14px; width: 3px; border-radius: 2px; background: color-mix(in srgb, var(--accent) 45%, transparent); pointer-events: none; }
 .ueb-sheet.rand .ueb-page.notes-ed { cursor: text; }
 .ueb-cm.notes-ed { position: absolute; top: 14px; width: calc(var(--cmw) - 14px); min-height: 0; border: 0; border-radius: 0; background: none; padding: 0 4px; font-size: 0.88em; color: var(--ink); overflow-wrap: anywhere; }
 .ueb-cm.notes-ed:focus { border: 0; background: color-mix(in srgb, var(--accent) 4%, transparent); }
 .ueb-cm:empty::before { font-size: 0.9em; }
 .ueb-mline.shut { display: none; }
-.ueb-tab { position: absolute; top: 14px; z-index: 2; border: 1px solid color-mix(in srgb, #d63384 45%, transparent); border-right: 0; background: var(--surface); color: #b02a6b; font: inherit; font-size: 0.72rem; font-weight: 700; padding: 1px 4px; border-radius: 6px 0 0 6px; cursor: pointer; line-height: 1.4; }
-.ueb-tab:hover { background: color-mix(in srgb, #d63384 12%, var(--surface)); }
-/* zu: Reiter rechts am Text */ .ueb-tab.shut { border-radius: 0 6px 6px 0; border-right: 1px solid color-mix(in srgb, #d63384 45%, transparent); border-left: 3px solid color-mix(in srgb, #d63384 45%, transparent); padding: 4px 8px; }
+.ueb-tab { position: absolute; top: 14px; z-index: 2; border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); border-right: 0; background: var(--surface); color: var(--accent); font: inherit; font-size: 0.72rem; font-weight: 700; padding: 1px 4px; border-radius: 6px 0 0 6px; cursor: pointer; line-height: 1.4; }
+.ueb-tab:hover { background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
+/* zu: Reiter rechts am Text */ .ueb-tab.shut { border-radius: 0 6px 6px 0; border-right: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); border-left: 3px solid color-mix(in srgb, var(--accent) 45%, transparent); padding: 4px 8px; }
 .ueb-sheet.free { cursor: crosshair; background-color: color-mix(in srgb, var(--accent) 4%, transparent); background-image: radial-gradient(color-mix(in srgb, var(--muted) 25%, transparent) 1px, transparent 1px); background-size: 24px 24px; }
 .ueb-sheet.file-drop { outline: 3px dashed var(--accent); outline-offset: -6px; }
 .ueb-page.notes-ed { min-height: 120px; border: 0; border-radius: 0; background: none; padding: 14px 20px; line-height: var(--ulh); }
@@ -6679,7 +6689,18 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   const uebHas = (r) => !!(r && r.ueb);
   const uebOn = (r) => uebHas(r) && !r.klasse && !!UEBS.open;
   const uebId = () => "u" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-  function uebData(r) { return uebNorm(r.ueb || (r.ueb = {})); }
+  // r.ueb.pages = [{id, name, html, items, cm, lh, fs}] – Seiten wie ein Büchlein; welche offen ist, merkt sich das Gerät (UEBS.pg)
+  function uebData(r) {
+    const u = r.ueb || (r.ueb = {});
+    if (!Array.isArray(u.pages) || !u.pages.length) { const p0 = { id: uebId() }; ["html", "notesHtml", "notesLh", "items", "cm", "lh", "fs"].forEach((f) => { if (u[f] != null) p0[f] = u[f]; delete u[f]; }); u.pages = [uebNorm(p0)]; }
+    u.pages.forEach(uebNorm);
+    return u;
+  }
+  function uebCur(r, rid) {
+    const u = uebData(r), id = (UEBS.pg || {})[rid];
+    return u.pages.find((p) => p.id === id) || u.pages[0];
+  }
+  const uebPgHas = (p) => filled(p.html) || /<(img|figure|table)\b/i.test(p.html) || p.items.length || filled(p.cm || "");
   function uebNorm(u) {
     if (typeof u.html !== "string") u.html = u.notesHtml && (filled(u.notesHtml) || /<(img|figure|table)\b/i.test(u.notesHtml)) ? uebSan(u.notesHtml) : "";
     if (!Array.isArray(u.items)) u.items = [];
@@ -6703,7 +6724,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   function uebHtml(r, rid) {
     if (r.klasse || uebOn(r)) return "";
     if (!uebHas(r)) return '<span class="ueb"><button type="button" class="btn ghost ueb-open" data-uebnew title="Eine Übersichtsseite neben den Lektionen anlegen: Notizen, Bilder, Screenshots – z. B. welches Material wo zu finden ist">Übersichtsseite</button></span>';
-    const u = uebData(r), has = filled(u.html) || /<(img|figure|table)\b/i.test(u.html) || u.items.length || filled(u.cm || "");
+    const has = uebData(r).pages.some(uebPgHas);
     return '<span class="ueb" data-uebrid="' + esc(rid) + '"><button type="button" class="btn ghost ueb-open' + (has ? " has" : "") + '" data-uebopen title="Übersichtsseite links neben der Reihe öffnen' + (has ? "" : " (noch leer)") + '">Übersichtsseite</button></span>';
   }
   function uebLayout(box, r, rid) {
@@ -6715,7 +6736,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     lay.style.setProperty("--uw", (UEBS.w || 50) + "%");
     pane.hidden = gut.hidden = !on;
     if (!on) { pane.innerHTML = ""; pane.dataset.rid = ""; pane.dataset.sig = ""; return; }
-    const u = uebData(r), sig = JSON.stringify([u.html, u.items, u.lh || 0, u.fs || 0, u.cm || ""]);
+    const u = uebCur(r, rid), sig = JSON.stringify([u.id, uebData(r).pages.map((p) => [p.id, p.name || ""]), u.html, u.items, u.lh || 0, u.fs || 0, u.cm || ""]);
     if (pane.dataset.rid === rid && pane.dataset.sig === sig && pane.querySelector(".ueb-sheet")) { uebBarState(pane); return; }
     if (pane.dataset.rid === rid && pane.contains(document.activeElement) && document.activeElement.isContentEditable) return;
     uebMount(pane, rid);
@@ -6735,10 +6756,15 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   }
   function uebMount(pane, rid, ctx) {
     const r = U.reihen[rid]; if (!r && !ctx) return;
-    const u0 = ctx ? uebNorm(ctx.data()) : uebData(r);
-    pane.dataset.rid = rid; pane.dataset.sig = JSON.stringify([u0.html, u0.items, u0.lh || 0, u0.fs || 0, u0.cm || ""]);
+    const u0 = ctx ? uebNorm(ctx.data()) : uebCur(r, rid), pages = ctx ? null : uebData(r).pages;
+    const sigOf = (u) => JSON.stringify(ctx ? [u.html, u.items, u.lh || 0, u.fs || 0, u.cm || ""] : [u.id, uebData(R()).pages.map((p) => [p.id, p.name || ""]), u.html, u.items, u.lh || 0, u.fs || 0, u.cm || ""]);
+    const R = () => U.reihen[rid];
+    pane.dataset.rid = rid; pane.dataset.sig = sigOf(u0);
+    const pgName = (p, i) => p.name || "Seite " + (i + 1);
+    const tabsHtml = ctx ? "" : '<span class="ueb-pgs" role="tablist" aria-label="Seiten">' + (pages.length > 1 ? pages.map((p, i) => '<button type="button" class="ueb-pg' + (p.id === u0.id ? " on" : "") + '" role="tab" aria-selected="' + (p.id === u0.id) + '" draggable="true" data-upg="' + esc(p.id) + '" title="' + (p.id === u0.id ? "Klick: umbenennen, verschieben oder löschen. Ziehen: Reihenfolge ändern" : "Diese Seite öffnen. Markierten Text hierher ziehen = unten an diese Seite anhängen") + '">' + esc(pgName(p, i)) + "</button>").join("") : "") +
+      '<button type="button" class="ueb-pg ueb-pgadd" id="ueb-pgadd" title="Neue Seite anlegen (wie in einem Büchlein)">+ Seite</button></span>';
     const TB = (cmd, label, title, cls) => '<button type="button" class="nb' + (cls ? " " + cls : "") + '" data-ucmd="' + cmd + '" title="' + title + '" aria-label="' + title + '">' + label + "</button>";
-    pane.innerHTML = '<div class="ueb-in"><div class="ueb-bar"><span class="ueb-name">' + esc(ctx ? ctx.name || "Seite" : "Übersichtsseite") + '</span><span class="ueb-tools">' +
+    pane.innerHTML = '<div class="ueb-in"><div class="ueb-bar">' + (ctx ? '<span class="ueb-name">' + esc(ctx.name || "Seite") + "</span>" : '<div class="ueb-top"><span class="ueb-name">Übersichtsseite</span>' + tabsHtml + '<span class="ueb-right"><button type="button" class="btn ghost" id="ueb-solo"></button><button type="button" class="btn ghost" id="ueb-close" title="Übersichtsseite einklappen – die Reihenliste erscheint wieder">✕ Einklappen</button></span></div>') + '<span class="ueb-tools">' +
       '<button type="button" class="nb" id="ueb-undo"' + (ctx ? " hidden" : "") + ' title="Letzte Änderung rückgängig machen" aria-label="Rückgängig">↶</button><span class="nsep"></span>' +
       '<button type="button" class="nb nimg ueb-free" id="ueb-free" aria-pressed="false" title="Frei schreiben: irgendwo hinklicken und schreiben, Bilder frei hinlegen (wie in OneNote). Ausgeschaltet: normale Seite">✥ Frei schreiben</button><span class="nsep"></span>' +
       TB("bold", "<b>F</b>", "Fett (Strg+B)") + TB("italic", "<i>K</i>", "Kursiv (Strg+I)") + TB("underline", "<u>U</u>", "Unterstrichen (Strg+U)") + '<span class="nsep"></span>' +
@@ -6747,7 +6773,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       TB("insertUnorderedList", "•", "Aufzählung") + TB("ls", '<span class="ls">✎</span>', "Lehrerschrift (Strg+Umschalt+L)", "nls") + '<span class="nsep"></span>' +
       '<button type="button" class="nb nimg" id="ueb-sec" title="Abschnitt mit Titel einfügen (lässt sich zuklappen und samt Inhalt und freien Notizen nach oben/unten schieben)">§ Abschnitt</button>' +
       '<label class="nb nimg" title="Bild einfügen">🖼 Bild<input type="file" id="ueb-img" accept="image/*" multiple hidden></label></span>' +
-      (ctx ? "" : '<span class="ueb-right"><button type="button" class="btn ghost" id="ueb-solo"></button><button type="button" class="btn ghost" id="ueb-close" title="Übersichtsseite einklappen – die Reihenliste erscheint wieder">✕ Einklappen</button></span>') + "</div>" +
+      "</div>" +
       '<div class="ueb-scroll"><div class="ueb-sheet"><div class="ueb-mline" aria-hidden="true"></div><div class="notes-ed ueb-cm" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Kommentare im Rand" data-ph="Kommentare, Stichpunkte … auf der gewünschten Höhe hineinklicken."></div><button type="button" class="ueb-tab" id="ueb-tab"></button><div class="notes-ed ueb-page" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Übersichtsseite" data-ph="Notizen zur Reihe: was alles hinein muss, Gedanken, wo welches Material ist … Screenshots mit Strg+V.">' + u0.html + '</div></div></div>' +
       '<div class="ueb-hint" id="ueb-msg"></div></div>';
     const root = pane.firstElementChild; // Ereignisse hier anhängen: das Feld selbst bleibt beim Neuaufbau bestehen
@@ -6756,8 +6782,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const HINT_F = "Frei schreiben: irgendwo hinklicken und schreiben, Screenshot = Stelle anklicken, dann Strg+V. Grauer Rand oben = verschieben, Ecke = Grösse.";
     let last = null, saveT = null, kText = {};
     const say = (t) => { msg.textContent = t; };
-    const R = () => U.reihen[rid];
-    const U_ = ctx ? () => { const d = ctx.data(); return d ? uebNorm(d) : null; } : () => { const rr = R(); return rr ? uebData(rr) : null; };
+    const U_ = ctx ? () => { const d = ctx.data(); return d ? uebNorm(d) : null; } : () => { const rr = R(); return rr ? uebCur(rr, rid) : null; };
     const itemOf = (el) => { const u = U_(); return u && u.items.find((q) => q.id === el.dataset.id); };
     const blocks = () => [...page.children];
     const kOf = (k) => (k ? page.querySelector(':scope > [data-k="' + k + '"]') : null);
@@ -6824,7 +6849,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     };
     const save = (now) => {
       clearTimeout(saveT);
-      const go = () => { const u = U_(); if (!u) return; norm(); u.html = uebSan(page.innerHTML); pane.dataset.sig = JSON.stringify([u.html, u.items, u.lh || 0, u.fs || 0, u.cm || ""]); if (ctx) ctx.save(); else saveReihe(rid, 300); setTimeout(() => uebBarState(pane), 700); };
+      const go = () => { const u = U_(); if (!u) return; norm(); u.html = uebSan(page.innerHTML); pane.dataset.sig = sigOf(u); if (ctx) ctx.save(); else saveReihe(rid, 300); setTimeout(() => uebBarState(pane), 700); };
       if (now) go(); else saveT = setTimeout(go, 600);
     };
     const itHtml = (q) => '<div class="ueb-it ueb-' + q.t + '" data-id="' + esc(q.id) + '"><div class="ueb-grip" title="Ziehen zum Verschieben"></div><button type="button" class="ueb-x" title="Entfernen" aria-label="Entfernen">×</button>' +
@@ -6899,6 +6924,29 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       m.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; const inp = m.querySelector("input"); close(); on(b.dataset.um, inp ? inp.value.replace(/\s+/g, " ").trim() : ""); });
       const inp = m.querySelector("input"); if (inp) { inp.focus(); inp.select(); }
     };
+    // Seiten: wechseln, Reihenfolge per Ziehen, markierten Text auf eine Seite ziehen = dort unten anhängen
+    let pgDragT = 0, pgDrag = null, txtRange = null;
+    const pgGo = (id) => { UEBS.pg = UEBS.pg || {}; UEBS.pg[rid] = id; uebsSave(); uebMount(pane, rid); };
+    if (!ctx) {
+      const pgs = pane.querySelector(".ueb-pgs");
+      page.addEventListener("dragstart", (e) => { const sl = getSelection(); txtRange = sl.rangeCount && !sl.isCollapsed && page.contains(sl.anchorNode) ? sl.getRangeAt(0).cloneRange() : null; });
+      root.addEventListener("dragend", () => { setTimeout(() => { txtRange = null; }, 0); pgs.querySelectorAll(".ddrop").forEach((x) => x.classList.remove("ddrop")); });
+      pgs.addEventListener("dragstart", (e) => { const t = e.target.closest("[data-upg]"); if (!t) return; pgDrag = t.dataset.upg; try { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/x-upg", pgDrag); } catch (err) {} });
+      pgs.addEventListener("dragover", (e) => { const t = e.target.closest("[data-upg]"); if (!t || (!pgDrag && !txtRange) || (!pgDrag && t.dataset.upg === u0.id)) return; e.preventDefault(); try { e.dataTransfer.dropEffect = pgDrag ? "move" : "copy"; } catch (err) {} pgs.querySelectorAll(".ddrop").forEach((x) => x !== t && x.classList.remove("ddrop")); t.classList.add("ddrop"); });
+      pgs.addEventListener("dragleave", (e) => { const t = e.target.closest("[data-upg]"); if (t && !t.contains(e.relatedTarget)) t.classList.remove("ddrop"); });
+      pgs.addEventListener("drop", (e) => {
+        const t = e.target.closest("[data-upg]"); if (!t) return; e.preventDefault(); t.classList.remove("ddrop"); pgDragT = Date.now();
+        const ps = uebData(R()).pages, ti = ps.findIndex((p) => p.id === t.dataset.upg); if (ti < 0) return;
+        if (pgDrag) { const fi = ps.findIndex((p) => p.id === pgDrag); pgDrag = null; if (fi < 0 || fi === ti) return; save(true); ps.splice(ti, 0, ps.splice(fi, 1)[0]); saveReihe(rid, 0); uebMount(pane, rid); return; }
+        if (!txtRange || t.dataset.upg === u0.id) return;
+        const box = document.createElement("div"); box.appendChild(txtRange.cloneContents()); box.querySelectorAll("[data-k]").forEach((x) => x.removeAttribute("data-k"));
+        if (!filled(box.innerHTML) && !box.querySelector("img")) return;
+        const tp = ps[ti]; tp.html = uebSan((tp.html || "") + box.innerHTML);
+        page.focus(); const sl = getSelection(); sl.removeAllRanges(); sl.addRange(txtRange); document.execCommand("delete"); txtRange = null;
+        { const cb = curBlock(); if (cb && page.children.length > 1 && !cb.textContent.trim() && !cb.querySelector("img,figure,table")) cb.remove(); }
+        norm(); place(); save(true); say("Unten an «" + pgName(tp, ti) + "» angehängt.");
+      });
+    }
     const secInsert = (title) => {
       const d = document.createElement("div"); d.className = "nsec"; d.textContent = title; d.setAttribute("data-k", uebId());
       const after = document.createElement("div"); after.innerHTML = "<br>"; after.setAttribute("data-k", uebId());
@@ -6981,6 +7029,22 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     pane.querySelector(".ueb-bar").addEventListener("click", (e) => {
       const b = e.target.closest("button"); if (!b) return;
       if (b.id === "ueb-close") { save(true); UEBS.open = false; uebsSave(); renderU(); return; }
+      if (b.id === "ueb-pgadd") { save(true); const rr = R(); if (!rr) return; const ps = uebData(rr).pages, np = uebNorm({ id: uebId() }), ci = ps.findIndex((p) => p.id === u0.id); ps.splice(ci + 1, 0, np); pgGo(np.id); saveReihe(rid, 0); return; }
+      if (b.dataset.upg) {
+        if (Date.now() - pgDragT < 300) return;
+        if (b.dataset.upg !== u0.id) { save(true); pgGo(b.dataset.upg); return; }
+        const ps = uebData(R()).pages, i = ps.findIndex((p) => p.id === u0.id);
+        menu(b, '<div class="cm-title">Seite</div><div class="nsm-own"><input type="text" maxlength="60" value="' + esc(ps[i].name || "") + '" placeholder="Seite ' + (i + 1) + '" aria-label="Name der Seite"><button type="button" class="btn primary" data-um="ok">Umbenennen</button></div>' +
+          (i > 0 ? '<button type="button" role="menuitem" data-um="l">← Nach vorne schieben</button>' : "") + (i < ps.length - 1 ? '<button type="button" role="menuitem" data-um="r">Nach hinten schieben →</button>' : "") + '<hr><button type="button" role="menuitem" data-um="del">Seite löschen</button>', (k, v) => {
+          const ps2 = uebData(R()).pages, j = ps2.findIndex((p) => p.id === u0.id); if (j < 0) return;
+          if (k === "ok") { if (v) ps2[j].name = v; else delete ps2[j].name; }
+          else if (k === "l" || k === "r") { const t = j + (k === "l" ? -1 : 1); if (t < 0 || t >= ps2.length) return; ps2.splice(t, 0, ps2.splice(j, 1)[0]); }
+          else if (k === "del") { save(true); if (uebPgHas(ps2[j]) && !confirm("Diese Seite enthält Notizen. Trotzdem löschen? (Mit «Rückgängig» lässt sie sich wiederherstellen.)")) return; ps2.splice(j, 1); if (!ps2.length) ps2.push(uebNorm({ id: uebId() })); pgGo(ps2[Math.max(0, j - 1)].id); saveReihe(rid, 0); return; }
+          else return;
+          save(true); uebMount(pane, rid);
+        });
+        return;
+      }
       if (b.id === "ueb-free") { UEBS.free = !UEBS.free; uebsSave(); const a = document.activeElement; if (a && pane.contains(a) && a.blur) a.blur(); setFree(); return; }
       if (b.id === "ueb-solo") { UEBS.solo = !UEBS.solo; uebsSave(); const lay = pane.closest(".r-layout"); if (lay) lay.classList.toggle("ueb-solo", UEBS.solo); uebBarState(pane); setTimeout(place, 0); return; }
       if (b.id === "ueb-undo") { const rb = $("#r-undo"); if (rb && !rb.disabled) { save(true); const a = document.activeElement; if (a && a.blur) a.blur(); setTimeout(() => rb.click(), 0); } return; }
@@ -7042,7 +7106,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       if (hit(r.title)) where.push(["", "Titel"]);
       subsOf(r).forEach((x) => { if (hit(subLabel(x))) where.push(["", "Unterpunkt «" + subLabel(x) + "»"]); });
       if (hit(htmlToPlain(r.leitfrage || ""))) where.push(["", "Leitfrage"]);
-      if (r.ueb && hit(htmlToPlain((r.ueb.html || r.ueb.notesHtml || "") + " " + (r.ueb.items || []).map((q) => q.html || "").join(" ")))) where.push(["", "Übersichtsseite"]);
+      if (r.ueb && hit(htmlToPlain((r.ueb.pages || [r.ueb]).map((p) => (p.html || p.notesHtml || "") + " " + (p.cm || "") + " " + (p.items || []).map((q) => q.html || "").join(" ")).join(" ")))) where.push(["", "Übersichtsseite"]);
       blocksOf(r).forEach(([i, sp]) => {
         const m = (r.meta || {})[i] || {}, pl = m.plan || {};
         const txt = [phaseOf(r, i), htmlToPlain(r.lessons[i] || ""), m.details || "", htmlToPlain(m.notesHtml || ""), htmlToPlain(pl.ziele || ""), ...(pl.rows || []).flat().map((c) => htmlToPlain(c || ""))].join(" ");
