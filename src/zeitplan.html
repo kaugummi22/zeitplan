@@ -5456,16 +5456,17 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     if (!sp || !rail) return;
     const wide = () => innerWidth >= 900;
     // "rail" = eingeklappt (Klick blendet die Tabelle über den Notizen ein, bis ✕), "top" = fest oben, "left" = Spalte links neben den Notizen
-    const lb = root.querySelector("#d-pleft"), fb = root.querySelector("#d-pfold");
+    const lb = root.querySelector("#d-pleft"), fb = root.querySelector("#d-pfold"), b3 = root.querySelector("#d-p3");
     const cur = () => (sp.classList.contains("rail") ? "rail" : sp.classList.contains("on") ? "left" : "top");
     // tmp = nur vorübergehend (z. B. wegen Arbeitsblatt), die gespeicherte Wahl bleibt
-    const set = (v, tmp) => {
+    // three = Tabelle links UND Arbeitsblatt (drei Spalten, nur auf Wunsch)
+    const set = (v, tmp, three) => {
       if (v === "left" && !wide()) v = "top";
       if (v !== "top" && v !== "left") v = "rail";
       sp.classList.toggle("rail", v === "rail"); sp.classList.toggle("on", v === "left"); sp.classList.remove("peek", "pin");
       if (wide() && !tmp) { try { localStorage.setItem("zp-ptab2", v); } catch (e) {} }
-      // Tabelle links und Arbeitsblatt zusammen nur auf breiten Bildschirmen
-      if (v === "left" && innerWidth < 1600 && sp.classList.contains("ws")) { const wb = root.querySelector("#d-wsb"); if (wb) wb.click(); }
+      // immer nur eines offen: Tabelle links öffnen = Arbeitsblatt zu (ausser «Alle drei»)
+      if (v === "left" && !three && sp.classList.contains("ws") && root._ws) root._ws.set(false, true);
       btns(); hint();
     };
     const btns = () => {
@@ -5474,8 +5475,9 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       if (lb) { lb.hidden = c === "left" || !wide(); }
       if (fb) fb.hidden = c === "rail";
       if (cl) cl.hidden = c !== "rail" || !wide() || !pinned;
+      if (b3) b3.hidden = c === "left" || !wide() || !sp.classList.contains("ws");
     };
-    root._ptab = { set, get: cur };
+    root._ptab = { set, get: cur, btns: () => btns() };
     // Kleiner Hinweis an der eingeklappten Leiste: Tabelle leer oder Abschnitte ohne Zeile
     const hint = () => {
       const h = rail.querySelector(".d-rhint"); if (!h) return;
@@ -5491,6 +5493,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     if (cl) cl.addEventListener("click", () => pin(false));
     if (tb) tb.addEventListener("click", () => set("top"));
     if (lb) lb.addEventListener("click", () => set("left"));
+    if (b3) b3.addEventListener("click", () => set("left", true, true));
     if (fb) fb.addEventListener("click", () => set("rail"));
     root.addEventListener("keydown", (e) => { if (e.key === "Escape" && sp.classList.contains("pin")) { e.stopPropagation(); pin(false); } }, true);
     // Kurz zeigen: mit der Maus auf die eingeklappte Leiste – die Tabelle erscheint, solange die Maus dort bleibt
@@ -5587,16 +5590,21 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     let cur = null, cutting = false, band = null;
     const extW = (f) => extOf(f);
     const on = () => sp.classList.contains("ws");
-    const narrow = () => innerWidth < 1600;
-    const set = (v) => {
+    // noBack = Tabelle nicht zurückholen (sie öffnet sich gerade selbst)
+    const set = (v, noBack) => {
       if (v && !files().length) v = false;
       sp.classList.toggle("ws", v); pn.classList.toggle("wsp", v); if (wsb) wsb.setAttribute("aria-pressed", String(v));
       try { localStorage.setItem("zp-dws", v ? "1" : "0"); } catch (e) {}
-      // wenig Platz: Tabelle wieder oben (eingeklappt lässt sie sich wegklappen), damit Notizen und Arbeitsblatt Platz haben
-      if (v && narrow() && sp.classList.contains("on") && root._ptab) root._ptab.set("rail", true);
+      // immer nur eines offen: Arbeitsblatt auf = Tabelle einklappen (Maus drauf = kurz sehen); Arbeitsblatt zu = Tabelle wieder links
+      if (root._ptab) {
+        if (v && sp.classList.contains("on")) root._ptab.set("rail", true);
+        else if (!v && !noBack && pTab() === "left" && sp.classList.contains("rail") && !sp.classList.contains("pin")) root._ptab.set("left", true);
+        root._ptab.btns();
+      }
       if (v) render();
     };
     if (wsb) wsb.addEventListener("click", () => set(!on()));
+    root._ws = { set, on };
     const short = (n) => String(n || "").replace(/\.[^.]+$/, "");
     function render() {
       const fs = files(); if (!fs.length) { dp.innerHTML = '<div class="empty">Keine Dokumente.</div>'; return; }
@@ -5811,7 +5819,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         ["kurz", "Kurzeintrag", textF, filled(richOf(x, 1))], ["farbe", "Farbe", colorF, !!x.color], ["docs", "Dokumente" + (x.files.length ? " (" + x.files.length + ")" : ""), docsF, x.files.length > 0]].concat(rfl.length ? [["rdocs", "Dokumente der Reihe (" + rfl.length + ")", rdocsF, true]] : []);
       const side = dSide();
       // Arbeitsblatt rechts (Dokumente der Lektion und der Reihe), Spalte «Abschnitt», Kommentarecke
-      const wsHas = [...x.files, ...rfl].length > 0, wsOn = wsHas && dWs() && !(side && innerWidth < 1600), pt = pTab();
+      const wsHas = [...x.files, ...rfl].length > 0, wsOn = wsHas && dWs(), pt = wsOn && pTab() === "left" ? "rail" : pTab(); // immer nur eines offen: Arbeitsblatt offen = Tabelle eingeklappt
       PAB = !SEC_ON ? null : { secs: () => { const nd = document.getElementById("d-notes"); if (nd && nd._secs) return nd._secs(); const t = document.createElement("template"); t.innerHTML = x.notesHtml || ""; return [...t.content.children].filter((d) => d.classList.contains("nsec") && d.getAttribute("data-id")).map((d) => ({ id: d.getAttribute("data-id"), t: d.textContent.trim() })); },
         col: (id) => secColOf(opt.plan, id) || "#c3cad2" };
       const cmHas = filled(x.notesCm || ""), cmOn = dCm(cmHas);
@@ -5821,7 +5829,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         '<button type="button" class="d-tog d-wsb" id="d-wsb" aria-pressed="' + wsOn + '"' + (wsHas ? "" : " hidden") + ' title="Arbeitsblatt bzw. Dokument rechts neben den Notizen zeigen (wird auf diesem Gerät gemerkt)">Arbeitsblatt</button></div>' +
         secs.map(([k, , h]) => '<div class="d-sec" data-dsec="' + k + '"' + (openSet[k] ? "" : " hidden") + ">" + h + "</div>").join("") +
         '<div class="d-split' + (pt === "left" ? " on" : pt === "rail" ? " rail" : "") + (wsOn ? " ws" : "") + '" id="d-split" style="--dl:' + dSideW() + ";--wsw:" + dWsW() + '%"><button type="button" class="d-rail" id="d-rail" aria-expanded="false" aria-label="Lektionsplanung einblenden"><span class="d-rarr">▸</span><span class="d-rl">Lektionsplanung</span><span class="d-rhint" hidden></span></button><div class="d-sl"><div class="field" id="d-pfield"><div class="d-phead"><span class="lbl">Lektionsplanung</span><span class="d-pbtns"><button type="button" class="btn ghost" id="d-ptop"></button><button type="button" class="btn ghost" id="d-pfold" title="Tabelle wieder links als schmale Leiste einklappen">◂ Einklappen</button><button type="button" class="btn ghost" id="d-pclose" title="Tabelle ausblenden (Esc)" aria-label="Tabelle ausblenden">✕</button></span></div><div class="ptable-wrap"><table class="ptable' + (opt.plan.wman ? " wman" : "") + '" id="p-table">' + planTableInner(opt.plan) + "</table></div>" +
-        '<div class="ptools"><button class="btn ghost" type="button" id="p-addrow">+ Zeile</button><button class="btn ghost" type="button" id="d-pleft" title="Tabelle als Spalte links neben den Notizen zeigen (Breite an der Trennlinie ziehen)">⇤ Links einblenden</button><details class="hint"><summary title="Hilfe anzeigen">ⓘ Hilfe</summary><p class="help">Spaltentitel lassen sich anklicken und umbenennen. Die Trennlinie zwischen zwei Titeln ziehen, um die Breite zu ändern. Zeilen am Griff ⠿ rechts nach oben oder unten ziehen, Rechtsklick auf den Griff: Zeile einfügen oder löschen. Rechtsklick auf eine Zelle (Tablet: lange drücken auf den Titel): Spalten und Zeilen verschieben, einfügen, löschen. Jede Zeile hat ihre Farbe; die Abschnitte in den Notizen übernehmen sie.</p></details></div></div></div>' +
+        '<div class="ptools"><button class="btn ghost" type="button" id="p-addrow">+ Zeile</button><button class="btn ghost" type="button" id="d-pleft" title="Tabelle als Spalte links neben den Notizen zeigen (Breite an der Trennlinie ziehen)">⇤ Links einblenden</button><button class="btn ghost" type="button" id="d-p3" hidden title="Tabelle links, Notizen und Arbeitsblatt gleichzeitig zeigen (drei Spalten)">⫴ Alle drei</button><details class="hint"><summary title="Hilfe anzeigen">ⓘ Hilfe</summary><p class="help">Spaltentitel lassen sich anklicken und umbenennen. Die Trennlinie zwischen zwei Titeln ziehen, um die Breite zu ändern. Zeilen am Griff ⠿ rechts nach oben oder unten ziehen, Rechtsklick auf den Griff: Zeile einfügen oder löschen. Rechtsklick auf eine Zelle (Tablet: lange drücken auf den Titel): Spalten und Zeilen verschieben, einfügen, löschen. Jede Zeile hat ihre Farbe; die Abschnitte in den Notizen übernehmen sie.</p></details></div></div></div>' +
         '<div class="d-gut" id="d-gut" title="Ziehen, um die Breite der beiden Seiten zu ändern" aria-hidden="true"></div><div class="d-sr">' + notesF + '</div><div class="d-gut2" id="d-gut2" title="Ziehen, um die Breite des Arbeitsblatts zu ändern" aria-hidden="true"></div><section class="d-ws" id="d-ws" aria-label="Arbeitsblatt"></section></div>' + actionsF;
     } else body = textF + (opt.todo ? '<div class="field d-todof"><button type="button" class="btn ghost tdb" id="d-tdb" title="Die Zeile mit der Schreibmarke bekommt ein Kästchen zum Abhaken (oder verliert es). Enter = nächstes To-do, Enter in einem leeren To-do = fertig.">'+'<span class="tdq"></span> To-do</button></div>' : "") + (opt.time ? '<div class="field d-timef"><span class="lbl">Zeit (freiwillig)</span><div class="d-time"><input type="time" id="d-from" value="' + esc(x.from || "") + '" aria-label="von"><span>bis</span><input type="time" id="d-to" value="' + esc(x.to || "") + '" aria-label="bis"><button type="button" class="btn ghost" id="d-tclr" title="Zeit entfernen">×</button>' + (x.split ? '<span class="msg">(erster Teil)</span>' : "") + "</div>" +
       (x.split ? Array.from({ length: (x.nparts || 2) - 1 }, (_, k) => { const n = k + 2; return '<div class="d-time" data-ptime="' + n + '"><input type="time" class="pf" value="' + esc(x["from" + n] || "") + '" aria-label="Teil ' + n + ' von"><span>bis</span><input type="time" class="pt" value="' + esc(x["to" + n] || "") + '" aria-label="Teil ' + n + ' bis"><button type="button" class="btn ghost pc" title="Zeit entfernen">×</button><span class="msg">(Teil ' + n + ")</span></div>"; }).join("") : "") + '</div>' : "") + colorF + notesF + docsF + actionsF;
@@ -5870,7 +5878,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
           }, true);
         }
         if (opt.page) root.querySelector(".panel").classList.add("wide", "ueb-panel");
-        if (opt.plan) { lessonHead(root); root.querySelector(".panel").classList.add("wide"); root.querySelector(".panel").classList.toggle("side", dSide()); bindPlan(root, opt.plan, () => opt.changed()); bindSide(root, opt.plan); root._ptab && root._ptab.set(pTab());
+        if (opt.plan) { lessonHead(root); root.querySelector(".panel").classList.add("wide"); root.querySelector(".panel").classList.toggle("side", dSide()); bindPlan(root, opt.plan, () => opt.changed()); bindSide(root, opt.plan); root._ptab && root._ptab.set(pTab() === "left" && root.querySelector("#d-split").classList.contains("ws") ? "rail" : pTab(), true);
           // § in einer Zeile der Lektionsplanung: zum Abschnitt in den Notizen springen bzw. ihn anlegen
           const psecMark = () => { const nd = root.querySelector("#d-notes"); if (!nd) return; const have = new Set([...nd.querySelectorAll(":scope > .nsec")].map((d) => (d.querySelector(".nsec-t") || d).textContent.trim())); const ph = planPhases(opt.plan); root.querySelectorAll("[data-psec]").forEach((b) => { const q = ph.find((y) => y.ri === +b.dataset.psec); b.classList.toggle("has", !!(q && (have.has(q.label) || (q.ph && have.has(q.ph))))); }); };
           root.addEventListener("click", (e) => {
