@@ -1675,6 +1675,15 @@ html.phone .lesson.mat-slim .ldocs { grid-column: 1 / -1; }
 .notes-ed .nflow { outline: 1px dashed var(--line); outline-offset: 3px; border-radius: 2px; }
 .notes-ed .ncols.nc-near, .notes-ed .ncols.nc-near * { cursor: col-resize; }
 .notes-ed .ncols.nc-drag > .ncol + .ncol { border-left: 2px solid var(--accent); }
+/* Vorbereitung (Bedingungen, Kommentar, Material): graue Box oben in den Notizen, zuklappbar; im Unterricht standardmässig zu */
+.nprep { background: #f1f3f6; border: 1px solid #d5dae1; border-radius: 6px; padding: 26px 10px 6px; margin: 4px 0 10px; position: relative; color: #3a4350; }
+.nprep::before { content: "Vorbereitung  ▾"; position: absolute; top: 4px; left: 10px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #6b7480; white-space: pre; cursor: pointer; user-select: none; }
+.nprep[data-c] { padding-bottom: 0; height: 24px; overflow: hidden; }
+.nprep[data-c]::before { content: "Vorbereitung  ▸ zugeklappt"; }
+.nprep[data-c] > * { display: none; }
+.nprep .nprep { background: none; border: 0; padding: 0; margin: 0; } .nprep .nprep::before { content: none; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .nprep { background: #262b33; border-color: #3a414c; color: #c9d0da; } }
+:root[data-theme="dark"] .nprep { background: #262b33; border-color: #3a414c; color: #c9d0da; }
 /* Abschnitte in den Notizen: schmale Trennstriche links und rechts vom Titel */
 .nsec { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 16px 0 8px; clear: both; font-size: 0.8em; font-weight: 600; letter-spacing: 0.03em; color: var(--muted); line-height: 1.4; user-select: none; }
 .nsec::before, .nsec::after { content: ""; flex: 0 1 22%; border-top: 1.5px solid color-mix(in srgb, var(--ink) 28%, transparent); }
@@ -1822,9 +1831,10 @@ table:is(.ntab, .lk-tab) caption { caption-side: bottom; text-align: left; font-
 table.tt-moving { opacity: 0.45; }
 .notes-ed table.ntab th, .notes table.ntab th { background: var(--accent-soft); font-weight: 700; }
 .lk-ptake { position: absolute; top: 6px; right: 6px; white-space: nowrap; font: inherit; font-size: 0.75rem; font-weight: 600; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--accent); padding: 3px 9px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
-body:not(.lk-take) .lk-plantext .lk-ptake { display: none; }
-body:not(.lk-take) .lk-plantext .lk-ptab { padding-top: 0; }
-#lk-taketg[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+#lk-planbox { position: relative; }
+.lk-hov { position: absolute; z-index: 5; font: inherit; font-size: 0.9rem; font-weight: 700; line-height: 1; padding: 4px 8px; border: 1px solid var(--accent); border-radius: 6px; background: var(--surface); color: var(--accent); cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+.lk-hov:hover { background: var(--accent); color: var(--surface); }
+.lk-plantext .lk-hovon { outline: 2px dashed var(--accent-soft, #cfe0f5); outline-offset: 2px; border-radius: 3px; }
 .lk-ptake:hover { background: var(--accent); color: var(--surface); border-color: var(--accent); }
 .lk-figpop input.nf-cap { width: 100%; font: inherit; font-size: 0.85rem; border: 1px solid var(--line); border-radius: 6px; padding: 5px 7px; background: var(--bg); color: var(--ink); }
 .lk-fpg.four { grid-template-columns: repeat(5, 1fr); }
@@ -3311,6 +3321,11 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
           // markierter Text auf Spalten verteilt (fliesst wie in Word von Spalte zu Spalte)
           const k = parseInt(n.getAttribute("data-n"), 10) === 3 ? 3 : 2; out += '<div class="nflow" data-n="' + k + '">'; walk(n); out += "</div>"; continue;
         }
+        if (tag === "DIV" && n.classList.contains("nprep")) {
+          // Vorbereitung (graue Box oben in den Notizen); data-c = zugeklappt; keine Box in der Box
+          if (n.parentElement && n.parentElement.closest(".nprep")) { walk(n); continue; }
+          out += '<div class="nprep"' + (n.hasAttribute("data-c") ? ' data-c="1"' : "") + ">"; walk(n); out += "</div>"; continue;
+        }
         if (tag === "DIV" && n.classList.contains("nsec")) {
           // Abschnitt (Trennstrich mit Titel, z. B. «10' · Einstieg»); data-c = zugeklappt
           const tt = (n.querySelector(".nsec-t") || n).textContent.replace(/[\u00a0\u200b]/g, " ").replace(/\s+/g, " ").trim().slice(0, 120);
@@ -3358,7 +3373,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     }
     walk(tpl.content);
     let prev; do { prev = out; out = out.replace(/<(b|i|u)><\/\1>/g, "").replace(/<span class="lk-sp"><\/span>/g, "").replace(/<mark class="hl-[ygb]"><\/mark>/g, "").replace(/<span class="fs-(s|l|xl)"><\/span>/g, "").replace(/<span class="(ls|ff-[a-z])"><\/span>/g, ""); } while (out !== prev);
-    out = out.replace(/<div( class="(?:al-[crj]|lhn-[1-4])(?: lhn-[1-4])?")?><\/div>/g, "<div$1><br></div>").replace(/<div class="ncol"><\/div>/g, '<div class="ncol"><br></div>').replace(/<div class="ncols"><\/div>/g, "").replace(/<(ul|ol)><\/\1>/g, "");
+    out = out.replace(/<div( class="(?:al-[crj]|lhn-[1-4])(?: lhn-[1-4])?")?><\/div>/g, "<div$1><br></div>").replace(/<div class="ncol"><\/div>/g, '<div class="ncol"><br></div>').replace(/<div class="ncols"><\/div>/g, "").replace(/<div class="nprep"(?: data-c="1")?>(?:<div><br><\/div>)?<\/div>/g, "").replace(/<(ul|ol)><\/\1>/g, "");
     return out.replace(/(<br>)+$/, "");
   }
   // ---------- Tabellen (Notizen und Unterrichtsseite): Breite, Höhe, Spaltenbreiten, Lage, Verschieben ----------
@@ -4664,7 +4679,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   }
 
   // ---------- Drucken: eine Datei, die sich im Browser öffnet und gleich das Druckfenster zeigt ----------
-  const PRINT_CSS = "@page{size:A4;margin:10mm 11mm}body{font-family:Arial,Helvetica,sans-serif;font-size:9.5pt;color:#111;line-height:1.3;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}h1{font-size:13pt;margin:0 0 4px}h2{font-size:11pt;margin:10px 0 4px;padding-bottom:2px;border-bottom:1.2px solid #333}h3{font-size:8.5pt;margin:6px 0 2px;text-transform:uppercase;letter-spacing:.04em;color:#444}.meta{color:#444;margin:0 0 10px}.box{border:1px solid #bbb;border-radius:4px;padding:6px 8px;margin:4px 0}table{width:100%;border-collapse:collapse;margin:4px 0;table-layout:fixed}th,td{border:1px solid #999;padding:4px 6px;vertical-align:top;text-align:left;overflow-wrap:break-word}th{background:#eee;font-size:9.5pt}.pre{white-space:pre-wrap}tr{break-inside:avoid}.notes img{max-width:100%;max-height:120mm}.notes img.w50{max-width:50%}.notes img.w33{max-width:33%}.notes img.w25{max-width:25%}.notes img.w75{max-width:75%}.notes{display:flow-root}.nfig{margin:4px 0;width:fit-content;max-width:100%;break-inside:avoid}.nfig img{display:block;max-width:100%;max-height:120mm}.nfig[class*=\" w\"] img{width:100%}.nfig.w25{width:25%}.nfig.w33{width:33%}.nfig.w50{width:50%}.nfig.w75{width:75%}.nfig.w100{width:100%}.nfig figcaption{contain:inline-size;font-size:8pt;font-style:italic;color:#555;margin-top:2px}.nfig.p-l{float:left;margin:2px 10px 6px 0}.nfig.p-r{float:right;margin:2px 0 6px 10px}.nfig.p-c{margin-left:auto;margin-right:auto}.nfig.p-c figcaption{text-align:center}.ls{font-family:'Ink Free','Segoe Print','Bradley Hand',Noteworthy,'Comic Sans MS',cursive;color:#c8402c}table caption{caption-side:bottom;text-align:left;font-size:8pt;font-style:italic;color:#555;padding-top:2px}table.tp-l{float:left;margin:2px 10px 6px 0}table.tp-r{float:right;margin:2px 0 6px 10px}table.tp-c{margin-left:auto;margin-right:auto}mark.hl-y{background:#fff1a6}mark.hl-g{background:#d3f2c4}mark.hl-b{background:#cfe4ff}mark{color:inherit}.fs-s{font-size:85%}.fs-l{font-size:125%}.fs-xl{font-size:150%}.one h1{border-bottom:1.2px solid #333;padding-bottom:2px}.lhn-1{line-height:1.15}.lhn-2{line-height:1.5}.lhn-3{line-height:1.8}.lhn-4{line-height:2.2}.al-c{text-align:center}.al-r{text-align:right}.al-j{text-align:justify}.notes ul,.notes ol{margin:2px 0;padding-left:20px}.ncols{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);margin:4px 0;break-inside:avoid}.ncol{padding:2px 8px}.ncol+.ncol{border-left:1px solid #999}.nflow{column-count:2;column-gap:8mm;column-rule:1px solid #bbb;margin:4px 0}.nflow[data-n=\"3\"]{column-count:3}.nflow li{break-inside:avoid}.nsec{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px 0 4px;font-size:8.5pt;font-weight:700;color:#555;break-after:avoid}.nsec::before,.nsec::after{content:\"\";flex:0 1 22%;border-top:1px solid #999}.nsec .nsec-tg{display:none}.phase{font-weight:400;color:#555}ul{margin:2px 0;padding-left:18px}@media screen{body{max-width:190mm;margin:20px auto;padding:0 12px}}figure.ndoc::before{content:\"📄 \" attr(data-name);display:block;color:#555;font-style:italic}.ls{font-style:italic}.nend{display:none}.pph{font-weight:700;font-size:10.5pt;margin:12px 0 2px;break-after:avoid}.psec{margin:0 0 6px}.psec h4{margin:6px 0 3px;font-size:10pt;border-bottom:1px solid #000;padding-bottom:1px;break-after:avoid}.psec-ref{color:#444;font-style:italic;margin:2px 0 6px}.pcm{font-size:8.5pt;color:#222;border-left:2px solid #000;padding:2px 0 2px 7px;margin:4px 0}.pcut{position:relative;overflow:hidden;margin:4px auto;outline:1px solid #888;outline-offset:0;break-inside:avoid;background:#fff}.pcut-in{transform-origin:0 0}.pcut-n{font-size:7.5pt;color:#444;font-style:italic;margin:-2px 0 6px}.psheet{break-before:page}.psheet h3{margin:0 0 4px}.psheet img{max-width:100%;display:block;margin:0 auto 6px;border:1px solid #888}td.pab-p{font-size:8.5pt}td.pab-p .pab-s{display:block;margin-bottom:2px}" + FF_CSS;
+  const PRINT_CSS = "@page{size:A4;margin:10mm 11mm}body{font-family:Arial,Helvetica,sans-serif;font-size:9.5pt;color:#111;line-height:1.3;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}h1{font-size:13pt;margin:0 0 4px}h2{font-size:11pt;margin:10px 0 4px;padding-bottom:2px;border-bottom:1.2px solid #333}h3{font-size:8.5pt;margin:6px 0 2px;text-transform:uppercase;letter-spacing:.04em;color:#444}.meta{color:#444;margin:0 0 10px}.box{border:1px solid #bbb;border-radius:4px;padding:6px 8px;margin:4px 0}table{width:100%;border-collapse:collapse;margin:4px 0;table-layout:fixed}th,td{border:1px solid #999;padding:4px 6px;vertical-align:top;text-align:left;overflow-wrap:break-word}th{background:#eee;font-size:9.5pt}.pre{white-space:pre-wrap}tr{break-inside:avoid}.notes img{max-width:100%;max-height:120mm}.notes img.w50{max-width:50%}.notes img.w33{max-width:33%}.notes img.w25{max-width:25%}.notes img.w75{max-width:75%}.notes{display:flow-root}.nfig{margin:4px 0;width:fit-content;max-width:100%;break-inside:avoid}.nfig img{display:block;max-width:100%;max-height:120mm}.nfig[class*=\" w\"] img{width:100%}.nfig.w25{width:25%}.nfig.w33{width:33%}.nfig.w50{width:50%}.nfig.w75{width:75%}.nfig.w100{width:100%}.nfig figcaption{contain:inline-size;font-size:8pt;font-style:italic;color:#555;margin-top:2px}.nfig.p-l{float:left;margin:2px 10px 6px 0}.nfig.p-r{float:right;margin:2px 0 6px 10px}.nfig.p-c{margin-left:auto;margin-right:auto}.nfig.p-c figcaption{text-align:center}.ls{font-family:'Ink Free','Segoe Print','Bradley Hand',Noteworthy,'Comic Sans MS',cursive;color:#c8402c}table caption{caption-side:bottom;text-align:left;font-size:8pt;font-style:italic;color:#555;padding-top:2px}table.tp-l{float:left;margin:2px 10px 6px 0}table.tp-r{float:right;margin:2px 0 6px 10px}table.tp-c{margin-left:auto;margin-right:auto}mark.hl-y{background:#fff1a6}mark.hl-g{background:#d3f2c4}mark.hl-b{background:#cfe4ff}mark{color:inherit}.fs-s{font-size:85%}.fs-l{font-size:125%}.fs-xl{font-size:150%}.one h1{border-bottom:1.2px solid #333;padding-bottom:2px}.lhn-1{line-height:1.15}.lhn-2{line-height:1.5}.lhn-3{line-height:1.8}.lhn-4{line-height:2.2}.al-c{text-align:center}.al-r{text-align:right}.al-j{text-align:justify}.notes ul,.notes ol{margin:2px 0;padding-left:20px}.ncols{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);margin:4px 0;break-inside:avoid}.ncol{padding:2px 8px}.ncol+.ncol{border-left:1px solid #999}.nflow{column-count:2;column-gap:8mm;column-rule:1px solid #bbb;margin:4px 0}.nflow[data-n=\"3\"]{column-count:3}.nflow li{break-inside:avoid}.nsec{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px 0 4px;font-size:8.5pt;font-weight:700;color:#555;break-after:avoid}.nsec::before,.nsec::after{content:\"\";flex:0 1 22%;border-top:1px solid #999}.nsec .nsec-tg{display:none}.phase{font-weight:400;color:#555}ul{margin:2px 0;padding-left:18px}@media screen{body{max-width:190mm;margin:20px auto;padding:0 12px}}figure.ndoc::before{content:\"📄 \" attr(data-name);display:block;color:#555;font-style:italic}.ls{font-style:italic}.nend{display:none}.pph{font-weight:700;font-size:10.5pt;margin:12px 0 2px;break-after:avoid}.psec{margin:0 0 6px}.psec h4{margin:6px 0 3px;font-size:10pt;border-bottom:1px solid #000;padding-bottom:1px;break-after:avoid}.psec-ref{color:#444;font-style:italic;margin:2px 0 6px}.pcm{font-size:8.5pt;color:#222;border-left:2px solid #000;padding:2px 0 2px 7px;margin:4px 0}.pcut{position:relative;overflow:hidden;margin:4px auto;outline:1px solid #888;outline-offset:0;break-inside:avoid;background:#fff}.pcut-in{transform-origin:0 0}.pcut-n{font-size:7.5pt;color:#444;font-style:italic;margin:-2px 0 6px}.psheet{break-before:page}.psheet h3{margin:0 0 4px}.psheet img{max-width:100%;display:block;margin:0 auto 6px;border:1px solid #888}td.pab-p{font-size:8.5pt}td.pab-p .pab-s{display:block;margin-bottom:2px}.nprep{background:#f1f3f6;border:1px solid #cfd5dd;border-radius:4px;padding:4px 8px;margin:2px 0 8px;color:#333}.nprep::before{content:\"Vorbereitung\";display:block;font-size:7.5pt;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:2px}.nprep .nprep{background:none;border:0;padding:0;margin:0}.nprep .nprep::before{content:none}" + FF_CSS;
   const safeName = (t) => String(t || "Planung").replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, " ").trim().slice(0, 120);
   async function inlineImgs(body) {
     const ids = [...new Set([...body.matchAll(/src="\/_blob\/([0-9a-f]+)"/g)].map((m) => m[1]))];
@@ -5962,8 +5977,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   }
 
   // Lektion: Lektionsplanung links, Notizen rechts (Wahl und Breite pro Gerät)
-  // Lage der Lektionsplanung im Lektionsfenster: "rail" = links eingeklappt (Standard), "left" = Spalte links, "top" = oben
-  const pTab = () => { try { const v = localStorage.getItem("zp-ptab"); return v === "top" || v === "left" ? v : "rail"; } catch (e) { return "rail"; } };
+  // Lage der Lektionsplanung im Lektionsfenster: "left" = Spalte links (Standard am Computer), "rail" = links eingeklappt, "top" = oben (am Handy immer)
+  const pTab = () => { try { const v = localStorage.getItem("zp-ptab2"); return v === "top" || v === "rail" ? v : "left"; } catch (e) { return "left"; } };
   const dSide = () => pTab() === "left";
   const pFold = () => { try { return localStorage.getItem("zp-pfold") === "1"; } catch (e) { return false; } };
   const dWs = () => { try { return localStorage.getItem("zp-dws") !== "0"; } catch (e) { return true; } };
@@ -5977,11 +5992,12 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     // "rail" = eingeklappt (Klick blendet die Tabelle über den Notizen ein, bis ✕), "top" = fest oben, "left" = Spalte links neben den Notizen
     const lb = root.querySelector("#d-pleft"), fb = root.querySelector("#d-pfold");
     const cur = () => (sp.classList.contains("rail") ? "rail" : sp.classList.contains("on") ? "left" : "top");
-    const set = (v) => {
+    // tmp = nur vorübergehend (z. B. wegen Arbeitsblatt), die gespeicherte Wahl bleibt
+    const set = (v, tmp) => {
       if (v === "left" && !wide()) v = "top";
       if (v !== "top" && v !== "left") v = "rail";
       sp.classList.toggle("rail", v === "rail"); sp.classList.toggle("on", v === "left"); sp.classList.remove("peek", "pin");
-      try { localStorage.setItem("zp-ptab", v); } catch (e) {}
+      if (wide() && !tmp) { try { localStorage.setItem("zp-ptab2", v); } catch (e) {} }
       // Tabelle links und Arbeitsblatt zusammen nur auf breiten Bildschirmen
       if (v === "left" && innerWidth < 1600 && sp.classList.contains("ws")) { const wb = root.querySelector("#d-wsb"); if (wb) wb.click(); }
       btns(); hint();
@@ -6111,7 +6127,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       sp.classList.toggle("ws", v); pn.classList.toggle("wsp", v); if (wsb) wsb.setAttribute("aria-pressed", String(v));
       try { localStorage.setItem("zp-dws", v ? "1" : "0"); } catch (e) {}
       // wenig Platz: Tabelle wieder oben (eingeklappt lässt sie sich wegklappen), damit Notizen und Arbeitsblatt Platz haben
-      if (v && narrow() && sp.classList.contains("on") && root._ptab) root._ptab.set("rail");
+      if (v && narrow() && sp.classList.contains("on") && root._ptab) root._ptab.set("rail", true);
       if (v) render();
     };
     if (wsb) wsb.addEventListener("click", () => set(!on()));
@@ -6306,7 +6322,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       NB("hl", "y", "", "Gelb markieren", "sw-y") + NB("hl", "g", "", "Grün markieren", "sw-g") + NB("hl", "b", "", "Blau markieren", "sw-b") + NB("hl", "", "✕", "Markierung entfernen", "sw-x") + '<span class="nsep"></span>' +
       NB("size", "2", '<span style="font-size:11px">A</span>', "Kleine Schrift") + NB("size", "3", '<span style="font-size:14px">A</span>', "Normale Schrift") + NB("size", "4", '<span style="font-size:17px">A</span>', "Grosse Schrift") + NB("size", "5", '<span style="font-size:20px">A</span>', "Sehr grosse Schrift") + '<span class="nsep"></span>' +
       NB("justifyLeft", "", '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 3h12M2 6.5h8M2 10h12M2 13.5h8"/></svg>', "Linksbündig") + NB("justifyCenter", "", '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 3h12M4 6.5h8M2 10h12M4 13.5h8"/></svg>', "Zentriert") + NB("justifyRight", "", '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 3h12M6 6.5h8M2 10h12M6 13.5h8"/></svg>', "Rechtsbündig") + NB("justifyFull", "", '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 3h12M2 6.5h12M2 10h12M2 13.5h12"/></svg>', "Blocksatz") + '<span class="nsep"></span>' + NB("insertUnorderedList", "", '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="3" cy="4" r="1" fill="currentColor"/><circle cx="3" cy="8" r="1" fill="currentColor"/><circle cx="3" cy="12" r="1" fill="currentColor"/><path d="M6 4h8M6 8h8M6 12h8"/></svg>', "Aufzählung") + NB("insertOrderedList", "", '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 4h8M6 8h8M6 12h8"/><text x="0.5" y="5.5" font-size="5" fill="currentColor" stroke="none">1</text><text x="0.5" y="9.5" font-size="5" fill="currentColor" stroke="none">2</text><text x="0.5" y="13.5" font-size="5" fill="currentColor" stroke="none">3</text></svg>', "Nummerierte Liste") + '<span class="nsep"></span>' +
-      '<label class="nlh" title="Spalten einfügen, z. B. Fragen links, Antworten rechts">Spalten <select id="d-ncols"><option value="">–</option><option value="2">2 Spalten</option><option value="3">3 Spalten</option><option value="t">Aufgabe | Notizen</option><option value="0">Spalten aufheben</option></select></label>' + '<button type="button" class="nb nimg" id="d-nsec" aria-haspopup="menu" title="Abschnitt einfügen: Trennstrich mit Titel, z. B. eine Phase aus der Lektionsplanung; lässt sich zuklappen">§ Abschnitt</button><button type="button" class="nb nimg" id="d-nsp" title="Markierte Wörter abdecken (schwarzer Balken): Sie sehen sie, die Klasse beim Zeigen im Unterricht nicht – Klick auf den Balken deckt dort auf. Schreibmarke in einem Balken: Abdeckung entfernen">▮ Abdecken</button><button type="button" class="nb nimg" id="d-ntask" title="Seite teilen: markierte Aufgabe links, rechts Lösungen und Notizen schreiben (Linie dazwischen lässt sich ziehen)">◧ Aufgabe | Notizen</button><button type="button" class="nb" id="d-neye" aria-pressed="true" title="Abschnitte (Trennstriche und § in der Lektionsplanung) zeigen oder ausblenden">👁</button>' + '<span class="nsep"></span>' +
+      '<label class="nlh" title="Spalten einfügen, z. B. Fragen links, Antworten rechts">Spalten <select id="d-ncols"><option value="">–</option><option value="2">2 Spalten</option><option value="3">3 Spalten</option><option value="t">Aufgabe | Notizen</option><option value="0">Spalten aufheben</option></select></label>' + '<button type="button" class="nb nimg" id="d-nsec" aria-haspopup="menu" title="Abschnitt einfügen: Trennstrich mit Titel, z. B. eine Phase aus der Lektionsplanung; lässt sich zuklappen">§ Abschnitt</button><button type="button" class="nb nimg" id="d-nsp" title="Markierte Wörter abdecken (schwarzer Balken): Sie sehen sie, die Klasse beim Zeigen im Unterricht nicht – Klick auf den Balken deckt dort auf. Schreibmarke in einem Balken: Abdeckung entfernen">▮ Abdecken</button><button type="button" class="nb nimg" id="d-ntask" title="Seite teilen: markierte Aufgabe links, rechts Lösungen und Notizen schreiben (Linie dazwischen lässt sich ziehen)">◧ Aufgabe | Notizen</button>' + (opt.plan ? '<button type="button" class="nb nimg" id="d-nprep" title="Markierte Zeilen in die graue Box «Vorbereitung» oben verschieben (Bedingungen, Kommentar, Material) – im Unterricht ist sie zugeklappt. Schreibmarke in der Box: markierte Zeilen wieder herausnehmen">▤ Vorbereitung</button>' : "") + '<button type="button" class="nb" id="d-neye"<button type="button" class="nb" id="d-neye" aria-pressed="true" title="Abschnitte (Trennstriche und § in der Lektionsplanung) zeigen oder ausblenden">👁</button>' + '<span class="nsep"></span>' +
       '<span class="ntab-w"><button type="button" class="nb nimg" id="d-ntabb" aria-expanded="false" title="Tabelle einfügen: Grösse im Raster wählen oder Spalten und Zeilen eingeben">▦ Tabelle</button><div class="ntab-pop" id="d-ntabp" hidden><div class="ntab-grid">' + Array.from({ length: 64 }, (_, k) => '<button type="button" class="ntab-c" data-r="' + (Math.floor(k / 8) + 1) + '" data-c="' + (k % 8 + 1) + '"></button>').join("") + '</div><div class="ntab-lbl">Grösse im Raster wählen</div><div class="ntab-num"><label>Spalten <input type="number" id="d-ntc" min="1" max="20" value="3"></label><label>Zeilen <input type="number" id="d-ntr" min="1" max="60" value="3"></label><button type="button" class="btn primary" id="d-ntok">Einfügen</button></div></div></span>' + '<span class="nsep"></span>' +
       '<span class="nlh">Zeilenabstand <button type="button" class="nb" id="d-nlh" aria-haspopup="menu" title="Zeilenabstand für die markierten Zeilen. Rechtsklick auf einen Abstand im Menü: als Standard für diese Notizen">' + nlhName(x.notesLh) + " ▾</button></span>" + '<span class="nsep"></span>' +
       '<label class="nb nimg" title="Bild oder Screenshot einfügen (auch mit Strg+V)">🖼 Bild<input type="file" id="d-nimg" accept="image/*" multiple hidden></label>' +
@@ -7242,6 +7258,35 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       if (!dropFirst) setTimeout(() => nsecEdit(d), 0);
       return d;
     };
+    // Vorbereitung: markierte Zeilen (oberste Ebene) in die graue Box oben bzw. wieder heraus
+    const npb = $("#d-nprep");
+    if (npb) {
+      npb.addEventListener("mousedown", (e) => e.preventDefault());
+      npb.addEventListener("click", () => {
+        const sel = getSelection(); if (!sel.rangeCount || !ned.contains(sel.anchorNode)) { $("#d-nmsg").textContent = "Zuerst in die Notizen klicken oder Zeilen markieren."; return; }
+        const rg = sel.getRangeAt(0), el = (nd) => (nd.nodeType === 1 ? nd : nd.parentElement);
+        const box = el(rg.startContainer).closest(".nprep");
+        const par = box && ned.contains(box) ? box : ned;
+        let kids = [...par.childNodes].filter((c) => rg.intersectsNode(c) && !(c.nodeType === 3 && !c.textContent.trim()));
+        if (!kids.length) { const c = el(rg.startContainer); let k = c; while (k && k.parentNode !== par) k = k.parentNode; if (k) kids = [k]; }
+        kids = kids.filter((k) => !(k.nodeType === 1 && k.classList.contains("nprep")));
+        if (!kids.length) return;
+        if (par === box) {
+          // heraus: direkt unter die Box (Anfang des Teils «Für die Klasse»), Reihenfolge bleibt
+          let ref = box; kids.forEach((k) => { ref.after(k); ref = k; });
+          if (!box.textContent.trim() && !box.querySelector("img,table,figure")) box.remove();
+        } else {
+          let b = [...ned.children].find((c) => c.classList.contains("nprep"));
+          if (!b) { b = document.createElement("div"); b.className = "nprep"; ned.prepend(b); }
+          b.removeAttribute("data-c");
+          kids.forEach((k) => b.appendChild(k));
+        }
+        sel.removeAllRanges(); const r2 = document.createRange(); r2.selectNodeContents(kids[kids.length - 1]); r2.collapse(false); sel.addRange(r2);
+        HIST.brk = true; save();
+      });
+    }
+    // Kopf der Box «Vorbereitung» anklicken: auf- und zuklappen
+    ned.addEventListener("mousedown", (e) => { const b = e.target.closest && e.target.closest(".nprep"); if (!b || b !== e.target || e.offsetY > 22) return; e.preventDefault(); b.toggleAttribute("data-c"); if (b.hasAttribute("data-c")) b.setAttribute("data-c", "1"); HIST.brk = true; save(); });
     const mk = $("#d-nsp"); if (mk) { mk.addEventListener("mousedown", (e) => e.preventDefault()); mk.addEventListener("click", () => { if (spWrap(ned)) { HIST.brk = true; save(); } else $("#d-nmsg").textContent = "Zuerst die Wörter markieren, die abgedeckt werden sollen."; }); }
     // kleiner Knopf direkt beim markierten Text
     let mpop = null;
@@ -11907,15 +11952,13 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const on = $("#lk-list .lk-it.on"); if (on && on.scrollIntoView && !LK.scrolled) { LK.scrolled = true; on.scrollIntoView({ block: "nearest" }); }
     lkOpen();
   }
-  const lkTakeOn = () => { try { return localStorage.getItem("zp-lktake") === "1"; } catch (e) { return false; } };
-  const lkTakeSet = (v) => { try { localStorage.setItem("zp-lktake", v ? "1" : "0"); } catch (e) {} document.body.classList.toggle("lk-take", v); const b = document.getElementById("lk-taketg"); if (b) b.setAttribute("aria-pressed", String(v)); };
   function lkDocsHtml(x) {
     const r = U.reihen[x.u.rid] || {}, docs = lkDocs(x.u.rid, x.u.i), ids = new Set(docs.map((f) => f.id));
     const row = (f) => '<div class="lk-drow"><button type="button" class="doc" data-lkopen="' + esc(f.id) + '" title="Öffnen – dort können Sie es auch bearbeiten"><span class="tag">' + typeTag(f) + "</span><span>" + esc(f.name) + '</span></button>' + (lkCanPick(f) ? '<button type="button" class="btn ghost lk-ins" data-lkpick="' + esc(f.id) + '" title="' + (LK_IMG.test(extOf(f)) ? "Bild in die Seite einfügen (danach können Sie hineinschreiben)" : "Einzelne Folien bzw. Seiten als Bild in die Seite holen (danach können Sie hineinschreiben)") + '">🖼</button>' : "") + '<button type="button" class="btn ghost lk-ins" data-lkins="' + esc(f.id) + '" title="Als Verweis in die Seite einfügen">＋</button></div>';
     const more = (r.files || []).filter((f) => f && !f.folder && !ids.has(f.id));
     const all = [...docs, ...more], rv = all.some((f) => f.id === LK.rv) ? LK.rv : "plan", cur = rv && rv !== "plan" ? all.find((f) => f.id === rv) : null;
     const head = '<div class="lk-shead"><button type="button" class="lk-rvsel" id="lk-rv" title="Wählen, was hier rechts steht: die Lektionsplanung oder ein Dokument der Lektion gross">' + (rv === "plan" ? "Lektionsplanung" : cur ? esc(cur.name) : "Lektionsplanung") + ' <span aria-hidden="true">▾</span></button><span class="lk-rvbtns">' +
-      (rv === "plan" ? '<button type="button" class="btn ghost" id="lk-taketg" aria-pressed="' + lkTakeOn() + '" title="Knöpfe «⇥ In die Seite» bei Bildern und Tabellen zeigen bzw. ausblenden">⇥ In die Seite</button><button type="button" class="btn ghost" id="lk-planedit" title="Lernziele, Ablauf und Notizen dieser Lektion bearbeiten">✎ Bearbeiten</button>' : "") +
+      (rv === "plan" ? '<button type="button" class="btn ghost" id="lk-planedit" title="Lernziele, Ablauf und Notizen dieser Lektion bearbeiten">✎ Bearbeiten</button>' : "") +
       '<button type="button" class="lk-fold" id="lk-docsfold" title="Rechte Seite einklappen">▸</button></span></div>';
     if (rv === "plan") return head + '<div class="lk-planbox" id="lk-planbox"></div>';
     if (cur) return head + '<div class="lk-dvbar"><button type="button" class="btn ghost" data-lkopen="' + esc(cur.id) + '" title="Im eigenen Fenster öffnen – dort auch bearbeiten">⤢ Öffnen</button>' + (lkCanPick(cur) ? '<button type="button" class="btn ghost" data-lkpick="' + esc(cur.id) + '" title="Einzelne Seiten bzw. das Bild in die Seite holen">🖼 In die Seite</button>' : "") + '<button type="button" class="btn ghost" data-lkins="' + esc(cur.id) + '" title="Als Verweis in die Seite einfügen">＋ Verweis</button></div><div class="ufl-dmsg msg" id="lk-rvmsg"></div><div class="lk-rvdoc" id="lk-rvdoc" data-fid="' + esc(cur.id) + '"></div>';
@@ -12002,7 +12045,6 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   }
   // Rechte Seite (Pfeil-Menü): Lektionsplanung aus der Reihe oder ein Dokument gross
   function lkPlanRender() {
-    document.body.classList.toggle("lk-take", lkTakeOn());
     const x = LK.sel && lkLessons(LK.kid).find((y) => y.key === LK.sel), r = x && U.reihen[x.u.rid];
     const dv = $("#lk-rvdoc");
     if (dv && x) { const f = lkAllDocs()[dv.dataset.fid]; if (f && !dv.firstChild) lkRvDoc(f, dv, $("#lk-rvmsg")); }
@@ -12028,20 +12070,41 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       ph.after(g); ph.title = "Phase zu- bzw. aufklappen";
       ph.addEventListener("click", () => { const sh = !ph.classList.contains("shut"); ph.classList.toggle("shut", sh); g.classList.toggle("shut", sh); });
     });
-    // Bilder aus den Notizen in die Seite übernehmen (an der Stelle, wo zuletzt der Cursor in der Seite stand)
-    box.querySelectorAll(".lk-plantext img").forEach((img) => {
-      const m = /^\/_blob\/([0-9a-f]{8,64})$/.exec(img.getAttribute("src") || ""); if (!m) return;
-      let host = img.closest("figure.nfig");
-      if (!host) { host = document.createElement("span"); host.className = "lk-pimg"; img.replaceWith(host); host.appendChild(img); }
-      const b = document.createElement("button"); b.type = "button"; b.className = "lk-ptake"; b.dataset.take = m[1]; b.textContent = "⇥ In die Seite"; b.title = "Dieses Bild in die Unterrichtsseite übernehmen – dort, wo der Cursor zuletzt stand";
-      host.appendChild(b);
-    });
-    // Tabellen (Ablauf und Tabellen aus den Notizen) ebenso
-    box.querySelectorAll(".lk-plantext table").forEach((tb) => {
-      const pv = tb.previousElementSibling; if (pv && pv.tagName === "H3" && pv.textContent.trim() === "Lektionsplanung") { tb.classList.add("lk-pt"); return; }
-      const host = document.createElement("div"); host.className = "lk-ptab"; tb.replaceWith(host); host.appendChild(tb);
-      const b = document.createElement("button"); b.type = "button"; b.className = "lk-ptake"; b.dataset.taketab = "1"; b.textContent = "⇥ In die Seite"; b.title = "Diese Tabelle in die Unterrichtsseite übernehmen – dort, wo der Cursor zuletzt stand";
-      host.appendChild(b);
+    // Phasentabelle bleibt draussen (nicht übernehmbar)
+    box.querySelectorAll(".lk-plantext table").forEach((tb) => { const pv = tb.previousElementSibling; if (pv && pv.tagName === "H3" && pv.textContent.trim() === "Lektionsplanung") tb.classList.add("lk-pt"); });
+    // Vorbereitung im Unterricht zugeklappt (Kopf anklicken = aufklappen, nur hier, wird nicht gespeichert)
+    box.querySelectorAll(".lk-plantext .nprep").forEach((b) => b.setAttribute("data-c", "1"));
+    // Maus über einem Block der Notizen (Aufgabe, Liste, Tabelle, Bild …): kleines «⇥» – Klick holt ihn in die Seite
+    const hb = document.createElement("button"); hb.type = "button"; hb.className = "lk-hov"; hb.textContent = "⇥"; hb.title = "In die Unterrichtsseite übernehmen – dort, wo der Cursor zuletzt stand"; hb.hidden = true; box.appendChild(hb);
+    let hcur = null;
+    const blkOf = (t) => {
+      const nt = t && t.closest && t.closest(".lk-plantext .notes"); if (!nt) return null;
+      let k = t; while (k && k !== nt && !(k.parentElement && (k.parentElement === nt || k.parentElement.matches(".nprep, .ncols")))) k = k.parentElement;
+      if (!k || k === nt || k.nodeType !== 1 || k.matches(".nprep, .ncols, .nsec, .nend, br")) return null;
+      if (!k.textContent.trim() && !k.querySelector("img, table, figure")) return null;
+      return k;
+    };
+    const hShow = (k) => {
+      if (k === hcur) return; if (hcur) hcur.classList.remove("lk-hovon"); hcur = k;
+      if (!k) { hb.hidden = true; return; }
+      k.classList.add("lk-hovon");
+      const br = box.getBoundingClientRect(), r = k.getBoundingClientRect();
+      hb.hidden = false; hb.style.top = Math.max(0, r.top - br.top + box.scrollTop - 12) + "px"; hb.style.left = Math.max(0, r.right - br.left + box.scrollLeft - hb.offsetWidth) + "px";
+    };
+    box.addEventListener("mousemove", (e) => { if (e.target === hb) return; hShow(blkOf(e.target)); });
+    box.addEventListener("mouseleave", () => hShow(null));
+    hb.addEventListener("click", (e) => {
+      e.stopPropagation(); const k = hcur; if (!k) return;
+      const imgs = [...k.querySelectorAll("img")].concat(k.tagName === "IMG" ? [k] : []).map((im) => /^\/_blob\/([0-9a-f]{8,64})$/.exec(im.getAttribute("src") || "")).filter(Boolean);
+      if (k.tagName === "TABLE") { lkInsertBlocks(lkSanitize(tabKeepW(k).outerHTML), LK.range); LK.range = null; lkStat("Tabelle in die Seite übernommen. Unter «▦ Tabelle» lassen sich Zeilen und Spalten ändern."); hShow(null); return; }
+      if (imgs.length && !k.querySelector("table") && !(k.textContent.replace(k.querySelector("figcaption") ? k.querySelector("figcaption").textContent : "", "").trim())) {
+        const fc = k.querySelector("figcaption"), cap = fc ? fc.textContent.trim() : "";
+        lkInsertAtRange(imgs.map((m) => lkFigHtml(m[1])).join("") + (cap ? '<p class="fs-2">' + esc(cap) + "</p>" : "<p><br></p>"));
+        LK.range = null; lkStat("Bild in die Seite übernommen. Rechtsklick bzw. lange drücken aufs Bild: Grösse und Lage."); hShow(null); return;
+      }
+      const c = k.cloneNode(true); c.classList.remove("lk-hovon");
+      const ot = [...k.querySelectorAll("table")], ct = [...c.querySelectorAll("table")]; ct.forEach((t, n) => { if (ot[n]) t.replaceWith(tabKeepW(ot[n])); });
+      lkInsertBlocks(lkSanitize(k.classList.contains("ncol") ? c.innerHTML : c.outerHTML), LK.range); LK.range = null; lkStat("In die Seite übernommen."); hShow(null);
     });
     // Tabelle zuklappbar; Klick auf einen Abschnitt in der Tabelle springt hin
     const th = [...box.querySelectorAll(".lk-plantext h3")].find((h) => h.textContent.trim() === "Lektionsplanung");
@@ -12054,6 +12117,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       if (tf) { const off = !box.classList.contains("tab-off"); box.classList.toggle("tab-off", off); tf.textContent = off ? "▸" : "▾"; tf.setAttribute("aria-expanded", String(!off)); try { localStorage.setItem("zp-lktab", off ? "1" : "0"); } catch (er) {} return; }
       const sr = e.target.closest("[data-sref]") || (!e.target.closest("button, a") && e.target.closest(".lk-plantext tr") && e.target.closest(".lk-plantext tr").querySelector("[data-sref]"));
       if (sr) { const t = box.querySelector('.psec[data-sid="' + sr.dataset.sref + '"]'); if (t) { const gp = t.closest(".pgrp"); if (gp && gp.classList.contains("shut")) { gp.classList.remove("shut"); if (gp.previousElementSibling) gp.previousElementSibling.classList.remove("shut"); } box.querySelectorAll(".lk-plantext tr.on").forEach((y) => y.classList.remove("on")); const tr = sr.closest("tr"); if (tr) tr.classList.add("on"); t.scrollIntoView({ block: "start", behavior: "smooth" }); t.classList.remove("flash"); void t.offsetWidth; t.classList.add("flash"); } return; }
+      const np = e.target.closest(".nprep"); if (np && np === e.target && e.offsetY <= 24) { np.toggleAttribute("data-c"); return; }
       const bt = e.target.closest("[data-taketab]");
       if (bt) { lkInsertBlocks(lkSanitize(tabKeepW(bt.parentElement.querySelector("table")).outerHTML), LK.range); LK.range = null; lkStat("Tabelle in die Seite übernommen. Unter «▦ Tabelle» lassen sich Zeilen und Spalten ändern."); return; }
       const b = e.target.closest("[data-take]"); if (!b) return;
@@ -13538,7 +13602,6 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     if (b.id === "lk-rv") { lkRvMenu(b); return; }
     if (b.dataset.lkrv != null) { lkRvSet(b.dataset.lkrv); return; }
     if (b.dataset.takesec != null) { const sc = b.closest(".psec"); if (!sc) return; const c = sc.cloneNode(true); c.querySelectorAll(".lk-ptake").forEach((y) => y.remove()); c.querySelectorAll(".lk-ptab, .lk-pimg").forEach((y) => y.replaceWith(...y.childNodes)); c.querySelectorAll("h4").forEach((y) => { const h3 = document.createElement("h3"); h3.innerHTML = y.innerHTML; y.replaceWith(h3); }); lkInsertBlocks(lkSanitize(c.innerHTML), LK.range); LK.range = null; lkStat("Abschnitt in die Seite übernommen."); return; }
-    if (b.id === "lk-taketg") { lkTakeSet(!lkTakeOn()); return; }
     if (b.id === "lk-planedit") { const x = lkLessons(LK.kid).find((y) => y.key === LK.sel); if (x) openLessonDetail(x.u.i, LK.planFrom || x.u.rid, lkPlanRender); return; }
     if (b.id === "lk-docsfold" || b.id === "lk-docsopen") { if (lkIsProj()) LK.pdocs = b.id === "lk-docsopen"; else { LK.docs = b.id === "lk-docsopen"; lkSaveSel(); } lkLayout(); return; }
     if (b.closest(".lk-showmenu")) lkPopsClose();
