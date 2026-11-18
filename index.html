@@ -739,17 +739,19 @@ html.lk-proj .lk-planbox { display: none !important; }
 html.lk-proj .lk-main.split > .lk-page { grid-column: 1 / -1; }
 html.mob .lk-main.split > .lk-page { grid-column: 1 / -1; grid-row: 4; }
 html.mob .lk-main.split > .lk-planbox { grid-column: 1 / -1; position: static; max-height: 40vh; }
-.ls { font-family: "Ink Free", "Segoe Print", "Bradley Hand", "Noteworthy", "Comic Sans MS", cursive; color: #c8402c; line-height: 1; }
+.ls { font-family: "Ink Free", "Segoe Print", "Bradley Hand", "Noteworthy", "Comic Sans MS", cursive; color: var(--ls, #2459c9); line-height: 1; }
 .ffbtn .ffn { display: inline-block; min-width: 6.8em; text-align: left; }
 .nb.ffbtn { display: inline-flex; align-items: center; gap: 2px; padding: 0 6px; white-space: nowrap; font-family: inherit; font-size: 13px; border-color: var(--line); }
 .ffmenu { min-width: 190px; z-index: 10050; }
 .ffmenu button { font-size: 15px; }
 .fmtbar .fm-ff { width: auto; padding: 0 8px; font-size: 13px; font-family: inherit; }
-.ls-act { background: #fde8e3 !important; box-shadow: inset 0 0 0 1.5px #c8402c; border-radius: 5px; }
-html:not(.ls-on).lk-proj .lk-page .ls:not(.lk-sp .ls), .ls-x { visibility: hidden; }
+.ls-act { background: #e3ebfc !important; box-shadow: inset 0 0 0 1.5px var(--ls, #2459c9); border-radius: 5px; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ls: #8fb1ff; } } :root[data-theme="dark"] { --ls: #8fb1ff; }
+html.lk-proj .lk-page .ls:not(.lk-sp .ls), .ls-x { visibility: hidden; }
+[data-lsv] { display: none !important; }
 /* Abdecken (wie Spoiler): Sie sehen den Text durch den dunklen Balken, beim Zeigen ist er schwarz; Klick deckt auf */
 .lk-sp { background: #26282c; color: #f3f3f3; border-radius: 3px; padding: 0 3px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
-.lk-sp .ls, .ls .lk-sp { color: #ffab9c; }
+.lk-sp .ls, .ls .lk-sp { font-family: inherit; color: inherit; }
 table.trect *::selection { background: transparent; }
 table.trect td.tcsel, table.trect th.tcsel { background: color-mix(in srgb, #3b82f6 28%, transparent) !important; }
 .lk-split { display: inline-flex; align-items: center; }
@@ -757,7 +759,7 @@ table.trect td.tcsel, table.trect th.tcsel { background: color-mix(in srgb, #3b8
 .lk-split > .lk-tbw > .lk-tb { border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: -1px; padding-left: 5px; padding-right: 5px; }
 html.lk-proj .lk-page .lk-sp { visibility: visible; }
 .lk-sp.open { background: none; color: inherit; outline: 1.5px dashed #9aa3ad; outline-offset: 1px; }
-.lk-sp.open .ls, .ls .lk-sp.open { color: #c8402c; }
+.lk-sp.open .ls, .ls .lk-sp.open { color: inherit; }
 html.lk-presenting .lk-page .lk-sp, html.lk-proj .lk-page .lk-sp, .lk-slide .lk-sp { cursor: pointer; }
 html.lk-proj .lk-page .lk-sp:not(.open), .lk-slide .lk-sp:not(.open) { background: #111; color: transparent !important; outline: 0; }
 html.lk-proj .lk-page .lk-sp:not(.open) *, .lk-slide .lk-sp:not(.open) * { color: transparent !important; visibility: visible; }
@@ -1986,6 +1988,55 @@ table.tt-moving { opacity: 0.45; }
 /* Lektionsfenster: immer volle Breite, schlanke Kopfzeile mit Menü «Angaben», ↶ ↷, Arbeitsblatt, Drucken, ✕ */
 .panel.wide.lfull { width: min(1760px, 100%); }
 .panel.wide.lfull.lnarrow:not(.wsp) { width: min(1080px, 100%); }
+/* Lektion immer im Vollbild (18.11.2026): kein Fenster über der Reihe, sondern eine ganze Seite */
+.overlay:has(> .panel.lfull) { padding: 0; background: var(--bg); }
+.overlay > .panel.wide.lfull { width: 100%; min-height: 100vh; border-radius: 0; box-shadow: none; padding: 10px 18px 18px; align-content: start; }
+.overlay > .panel.wide.lfull.lnarrow:not(.wsp) { width: min(1080px, 100%); }
+.panel.lfull .d-title { padding-top: 8px; }
+@media (min-width: 900px) {
+  .panel.lfull .d-split.ws > .d-ws { height: calc(100vh - 22px - var(--dth, 50px)); }
+  /* rechts offen, Tabelle oben: Tabelle nur über der linken Spalte (Kärtchen), rechts die ganze Höhe */
+  .d-split.ws:not(.on):not(.rail) > .d-sl { grid-column: 1; grid-row: 1; }
+  .d-split.ws:not(.on):not(.rail) > .d-sr { grid-column: 1; grid-row: 2; }
+  .d-split.ws:not(.on):not(.rail) > .d-gut2 { grid-column: 2; grid-row: 1 / span 2; }
+  .d-split.ws:not(.on):not(.rail) > .d-ws { grid-column: 3; grid-row: 1 / span 2; }
+}
+/* Kärtchen in den Notizen (Entwurf A, 18.11.2026) */
+.notes-ed.ncards { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; align-items: start; align-content: start; container-type: inline-size; background: color-mix(in srgb, var(--line) 22%, var(--bg)); padding: 14px; }
+.notes-ed.ncards > :not(.ncard) { grid-column: 1 / -1; }
+.notes-ed.ncards > .nprep { margin: 0; }
+.ncard { grid-column: span 6; min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 9px 14px 11px; box-shadow: 0 1px 2px rgba(20, 30, 40, 0.06); position: relative; }
+.ncard[data-w="2"] { grid-column: span 2; } .ncard[data-w="3"] { grid-column: span 3; } .ncard[data-w="4"] { grid-column: span 4; }
+.ncard:hover, .ncard:focus-within { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.ncard.nc-moving { opacity: 0.45; }
+.nct { font-weight: 700; font-size: 1rem; margin: 0 0 5px; padding-bottom: 3px; border-bottom: 1px solid var(--line); position: relative; }
+.nct.nct-e::before { content: "Titel"; position: absolute; left: 0; top: 0; color: var(--muted); font-weight: 400; pointer-events: none; }
+@container (max-width: 760px) { .ncard[data-w="2"] { grid-column: span 3; } .ncard[data-w="4"] { grid-column: span 6; } }
+@container (max-width: 520px) { .ncard[data-w] { grid-column: 1 / -1; } }
+.nc-host { position: relative; }
+.ncbar { position: absolute; z-index: 6; display: flex; gap: 1px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 2px; box-shadow: 0 2px 8px rgba(20, 30, 40, 0.14); font-size: 0.8rem; }
+.ncbar button { border: 0; background: none; font: inherit; color: var(--muted); padding: 2px 8px; border-radius: 999px; cursor: pointer; line-height: 1.4; }
+.ncbar button:hover { background: var(--accent-soft); color: var(--accent); }
+.ncbar button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+.ncbar .nc-grip { cursor: grab; font-size: 0.95rem; touch-action: none; }
+body.nc-dragging, body.nc-dragging * { cursor: grabbing !important; user-select: none; }
+.ncdrop { position: absolute; z-index: 7; background: var(--accent); border-radius: 2px; pointer-events: none; }
+.ncadd { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 8px 0 2px; font-size: 0.85rem; }
+.ncadd button { font: inherit; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 3px 11px; cursor: pointer; }
+.ncadd .ncadd-b { border: 1.5px dashed color-mix(in srgb, var(--muted) 55%, var(--line)); color: var(--muted); background: transparent; }
+.ncadd button:hover { border-color: var(--accent); color: var(--accent); }
+.ncadd-c { display: inline-flex; gap: 4px; }
+.ncadd-h { color: var(--muted); font-size: 0.8rem; }
+.ncadd-c::before { content: "oder als:"; color: var(--muted); align-self: center; margin-right: 2px; }
+@media (max-width: 640px) { .notes-ed.ncards { padding: 8px; gap: 8px; } .ncard { padding: 8px 10px 10px; } .ncadd-h { display: none; } }
+.lk-plantext .notes.ncards, .notes.ncards { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; align-items: start; }
+.notes.ncards > :not(.ncard) { grid-column: 1 / -1; }
+.notes.ncards > .ncard { border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; background: var(--surface); box-shadow: none; }
+.d-pnote { margin-top: 2px; } .d-pnote .rtfield { min-height: 2.2em; font-size: 0.92rem; }
+.d-ws.ws-u { padding: 0; }
+.d-ws .ws-ub { flex: 1; min-height: 0; display: flex; padding: 0; background: var(--surface); overflow: hidden; }
+.d-ws .ws-ueb { position: static; flex: 1; height: auto; min-height: 0; border: 0; border-radius: 0; }
+.lk-plantext .pnote { margin: 4px 0 10px; font-size: 0.92rem; } .lk-plantext .pnote-l { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
 .panel.nosec #d-nsec, .panel.nosec #d-neye, .panel.nosec [data-wpin], .panel.nosec .nsec-dc, .panel.nosec .nsec-x { display: none !important; }
 .panel.lfull .nbar { top: calc(var(--dth, 50px) - 2px); }
 @media (min-width: 900px) { .panel.lfull .d-split.ws > .d-ws, .panel.lfull .d-split.rail > .d-rail { top: calc(var(--dth, 50px) + 4px); } .panel.lfull .d-split.ws > .d-ws { height: calc(100vh - 5vh - 32px - var(--dth, 50px)); } }
@@ -3035,6 +3086,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       try { document.execCommand("styleWithCSS", false, false); } catch (e) {}
       document.execCommand("fontName", false, "zp-ls");
       host.querySelectorAll('font[face="zp-ls"]').forEach((f) => { const sp = document.createElement("span"); sp.className = "ls"; while (f.firstChild) sp.appendChild(f.firstChild); f.replaceWith(sp); sp.querySelectorAll(".ls").forEach(unwrap); });
+      lsSpFix(host); // abgedeckter Text bleibt normale Schrift
     }
     host.dispatchEvent(new Event("input", { bubbles: true }));
     return true;
@@ -3234,6 +3286,28 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     R.tb.classList.add("trect"); R.tb.querySelectorAll("td, th").forEach((c) => c.classList.toggle("tcsel", R.cells.has(c)));
   };
   document.addEventListener("selectionchange", tShow);
+  // Lehrerschrift wird nie projiziert – auch nicht im Abdeck-Balken. Was abgedeckt ist, wird darum normale Schrift (Katharina, 18.11.2026)
+  function lsSpFix(root) {
+    if (!root || !root.querySelectorAll) return root;
+    const unwrap = (x) => { const p = x.parentNode; if (!p) return; while (x.firstChild) p.insertBefore(x.firstChild, x); x.remove(); };
+    const lsSel = '.ls, font[face="zp-ls"]';
+    root.querySelectorAll(".lk-sp").forEach((sp) => {
+      sp.querySelectorAll(lsSel).forEach(unwrap);
+      // Balken mitten in Lehrerschrift: Lehrerschrift dort auftrennen, der Balken steht dazwischen in normaler Schrift
+      let a = sp.parentElement && sp.parentElement.closest(lsSel);
+      while (a && root.contains(a)) {
+        while (sp.parentNode !== a.parentNode) {
+          const p = sp.parentNode, after = p.cloneNode(false);
+          while (sp.nextSibling) after.appendChild(sp.nextSibling);
+          p.after(sp); sp.after(after);
+          if (!after.textContent && !after.querySelector("img, br")) after.remove();
+          if (!p.textContent && !p.querySelector("img, br")) p.remove();
+        }
+        a = sp.parentElement && sp.parentElement.closest(lsSel);
+      }
+    });
+    return root;
+  }
   function spWrap(root) {
     const sl = getSelection(); if (!sl.rangeCount) return false;
     const rg = sl.getRangeAt(0); if (!root.contains(rg.commonAncestorContainer)) return false;
@@ -3266,6 +3340,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       if (!first) first = sp; last = sp;
     });
     if (!last) return false;
+    lsSpFix(root);
     const r2 = document.createRange(); r2.setStartAfter(last); r2.collapse(true); sl.removeAllRanges(); sl.addRange(r2);
     return true;
   }
@@ -3294,7 +3369,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   const NLH = [[1.15, "eng", 1], [1.5, "normal", 2], [1.8, "weit", 3], [2.2, "sehr weit", 4]];
   const nlhName = (v) => (NLH.find((a) => a[0] === (v || 1.5)) || NLH[1])[1];
   function sanitizeNotes(html) {
-    const tpl = document.createElement("template"); tpl.innerHTML = html || "";
+    const tpl = document.createElement("template"); tpl.innerHTML = html || ""; lsSpFix(tpl.content);
     let out = "";
     function walk(node) {
       for (const n of node.childNodes) {
@@ -3317,6 +3392,17 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
           continue;
         }
         const st = n.style || {};
+        if (tag === "DIV" && n.classList.contains("ncard")) {
+          // Kärtchen (Breite in Sechsteln); kein Kärtchen im Kärtchen
+          if (n.parentElement && n.parentElement.closest(".ncard")) { walk(n); continue; }
+          const w = +n.getAttribute("data-w"); out += '<div class="ncard" data-w="' + ([2, 3, 4, 6].includes(w) ? w : 6) + '">'; walk(n); out += "</div>"; continue;
+        }
+        if (tag === "DIV" && n.classList.contains("nct")) {
+          // Titel eines Kärtchens (nur Text)
+          const tt = n.textContent.replace(/[\u00a0\u200b]/g, " ").replace(/\s+/g, " ").trim().slice(0, 160);
+          if (n.parentElement && n.parentElement.classList.contains("ncard") && n === n.parentElement.querySelector(":scope > .nct")) { out += '<div class="nct">' + (tt ? esc(tt) : "<br>") + "</div>"; continue; }
+          if (tt) out += "<div><b>" + esc(tt) + "</b></div>"; continue;
+        }
         if (tag === "DIV" && n.classList.contains("nflow")) {
           // markierter Text auf Spalten verteilt (fliesst wie in Word von Spalte zu Spalte)
           const k = parseInt(n.getAttribute("data-n"), 10) === 3 ? 3 : 2; out += '<div class="nflow" data-n="' + k + '">'; walk(n); out += "</div>"; continue;
@@ -3373,7 +3459,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     }
     walk(tpl.content);
     let prev; do { prev = out; out = out.replace(/<(b|i|u)><\/\1>/g, "").replace(/<span class="lk-sp"><\/span>/g, "").replace(/<mark class="hl-[ygb]"><\/mark>/g, "").replace(/<span class="fs-(s|l|xl)"><\/span>/g, "").replace(/<span class="(ls|ff-[a-z])"><\/span>/g, ""); } while (out !== prev);
-    out = out.replace(/<div( class="(?:al-[crj]|lhn-[1-4])(?: lhn-[1-4])?")?><\/div>/g, "<div$1><br></div>").replace(/<div class="ncol"><\/div>/g, '<div class="ncol"><br></div>').replace(/<div class="ncols"><\/div>/g, "").replace(/<div class="nprep"(?: data-c="1")?>(?:<div><br><\/div>)?<\/div>/g, "").replace(/<(ul|ol)><\/\1>/g, "");
+    out = out.replace(/<div( class="(?:al-[crj]|lhn-[1-4])(?: lhn-[1-4])?")?><\/div>/g, "<div$1><br></div>").replace(/<div class="ncol"><\/div>/g, '<div class="ncol"><br></div>').replace(/<div class="ncols"><\/div>/g, "").replace(/<div class="nprep"(?: data-c="1")?>(?:<div><br><\/div>)?<\/div>/g, "").replace(/<(ul|ol)><\/\1>/g, "").replace(/<div class="ncard" data-w="\d"><\/div>/g, "");
     return out.replace(/(<br>)+$/, "");
   }
   // ---------- Tabellen (Notizen und Unterrichtsseite): Breite, Höhe, Spaltenbreiten, Lage, Verschieben ----------
@@ -4511,21 +4597,40 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     }
   }
   // Lektionsplanung (nur im grossen Feld der Lektionen): Lernziele und eine Tabelle wann / was / wie
-  const DEF_COLS = ["Zeit", "Phase / Was", "Inhalt und Vorgehen / Wie", "Sozialform, Material, Notizen"];
-  const DEF_W = [8, 13, 49, 30]; // Spaltenbreiten in Prozent
+  // Ablauf kurz (18.11.2026): Sozialform usw. schreibt Katharina direkt in «Wie»; was sonst dazugehört, steht im Feld «Notizen zum Ablauf» unter der Tabelle (p.note)
+  const DEF_COLS = ["Zeit", "Phase / Was", "Inhalt und Vorgehen / Wie"];
+  const DEF_W = [9, 18, 73]; // Spaltenbreiten in Prozent
+  const COLS4 = ["Zeit", "Phase / Was", "Inhalt und Vorgehen / Wie", "Sozialform, Material, Notizen"], COLS4_W = [8, 13, 49, 30];
   const OLD_COLS = ["Zeit", "Phase / Was", "Inhalt und Vorgehen / Wie", "Sozialform / Material", "Notizen / Kommentare"];
+  // bisherige 4. Spalte «Sozialform, Material, Notizen» aus der Tabelle nehmen: pro Zeile als Zeile ins Feld «Notizen zum Ablauf» (mit Zeit und Phase davor)
+  function planShorten(p) {
+    if (!Array.isArray(p.cols) || p.cols.length !== 4 || !p.cols.every((c, j) => c === COLS4[j])) return false;
+    const lines = [];
+    (p.rows || []).forEach((r) => {
+      const v = sanitize(r[3] || ""); if (!filled(v)) return;
+      const lab = [r[0], r[1]].map((y) => htmlToPlain(sanitize(y || "")).replace(/\s+/g, " ").trim()).filter(Boolean).join(" · ");
+      lines.push((lab ? "<b>" + esc(lab) + ":</b> " : "") + v);
+    });
+    p.rows = (p.rows || []).map((r) => [r[0] || "", r[1] || "", r[2] || "", ...r.slice(4)]);
+    p.cols = DEF_COLS.slice();
+    const w = Array.isArray(p.widths) && p.widths.length === 4 ? p.widths : COLS4_W;
+    if (w.every((y, j) => y === COLS4_W[j])) p.widths = DEF_W.slice(); else { const t = w[0] + w[1] + w[2] || 1; p.widths = w.slice(0, 3).map((y) => +((y / t) * 100).toFixed(1)); }
+    if (lines.length) p.note = sanitize((filled(p.note || "") ? p.note + "<br>" : "") + lines.join("<br>"));
+    return true;
+  }
   function ensurePlan(p) {
     if (!Array.isArray(p.cols) || !p.cols.length) p.cols = DEF_COLS.slice();
     // frühere Aufteilung „Sozialform | Material“ zu einer Spalte zusammenführen, dafür Notizen / Kommentare
     if (p.cols.length === 5 && p.cols[3] === "Sozialform" && p.cols[4] === "Material") {
       p.rows = (p.rows || []).map((r) => [r[0] || "", r[1] || "", r[2] || "", [r[3], r[4]].filter(filled).join("<br>"), ...r.slice(5)]);
-      p.cols = DEF_COLS.slice(); p.widths = DEF_W.slice();
+      p.cols = COLS4.slice(); p.widths = COLS4_W.slice();
     }
     // bisherige 5 Spalten: «Sozialform / Material» und «Notizen» zu einem grösseren Feld zusammenführen
     if (p.cols.length === 5 && p.cols.every((c, j) => c === OLD_COLS[j])) {
       p.rows = (p.rows || []).map((r) => [r[0] || "", r[1] || "", r[2] || "", [r[3], r[4]].filter(filled).join("<br>"), ...r.slice(5)]);
-      p.cols = DEF_COLS.slice(); p.widths = DEF_W.slice();
+      p.cols = COLS4.slice(); p.widths = COLS4_W.slice();
     }
+    planShorten(p);
     if (!Array.isArray(p.rows) || !p.rows.length) p.rows = [0, 1].map(() => p.cols.map(() => ""));
     if (!Array.isArray(p.widths) || p.widths.length !== p.cols.length) p.widths = p.cols.length === DEF_W.length ? DEF_W.slice() : p.cols.map(() => +(100 / p.cols.length).toFixed(1));
     return p;
@@ -4569,6 +4674,11 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   function bindPlan(root, p, changed) {
     const tbl = $("#p-table");
     $("#p-ziele").addEventListener("input", (e) => { p.ziele = sanitize(e.target.innerHTML); changed(); });
+    const pnote = $("#p-note");
+    if (pnote) {
+      pnote.addEventListener("input", () => { const h = sanitize(pnote.innerHTML); if (filled(h)) p.note = h; else delete p.note; changed(); });
+      pnote.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); lineBreak(); } });
+    }
     tbl.addEventListener("input", (e) => {
       const c = e.target.closest(".pcell"); if (!c) return;
       if (c.dataset.pc != null) p.cols[+c.dataset.pc] = c.textContent.replace(/\s+/g, " ").trim();
@@ -4679,7 +4789,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   }
 
   // ---------- Drucken: eine Datei, die sich im Browser öffnet und gleich das Druckfenster zeigt ----------
-  const PRINT_CSS = "@page{size:A4;margin:10mm 11mm}body{font-family:Arial,Helvetica,sans-serif;font-size:9.5pt;color:#111;line-height:1.3;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}h1{font-size:13pt;margin:0 0 4px}h2{font-size:11pt;margin:10px 0 4px;padding-bottom:2px;border-bottom:1.2px solid #333}h3{font-size:8.5pt;margin:6px 0 2px;text-transform:uppercase;letter-spacing:.04em;color:#444}.meta{color:#444;margin:0 0 10px}.box{border:1px solid #bbb;border-radius:4px;padding:6px 8px;margin:4px 0}table{width:100%;border-collapse:collapse;margin:4px 0;table-layout:fixed}th,td{border:1px solid #999;padding:4px 6px;vertical-align:top;text-align:left;overflow-wrap:break-word}th{background:#eee;font-size:9.5pt}.pre{white-space:pre-wrap}tr{break-inside:avoid}.notes img{max-width:100%;max-height:120mm}.notes img.w50{max-width:50%}.notes img.w33{max-width:33%}.notes img.w25{max-width:25%}.notes img.w75{max-width:75%}.notes{display:flow-root}.nfig{margin:4px 0;width:fit-content;max-width:100%;break-inside:avoid}.nfig img{display:block;max-width:100%;max-height:120mm}.nfig[class*=\" w\"] img{width:100%}.nfig.w25{width:25%}.nfig.w33{width:33%}.nfig.w50{width:50%}.nfig.w75{width:75%}.nfig.w100{width:100%}.nfig figcaption{contain:inline-size;font-size:8pt;font-style:italic;color:#555;margin-top:2px}.nfig.p-l{float:left;margin:2px 10px 6px 0}.nfig.p-r{float:right;margin:2px 0 6px 10px}.nfig.p-c{margin-left:auto;margin-right:auto}.nfig.p-c figcaption{text-align:center}.ls{font-family:'Ink Free','Segoe Print','Bradley Hand',Noteworthy,'Comic Sans MS',cursive;color:#c8402c}table caption{caption-side:bottom;text-align:left;font-size:8pt;font-style:italic;color:#555;padding-top:2px}table.tp-l{float:left;margin:2px 10px 6px 0}table.tp-r{float:right;margin:2px 0 6px 10px}table.tp-c{margin-left:auto;margin-right:auto}mark.hl-y{background:#fff1a6}mark.hl-g{background:#d3f2c4}mark.hl-b{background:#cfe4ff}mark{color:inherit}.fs-s{font-size:85%}.fs-l{font-size:125%}.fs-xl{font-size:150%}.one h1{border-bottom:1.2px solid #333;padding-bottom:2px}.lhn-1{line-height:1.15}.lhn-2{line-height:1.5}.lhn-3{line-height:1.8}.lhn-4{line-height:2.2}.al-c{text-align:center}.al-r{text-align:right}.al-j{text-align:justify}.notes ul,.notes ol{margin:2px 0;padding-left:20px}.ncols{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);margin:4px 0;break-inside:avoid}.ncol{padding:2px 8px}.ncol+.ncol{border-left:1px solid #999}.nflow{column-count:2;column-gap:8mm;column-rule:1px solid #bbb;margin:4px 0}.nflow[data-n=\"3\"]{column-count:3}.nflow li{break-inside:avoid}.nsec{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px 0 4px;font-size:8.5pt;font-weight:700;color:#555;break-after:avoid}.nsec::before,.nsec::after{content:\"\";flex:0 1 22%;border-top:1px solid #999}.nsec .nsec-tg{display:none}.phase{font-weight:400;color:#555}ul{margin:2px 0;padding-left:18px}@media screen{body{max-width:190mm;margin:20px auto;padding:0 12px}}figure.ndoc::before{content:\"📄 \" attr(data-name);display:block;color:#555;font-style:italic}.ls{font-style:italic}.nend{display:none}.pph{font-weight:700;font-size:10.5pt;margin:12px 0 2px;break-after:avoid}.psec{margin:0 0 6px}.psec h4{margin:6px 0 3px;font-size:10pt;border-bottom:1px solid #000;padding-bottom:1px;break-after:avoid}.psec-ref{color:#444;font-style:italic;margin:2px 0 6px}.pcm{font-size:8.5pt;color:#222;border-left:2px solid #000;padding:2px 0 2px 7px;margin:4px 0}.pcut{position:relative;overflow:hidden;margin:4px auto;outline:1px solid #888;outline-offset:0;break-inside:avoid;background:#fff}.pcut-in{transform-origin:0 0}.pcut-n{font-size:7.5pt;color:#444;font-style:italic;margin:-2px 0 6px}.psheet{break-before:page}.psheet h3{margin:0 0 4px}.psheet img{max-width:100%;display:block;margin:0 auto 6px;border:1px solid #888}td.pab-p{font-size:8.5pt}td.pab-p .pab-s{display:block;margin-bottom:2px}.nprep{background:#f1f3f6;border:1px solid #cfd5dd;border-radius:4px;padding:4px 8px;margin:2px 0 8px;color:#333}.nprep::before{content:\"Vorbereitung\";display:block;font-size:7.5pt;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:2px}.nprep .nprep{background:none;border:0;padding:0;margin:0}.nprep .nprep::before{content:none}" + FF_CSS;
+  const PRINT_CSS = "@page{size:A4;margin:10mm 11mm}body{font-family:Arial,Helvetica,sans-serif;font-size:9.5pt;color:#111;line-height:1.3;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}h1{font-size:13pt;margin:0 0 4px}h2{font-size:11pt;margin:10px 0 4px;padding-bottom:2px;border-bottom:1.2px solid #333}h3{font-size:8.5pt;margin:6px 0 2px;text-transform:uppercase;letter-spacing:.04em;color:#444}.meta{color:#444;margin:0 0 10px}.box{border:1px solid #bbb;border-radius:4px;padding:6px 8px;margin:4px 0}table{width:100%;border-collapse:collapse;margin:4px 0;table-layout:fixed}th,td{border:1px solid #999;padding:4px 6px;vertical-align:top;text-align:left;overflow-wrap:break-word}th{background:#eee;font-size:9.5pt}.pre{white-space:pre-wrap}tr{break-inside:avoid}.notes img{max-width:100%;max-height:120mm}.notes img.w50{max-width:50%}.notes img.w33{max-width:33%}.notes img.w25{max-width:25%}.notes img.w75{max-width:75%}.notes{display:flow-root}.nfig{margin:4px 0;width:fit-content;max-width:100%;break-inside:avoid}.nfig img{display:block;max-width:100%;max-height:120mm}.nfig[class*=\" w\"] img{width:100%}.nfig.w25{width:25%}.nfig.w33{width:33%}.nfig.w50{width:50%}.nfig.w75{width:75%}.nfig.w100{width:100%}.nfig figcaption{contain:inline-size;font-size:8pt;font-style:italic;color:#555;margin-top:2px}.nfig.p-l{float:left;margin:2px 10px 6px 0}.nfig.p-r{float:right;margin:2px 0 6px 10px}.nfig.p-c{margin-left:auto;margin-right:auto}.nfig.p-c figcaption{text-align:center}.pnote{margin:4px 0 8px}.pnote-l{display:block;font-size:8pt;text-transform:uppercase;letter-spacing:.04em;color:#555;margin-bottom:1px}.ls{font-family:'Ink Free','Segoe Print','Bradley Hand',Noteworthy,'Comic Sans MS',cursive;color:#2459c9}table caption{caption-side:bottom;text-align:left;font-size:8pt;font-style:italic;color:#555;padding-top:2px}table.tp-l{float:left;margin:2px 10px 6px 0}table.tp-r{float:right;margin:2px 0 6px 10px}table.tp-c{margin-left:auto;margin-right:auto}mark.hl-y{background:#fff1a6}mark.hl-g{background:#d3f2c4}mark.hl-b{background:#cfe4ff}mark{color:inherit}.fs-s{font-size:85%}.fs-l{font-size:125%}.fs-xl{font-size:150%}.one h1{border-bottom:1.2px solid #333;padding-bottom:2px}.lhn-1{line-height:1.15}.lhn-2{line-height:1.5}.lhn-3{line-height:1.8}.lhn-4{line-height:2.2}.al-c{text-align:center}.al-r{text-align:right}.al-j{text-align:justify}.notes ul,.notes ol{margin:2px 0;padding-left:20px}.ncols{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);margin:4px 0;break-inside:avoid}.ncol{padding:2px 8px}.ncol+.ncol{border-left:1px solid #999}.nflow{column-count:2;column-gap:8mm;column-rule:1px solid #bbb;margin:4px 0}.nflow[data-n=\"3\"]{column-count:3}.nflow li{break-inside:avoid}.nsec{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px 0 4px;font-size:8.5pt;font-weight:700;color:#555;break-after:avoid}.nsec::before,.nsec::after{content:\"\";flex:0 1 22%;border-top:1px solid #999}.nsec .nsec-tg{display:none}.phase{font-weight:400;color:#555}ul{margin:2px 0;padding-left:18px}@media screen{body{max-width:190mm;margin:20px auto;padding:0 12px}}figure.ndoc::before{content:\"📄 \" attr(data-name);display:block;color:#555;font-style:italic}.ls{font-style:italic}.nend{display:none}.pph{font-weight:700;font-size:10.5pt;margin:12px 0 2px;break-after:avoid}.psec{margin:0 0 6px}.psec h4{margin:6px 0 3px;font-size:10pt;border-bottom:1px solid #000;padding-bottom:1px;break-after:avoid}.psec-ref{color:#444;font-style:italic;margin:2px 0 6px}.pcm{font-size:8.5pt;color:#222;border-left:2px solid #000;padding:2px 0 2px 7px;margin:4px 0}.pcut{position:relative;overflow:hidden;margin:4px auto;outline:1px solid #888;outline-offset:0;break-inside:avoid;background:#fff}.pcut-in{transform-origin:0 0}.pcut-n{font-size:7.5pt;color:#444;font-style:italic;margin:-2px 0 6px}.psheet{break-before:page}.psheet h3{margin:0 0 4px}.psheet img{max-width:100%;display:block;margin:0 auto 6px;border:1px solid #888}td.pab-p{font-size:8.5pt}td.pab-p .pab-s{display:block;margin-bottom:2px}.nprep{background:#f1f3f6;border:1px solid #cfd5dd;border-radius:4px;padding:4px 8px;margin:2px 0 8px;color:#333}.nprep::before{content:\"Vorbereitung\";display:block;font-size:7.5pt;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:2px}.nprep .nprep{background:none;border:0;padding:0;margin:0}.nprep .nprep::before{content:none}.notes.ncards{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px 8px;align-items:start}.notes.ncards>*{grid-column:1/-1}.notes.ncards>.ncard{grid-column:span 6;border:1px solid #999;border-radius:5px;padding:4px 7px;break-inside:avoid}.notes.ncards>.ncard[data-w=\"2\"]{grid-column:span 2}.notes.ncards>.ncard[data-w=\"3\"]{grid-column:span 3}.notes.ncards>.ncard[data-w=\"4\"]{grid-column:span 4}.nct{font-weight:700;font-size:10pt;border-bottom:1px solid #bbb;margin:0 0 3px;padding-bottom:1px}" + FF_CSS;
   const safeName = (t) => String(t || "Planung").replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, " ").trim().slice(0, 120);
   async function inlineImgs(body) {
     const ids = [...new Set([...body.matchAll(/src="\/_blob\/([0-9a-f]+)"/g)].map((m) => m[1]))];
@@ -4774,6 +4884,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       h += "<h3>Lektionsplanung</h3><table>" + colgroup(p, false, anyAb ? "17%" : "") + "<thead><tr>" + p.cols.map((c) => "<th>" + esc(c) + "</th>").join("") + (anyAb ? '<th class="pab-ph"><span>Abschnitt</span></th>' : "") + "</tr></thead><tbody>" +
         rows.map(([row, ri]) => "<tr" + (SEC_ON ? ' style="--pc:' + rowCol(ri) + '"' : "") + ">" + p.cols.map((c, j) => "<td>" + lsOff(sanitize(row[j] || "")) + "</td>").join("") + (anyAb ? '<td class="pab-p">' + abGet(p, ri).filter((id) => sp.secs[id]).map((id) => '<span class="pab-s" data-sref="' + id + '" style="--pc:' + rowCol(ri) + '" title="' + esc(sp.secs[id].t) + '"><span>' + esc(sp.secs[id].t) + "</span></span>").join("") + "</td>" : "") + "</tr>").join("") + "</tbody></table>";
     }
+    if (p && filled(p.note || "")) h += '<div class="pnote"><b class="pnote-l">Notizen zum Ablauf</b><div>' + lsOff(sanitize(p.note)) + "</div></div>";
     if (hasNotes && anyAb) {
       // Abschnitte in der Reihenfolge der Lektionsplanung, darüber die Phase als schwarzer Balken (auch schwarz-weiss gut lesbar)
       const done = new Set(), labels = planPhases(p);
@@ -4789,7 +4900,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const rest = sp.list.slice(Math.max(0, fi)).map((y) => (y.sec ? (done.has(y.sec.id) ? "" : '<div class="psec"><h4>' + esc(y.sec.t) + "</h4>" + y.sec.h + "</div>") : y.html)).filter((y) => filled(y) || /<(img|figure|table)/.test(y)).join("");
       if (rest) h += '<div class="pph pph-rest">Weitere Notizen</div>' + rest;
       h += "</div>";
-    } else if (hasNotes) h += '<h3>Notizen</h3><div class="notes" style="line-height:' + (m.notesLh || 1.4) + '">' + lsOff(sanitizeNotes(m.notesHtml)) + "</div>";
+    } else if (hasNotes) h += '<h3>Notizen</h3><div class="notes' + (/class="ncard"/.test(m.notesHtml) ? " ncards" : "") + '" style="line-height:' + (m.notesLh || 1.4) + '">' + lsOff(sanitizeNotes(m.notesHtml)) + "</div>";
     else if (m.details) h += '<h3>Notizen</h3><div class="pre notes">' + esc(m.details) + "</div>";
     if (o.cm && filled(m.notesCm || "")) h += '<h3>Kommentare</h3><div class="pcm">' + sanitize(m.notesCm).replace(/^(\s*<br\s*\/?>\s*)+/i, "").replace(/(<br\s*\/?>\s*){2,}/gi, "<br>") + "</div>";
     return h + "</section>";
@@ -6125,14 +6236,17 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const extW = (f) => extOf(f);
     const on = () => sp.classList.contains("ws");
     // noBack = Tabelle nicht zurückholen (sie öffnet sich gerade selbst)
+    // rechts: Arbeitsblatt (Dokumente der Lektion und Reihe) oder die Übersichtsseite der Reihe als Notizblock (18.11.2026)
+    const UEB = "__ueb", uebRid = () => { const id = opt.rid; const r = id && U.reihen[id]; if (!r) return ""; const src = r.klasse && r.src && U.reihen[r.src]; return src ? r.src : id; };
     const set = (v, noBack) => {
-      if (v && !files().length) v = false;
+      if (v && !files().length && !uebRid()) v = false;
       sp.classList.toggle("ws", v); pn.classList.toggle("wsp", v); if (wsb) wsb.setAttribute("aria-pressed", String(v));
       try { localStorage.setItem("zp-dws", v ? "1" : "0"); } catch (e) {}
       // immer nur eines offen: Arbeitsblatt auf = Tabelle einklappen (Maus drauf = kurz sehen); Arbeitsblatt zu = Tabelle wieder links
       if (root._ptab) {
-        if (v && sp.classList.contains("on")) root._ptab.set("rail", true);
-        else if (!v && !noBack && pTab() === "left" && sp.classList.contains("rail") && !sp.classList.contains("pin")) root._ptab.set("left", true);
+        // rechts offen = Tabelle steht über den Kärtchen (links bleibt eine Spalte: Tabelle + Kärtchen), rechts zu = Tabelle wieder links
+        if (v && sp.classList.contains("on")) root._ptab.set("top", true);
+        else if (!v && !noBack && pTab() === "left" && ((sp.classList.contains("rail") && !sp.classList.contains("pin")) || (!sp.classList.contains("rail") && !sp.classList.contains("on")))) root._ptab.set("left", true);
         root._ptab.btns();
       }
       if (v) render();
@@ -6140,13 +6254,16 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     if (wsb) wsb.addEventListener("click", () => set(!on()));
     root._ws = { set, on };
     const short = (n) => String(n || "").replace(/\.[^.]+$/, "");
+    const wsList = () => (uebRid() ? [UEB] : []).concat(files().map((f) => f.id));
     function render() {
-      const fs = files(); if (!fs.length) { dp.innerHTML = '<div class="empty">Keine Dokumente.</div>'; return; }
-      if (!cur || !fs.some((f) => f.id === cur)) { let last = null; try { last = localStorage.getItem("zp-dwsdoc"); } catch (e) {} cur = fs.some((f) => f.id === last) ? last : fs[0].id; }
+      const fs = files(), uOk = !!uebRid(); if (!fs.length && !uOk) { dp.innerHTML = '<div class="empty">Keine Dokumente.</div>'; return; }
+      if (!cur || !wsList().includes(cur)) { let last = null; try { last = localStorage.getItem("zp-dwsdoc"); } catch (e) {} cur = wsList().includes(last) ? last : (x.files || []).length ? x.files[0].id : uOk ? UEB : fs[0].id; }
       const own = (x.files || []).map((f) => f.id), opt1 = (f) => '<option value="' + esc(f.id) + '"' + (f.id === cur ? " selected" : "") + ">" + esc(short(f.name)) + "</option>";
       const a = fs.filter((f) => own.includes(f.id)), b = fs.filter((f) => !own.includes(f.id));
       const f = fs.find((y) => y.id === cur);
-      dp.innerHTML = '<div class="ufl-dbar ws-bar"><select class="ufl-dsel" aria-label="Dokument wählen">' + (a.length ? '<optgroup label="Dokumente der Lektion">' + a.map(opt1).join("") + "</optgroup>" : "") + (b.length ? '<optgroup label="Dokumente der Reihe">' + b.map(opt1).join("") + "</optgroup>" : "") + "</select>" +
+      if (cur === UEB) { renderUeb(a, b, opt1); return; }
+      dp.classList.remove("ws-u");
+      dp.innerHTML = '<div class="ufl-dbar ws-bar"><select class="ufl-dsel" aria-label="Dokument oder Übersichtsseite wählen">' + (uOk ? '<optgroup label="Notizblock"><option value="' + UEB + '">📖 Übersichtsseite der Reihe</option></optgroup>' : "") + (a.length ? '<optgroup label="Dokumente der Lektion">' + a.map(opt1).join("") + "</optgroup>" : "") + (b.length ? '<optgroup label="Dokumente der Reihe">' + b.map(opt1).join("") + "</optgroup>" : "") + "</select>" +
         '<button type="button" class="btn ghost" data-wnav="-1" title="Vorheriges Dokument" aria-label="Vorheriges Dokument">‹</button><button type="button" class="btn ghost" data-wnav="1" title="Nächstes Dokument" aria-label="Nächstes Dokument">›</button>' +
         (docPages(f).length ? '<button type="button" class="btn ghost" data-wnp aria-pressed="' + !!npSel + '" title="Die Notizseite zu diesem Blatt aus der Materialsammlung hier anzeigen (Text markieren und in die Notizen ziehen oder kopieren)">📖 Notizseite' + (docPages(f).length > 1 ? " ▾" : "") + "</button>" : "") +
         '<button type="button" class="btn ghost" data-wpin title="Dieses Arbeitsblatt einem oder mehreren Abschnitten der Notizen zuordnen">📌 Abschnitt ▾</button>' +
@@ -6157,6 +6274,16 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       try { localStorage.setItem("zp-dwsdoc", cur); } catch (e) {}
       const dps = docPages(f), np = npSel && dps.find((y) => y.rid + "|" + y.k + "|" + y.pid === npSel);
       if (np) showNp(np); else { npSel = null; show(f); }
+    }
+    // Übersichtsseite der Reihe rechts: Notizen, Übersichten, weitere Seiten («+ Seite», z. B. eine Lektionsübersicht)
+    function renderUeb(a, b, opt1) {
+      const rid = uebRid(); try { localStorage.setItem("zp-dwsdoc", UEB); } catch (e) {}
+      dp.classList.add("ws-u");
+      dp.innerHTML = '<div class="ufl-dbar ws-bar"><select class="ufl-dsel" aria-label="Dokument oder Übersichtsseite wählen"><optgroup label="Notizblock"><option value="' + UEB + '" selected>📖 Übersichtsseite der Reihe</option></optgroup>' + (a.length ? '<optgroup label="Dokumente der Lektion">' + a.map(opt1).join("") + "</optgroup>" : "") + (b.length ? '<optgroup label="Dokumente der Reihe">' + b.map(opt1).join("") + "</optgroup>" : "") + "</select>" +
+        '<button type="button" class="btn ghost" data-wnav="-1" title="Vorheriges" aria-label="Vorheriges">‹</button><button type="button" class="btn ghost" data-wnav="1" title="Nächstes" aria-label="Nächstes">›</button>' +
+        '<button type="button" class="btn ghost" data-wclose title="Rechte Seite ausblenden" aria-label="Rechte Seite ausblenden">✕</button></div><div class="ws-body ws-ub"><section class="ueb-pane ws-ueb" aria-label="Übersichtsseite der Reihe"></section></div>';
+      const pane = dp.querySelector(".ws-ueb"), R = () => U.reihen[rid];
+      uebMount(pane, rid, { name: "Übersichtsseite", key: "lesson", data: () => { const r = R(); return r ? r.ueb || (r.ueb = {}) : null; }, save: () => saveReihe(rid, 400), files: () => { const r = R() || {}; return [...(r.mainFiles || []), ...(r.files || [])]; } });
     }
     // Notizseite eines Blattes aus der Materialsammlung (nur zum Ansehen, Text lässt sich markieren und hinüberziehen)
     let npSel = null;
@@ -6187,7 +6314,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     dp.addEventListener("change", (e) => { if (e.target.classList.contains("ufl-dsel")) { cur = e.target.value; render(); } });
     dp.addEventListener("click", (e) => {
       const b = e.target.closest("button"); if (!b) return; const fs = files(), f = fs.find((y) => y.id === cur);
-      if (b.dataset.wnav) { const j = fs.findIndex((y) => y.id === cur), n = j + +b.dataset.wnav; if (n >= 0 && n < fs.length) { cur = fs[n].id; render(); } return; }
+      if (b.dataset.wnav) { const l = wsList(), j = l.indexOf(cur), n = j + +b.dataset.wnav; if (n >= 0 && n < l.length) { cur = l[n]; render(); } return; }
       if (b.dataset.wclose != null) { set(false); return; }
       if (b.dataset.wnp != null) {
         const dps = docPages(f), key = (y) => y.rid + "|" + y.k + "|" + y.pid;
@@ -6353,17 +6480,17 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         ["kurz", "Kurzeintrag", textF, filled(richOf(x, 1))], ["farbe", "Farbe", colorF, !!x.color], ["docs", "Dokumente" + (x.files.length ? " (" + x.files.length + ")" : ""), docsF, x.files.length > 0]].concat(rfl.length ? [["rdocs", "Dokumente der Reihe (" + rfl.length + ")", rdocsF, true]] : []);
       const side = dSide();
       // Arbeitsblatt rechts (Dokumente der Lektion und der Reihe), Spalte «Abschnitt», Kommentarecke
-      const wsHas = [...x.files, ...rfl].length > 0, wsOn = wsHas && dWs(), pt = wsOn && pTab() === "left" ? "rail" : pTab(); // immer nur eines offen: Arbeitsblatt offen = Tabelle eingeklappt
+      const wsHas = [...x.files, ...rfl].length > 0 || !!(opt.rid && U.reihen[opt.rid]), wsOn = wsHas && dWs(), pt = wsOn && pTab() === "left" ? "top" : pTab(); // immer nur eines offen: Arbeitsblatt offen = Tabelle eingeklappt
       PAB = !SEC_ON ? null : { secs: () => { const nd = document.getElementById("d-notes"); if (nd && nd._secs) return nd._secs(); const t = document.createElement("template"); t.innerHTML = x.notesHtml || ""; return [...t.content.children].filter((d) => d.classList.contains("nsec") && d.getAttribute("data-id")).map((d) => ({ id: d.getAttribute("data-id"), t: d.textContent.trim() })); },
         col: (id) => secColOf(opt.plan, id) || "#c3cad2" };
       const cmHas = filled(x.notesCm || ""), cmOn = dCm(cmHas);
       notesF = notesF.replace('<div class="notes-ed"', '<div class="d-nw' + (cmOn ? "" : " shut") + '"><div class="notes-ed"').replace('</div><div class="links" id="d-links">', '</div><div class="d-cmw"><button type="button" class="d-cmtab" id="d-cmtab" title="Kommentare ein- bzw. ausblenden (für die Vorbereitung; werden nur auf Wunsch gedruckt)">' + (cmOn ? "▸" : "◂" + (cmHas ? " ●" : "")) + '</button><div class="d-cm" id="d-cm" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Kommentare" data-ph="Kommentare, Ideen für die Vorbereitung … (dort klicken, wo der Kommentar hin soll)">' + sanitize(x.notesCm || "") + '</div></div></div><div class="links" id="d-links">');
       body = '<div class="d-toggles" role="group" aria-label="Weitere Angaben">' + secs.map(([k, l, , has]) => '<button type="button" class="d-tog' + (has ? " has" : "") + '" data-dtog="' + k + '" aria-expanded="' + !!openSet[k] + '">' + esc(l) + "</button>").join("") +
         '<span class="d-ur"><button type="button" id="d-undo" disabled title="Rückgängig (Strg+Z): Lektionsplanung, Lernziele, Kurzeintrag und Notizen">↶ Rückgängig</button><button type="button" id="d-redo" disabled title="Wiederholen (Strg+Y)" aria-label="Wiederholen">↷</button></span>' +
-        '<button type="button" class="d-tog d-wsb" id="d-wsb" aria-pressed="' + wsOn + '"' + (wsHas ? "" : " hidden") + ' title="Arbeitsblatt bzw. Dokument rechts neben den Notizen zeigen (wird auf diesem Gerät gemerkt)">Arbeitsblatt</button></div>' +
+        '<button type="button" class="d-tog d-wsb" id="d-wsb" aria-pressed="' + wsOn + '"' + (wsHas ? "" : " hidden") + ' title="Rechts ein Arbeitsblatt oder die Übersichtsseite der Reihe zeigen (wird auf diesem Gerät gemerkt)">Arbeitsblatt / Übersicht</button></div>' +
         secs.map(([k, , h]) => '<div class="d-sec" data-dsec="' + k + '"' + (openSet[k] ? "" : " hidden") + ">" + h + "</div>").join("") +
         '<div class="d-split' + (pt === "left" ? " on" : pt === "rail" ? " rail" : "") + (wsOn ? " ws" : "") + '" id="d-split" style="--dl:' + dSideW() + ";--wsw:" + dWsW() + '%"><button type="button" class="d-rail" id="d-rail" aria-expanded="false" aria-label="Lektionsplanung einblenden"><span class="d-rarr">▸</span><span class="d-rl">Lektionsplanung</span><span class="d-rhint" hidden></span></button><div class="d-sl"><div class="field" id="d-pfield"><div class="d-phead"><span class="lbl">Lektionsplanung</span><span class="d-pbtns"><button type="button" class="btn ghost" id="d-ptop"></button><button type="button" class="btn ghost" id="d-pfold" title="Tabelle wieder links als schmale Leiste einklappen">◂ Einklappen</button><button type="button" class="btn ghost" id="d-pclose" title="Tabelle ausblenden (Esc)" aria-label="Tabelle ausblenden">✕</button></span></div><div class="ptable-wrap"><table class="ptable' + (opt.plan.wman ? " wman" : "") + '" id="p-table">' + planTableInner(opt.plan) + "</table></div>" +
-        '<div class="ptools"><button class="btn ghost" type="button" id="p-addrow">+ Zeile</button><button class="btn ghost" type="button" id="d-pleft" title="Tabelle als Spalte links neben den Notizen zeigen (Breite an der Trennlinie ziehen)">⇤ Links einblenden</button><button class="btn ghost" type="button" id="d-p3" hidden title="Tabelle links, Notizen und Arbeitsblatt gleichzeitig zeigen (drei Spalten)">⫴ Alle drei</button><details class="hint"><summary title="Hilfe anzeigen">ⓘ Hilfe</summary><p class="help">Spaltentitel lassen sich anklicken und umbenennen. Die Trennlinie zwischen zwei Titeln ziehen, um die Breite zu ändern. Zeilen am Griff ⠿ rechts nach oben oder unten ziehen, Rechtsklick auf den Griff: Zeile einfügen oder löschen. Rechtsklick auf eine Zelle (Tablet: lange drücken auf den Titel): Spalten und Zeilen verschieben, einfügen, löschen. Jede Zeile hat ihre Farbe; die Abschnitte in den Notizen übernehmen sie.</p></details></div></div></div>' +
+        '<div class="ptools"><button class="btn ghost" type="button" id="p-addrow">+ Zeile</button><button class="btn ghost" type="button" id="d-pleft" title="Tabelle als Spalte links neben den Notizen zeigen (Breite an der Trennlinie ziehen)">⇤ Links einblenden</button><button class="btn ghost" type="button" id="d-p3" hidden title="Tabelle links, Notizen und Arbeitsblatt gleichzeitig zeigen (drei Spalten)">⫴ Alle drei</button><details class="hint"><summary title="Hilfe anzeigen">ⓘ Hilfe</summary><p class="help">Spaltentitel lassen sich anklicken und umbenennen. Die Trennlinie zwischen zwei Titeln ziehen, um die Breite zu ändern. Zeilen am Griff ⠿ rechts nach oben oder unten ziehen, Rechtsklick auf den Griff: Zeile einfügen oder löschen. Rechtsklick auf eine Zelle (Tablet: lange drücken auf den Titel): Spalten und Zeilen verschieben, einfügen, löschen. Jede Zeile hat ihre Farbe; die Abschnitte in den Notizen übernehmen sie.</p></details></div><div class="field d-pnote"><label class="lbl" for="p-note">Notizen zum Ablauf</label><div class="rich rtfield" contenteditable="true" role="textbox" aria-multiline="true" id="p-note" data-ph="Was sonst noch zum Ablauf gehört (Material, Sozialform, Hinweise) …">' + sanitize(opt.plan.note || "") + "</div></div></div></div>" +
         '<div class="d-gut" id="d-gut" title="Ziehen, um die Breite der beiden Seiten zu ändern" aria-hidden="true"></div><div class="d-sr">' + notesF + '</div><div class="d-gut2" id="d-gut2" title="Ziehen, um die Breite des Arbeitsblatts zu ändern" aria-hidden="true"></div><section class="d-ws" id="d-ws" aria-label="Arbeitsblatt"></section></div>' + actionsF;
     } else body = textF + (opt.todo ? '<div class="field d-todof"><button type="button" class="btn ghost tdb" id="d-tdb" title="Die Zeile mit der Schreibmarke bekommt ein Kästchen zum Abhaken (oder verliert es). Enter = nächstes To-do, Enter in einem leeren To-do = fertig.">'+'<span class="tdq"></span> To-do</button></div>' : "") + (opt.time ? '<div class="field d-timef"><span class="lbl">Zeit (freiwillig)</span><div class="d-time"><input type="time" id="d-from" value="' + esc(x.from || "") + '" aria-label="von"><span>bis</span><input type="time" id="d-to" value="' + esc(x.to || "") + '" aria-label="bis"><button type="button" class="btn ghost" id="d-tclr" title="Zeit entfernen">×</button>' + (x.split ? '<span class="msg">(erster Teil)</span>' : "") + "</div>" +
       (x.split ? Array.from({ length: (x.nparts || 2) - 1 }, (_, k) => { const n = k + 2; return '<div class="d-time" data-ptime="' + n + '"><input type="time" class="pf" value="' + esc(x["from" + n] || "") + '" aria-label="Teil ' + n + ' von"><span>bis</span><input type="time" class="pt" value="' + esc(x["to" + n] || "") + '" aria-label="Teil ' + n + ' bis"><button type="button" class="btn ghost pc" title="Zeit entfernen">×</button><span class="msg">(Teil ' + n + ")</span></div>"; }).join("") : "") + '</div>' : "") + colorF + notesF + docsF + actionsF;
@@ -6386,9 +6513,10 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
             { const cm = root.querySelector("#d-cm"); if (cm) cm.innerHTML = sanitize(x.notesCm || ""); }
             const tb = root.querySelector("#p-table"); if (tb) tb.innerHTML = planTableInner(opt.plan);
             const z = root.querySelector("#p-ziele"); if (z) z.innerHTML = sanitize(opt.plan.ziele || "");
+            const pnn = root.querySelector("#p-note"); if (pnn) pnn.innerHTML = sanitize(opt.plan.note || "");
             const t1 = root.querySelector("#d-text"); if (t1) t1.innerHTML = tdpDeco(richOf(x, 1));
             const nd = root.querySelector("#d-notes");
-            if (nd) { nd.innerHTML = sanitizeNotes(x.notesHtml || ""); nd.querySelectorAll("figure.nfig").forEach((f) => { f.contentEditable = "false"; }); nsecDeco(nd); if (tb && PAB) tb.innerHTML = planTableInner(opt.plan); ndocFill(nd, [...(x.files || []), ...(opt.reiheFiles || [])]); nd.style.lineHeight = String(x.notesLh || 1.5); const lh = root.querySelector("#d-nlh"); if (lh) lh.textContent = nlhName(x.notesLh) + " ▾"; const dl = root.querySelector("#d-links"); if (dl) dl.innerHTML = linkify(notesLinkText(x.notesHtml || "")); }
+            if (nd) { nd.innerHTML = sanitizeNotes(x.notesHtml || ""); nd.querySelectorAll("figure.nfig").forEach((f) => { f.contentEditable = "false"; }); nsecDeco(nd); if (nd._ncMark) nd._ncMark(); if (tb && PAB) tb.innerHTML = planTableInner(opt.plan); ndocFill(nd, [...(x.files || []), ...(opt.reiheFiles || [])]); nd.style.lineHeight = String(x.notesLh || 1.5); const lh = root.querySelector("#d-nlh"); if (lh) lh.textContent = nlhName(x.notesLh) + " ▾"; const dl = root.querySelector("#d-links"); if (dl) dl.innerHTML = linkify(notesLinkText(x.notesHtml || "")); }
             ttHide(); oc(); H.busy = false; H.t = 0; btns();
           };
           const step = (dir) => {
@@ -6412,7 +6540,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
           }, true);
         }
         if (opt.page) root.querySelector(".panel").classList.add("wide", "ueb-panel");
-        if (opt.plan) { lessonHead(root); root.querySelector(".panel").classList.add("wide"); root.querySelector(".panel").classList.toggle("side", dSide()); bindPlan(root, opt.plan, () => opt.changed()); bindSide(root, opt.plan); root._ptab && root._ptab.set(pTab() === "left" && root.querySelector("#d-split").classList.contains("ws") ? "rail" : pTab(), true);
+        if (opt.plan) { lessonHead(root); root.querySelector(".panel").classList.add("wide"); root.querySelector(".panel").classList.toggle("side", dSide()); bindPlan(root, opt.plan, () => opt.changed()); bindSide(root, opt.plan); root._ptab && root._ptab.set(pTab() === "left" && root.querySelector("#d-split").classList.contains("ws") ? "top" : pTab(), true);
           // § in einer Zeile der Lektionsplanung: zum Abschnitt in den Notizen springen bzw. ihn anlegen
           const psecMark = () => { const nd = root.querySelector("#d-notes"); if (!nd) return; const have = new Set([...nd.querySelectorAll(":scope > .nsec")].map((d) => (d.querySelector(".nsec-t") || d).textContent.trim())); const ph = planPhases(opt.plan); root.querySelectorAll("[data-psec]").forEach((b) => { const q = ph.find((y) => y.ri === +b.dataset.psec); b.classList.toggle("has", !!(q && (have.has(q.label) || (q.ph && have.has(q.ph))))); }); };
           root.addEventListener("click", (e) => {
@@ -6445,6 +6573,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         if (ned) bindNotes(root, ned, x, changed, { reiheFiles: opt.reiheFiles || [], addFiles: (fl) => addFiles(fl), drawFiles: () => drawFiles(), phases: opt.plan ? () => planPhases(opt.plan) : null,
           onSecs: opt.plan ? () => { if (WS) WS.secs(); } : null, openDoc: (fid) => { if (WS) WS.open(fid); }, onUnfold: (d) => { if (WS) WS.unfold(d); } });
         if (opt.plan && ned) WS = lessonExtras(root, opt, x, ned, () => opt.changed());
+        if (opt.plan && ned && ned._save) bindCards(root, ned, () => ned._save());
         root.querySelectorAll("[data-dtog]").forEach((b) => b.addEventListener("click", () => {
           const k = b.dataset.dtog, open = b.getAttribute("aria-expanded") !== "true";
           b.setAttribute("aria-expanded", String(open)); root.querySelector('[data-dsec="' + k + '"]').hidden = !open;
@@ -6531,6 +6660,193 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         if (opt.page && ned) { ned.focus(); const rg = document.createRange(); rg.selectNodeContents(ned); rg.collapse(false); const sl = getSelection(); sl.removeAllRanges(); sl.addRange(rg); }
       });
   }
+  // ---------- Kärtchen in den Notizen der Lektionsplanung (18.11.2026, Entwurf A) ----------
+  // Jeder Teil der Lektion ist ein Kärtchen (div.ncard) mit Breite data-w in Sechsteln (2 = ein Drittel, 3 = halb, 4 = zwei Drittel, 6 = ganz)
+  // und einem Titel (div.nct). Alles bleibt EIN Schreibfeld, damit Lehrerschrift, Abdecken, Tabellen, Bilder usw. wie bisher gehen.
+  const NC_W = { 2: "⅓", 3: "½", 4: "⅔", 6: "ganz" };
+  const ncWOf = (c) => { const w = +c.dataset.w; return NC_W[w] ? w : 6; };
+  function ncMark(ned) { const on = !!ned.querySelector(":scope > .ncard"); ned.classList.toggle("ncards", on); ned.querySelectorAll(".nct").forEach((h) => h.classList.toggle("nct-e", !h.textContent.replace(/\u200b/g, "").trim())); return on; }
+  function ncNew(w, kind) {
+    const c = document.createElement("div"); c.className = "ncard"; c.dataset.w = String(w || 3);
+    c.innerHTML = '<div class="nct"><br></div>' + (kind === "list" ? "<ul><li><br></li></ul>" : "<div><br></div>"); return c;
+  }
+  // lose Textstücke direkt im Kärtchen in eine Zeile packen (sonst teilt Enter das ganze Kärtchen)
+  function ncNorm(card) {
+    let run = []; const wrap = () => { if (run.length) { const d = document.createElement("div"); run[0].before(d); run.forEach((n) => d.appendChild(n)); } run = []; };
+    [...card.childNodes].forEach((n) => { if (n.nodeType === 3 ? n.nodeValue.trim() : n.nodeType === 1 && !/^(DIV|P|UL|OL|TABLE|FIGURE|H[1-6]|BLOCKQUOTE)$/.test(n.tagName)) run.push(n); else { wrap(); if (n.nodeType === 3) n.remove(); } }); wrap();
+  }
+  // bisherige Notizen in Kärtchen aufteilen: fette kurze Zeilen (frühere Abschnittstitel) beginnen ein neues Kärtchen; die graue Box «Vorbereitung» bleibt oben.
+  // Gibt null zurück, wenn es schon Kärtchen gibt oder nichts zu tun ist. Kurze Kärtchen nacheinander stehen paarweise nebeneinander.
+  function notesToCards(html) {
+    const t = document.createElement("template"); t.innerHTML = sanitizeNotes(html || "");
+    const top = [...t.content.childNodes];
+    if (!top.length || top.some((n) => n.nodeType === 1 && n.classList.contains("ncard"))) return null;
+    const out = document.createElement("div"), list = []; let card = null;
+    const empty = (k) => (k.nodeType === 3 ? !k.nodeValue.trim() : k.nodeType === 1 && /^(DIV|P)$/.test(k.tagName) && !k.className && !k.textContent.trim() && !k.querySelector("img,figure,table"));
+    const titleOf = (k) => {
+      if (k.nodeType !== 1) return null;
+      if (k.classList.contains("nsec")) return k.textContent.trim() || null;
+      if (k.tagName !== "DIV" || k.className) return null;
+      const tx = k.textContent.replace(/\s+/g, " ").trim(); if (!tx || tx.length > 70 || k.querySelector("img,figure,table,ul,ol,div")) return null;
+      let bold = ""; k.querySelectorAll("b").forEach((b) => { if (!b.parentElement.closest("b")) bold += b.textContent; });
+      return bold.replace(/\s+/g, " ").trim() === tx ? tx : null;
+    };
+    const mk = (title) => { const c = document.createElement("div"); c.className = "ncard"; c.dataset.w = "6"; if (title != null) { const h = document.createElement("div"); h.className = "nct"; h.textContent = title; c.appendChild(h); } out.appendChild(c); list.push(c); return c; };
+    top.forEach((k) => {
+      if (k.nodeType === 1 && k.classList.contains("nprep")) { out.appendChild(k); card = null; return; }
+      if (k.nodeType === 1 && k.classList.contains("nend")) { card = null; return; }
+      const tt = titleOf(k); if (tt) { card = mk(tt); return; }
+      if (!card) { if (empty(k)) return; card = mk(null); }
+      card.appendChild(k);
+    });
+    list.forEach((c) => {
+      ncNorm(c);
+      // leere Zeilen am Anfang (nach dem Titel) und am Ende weg
+      let k = c.lastElementChild; while (k && !k.classList.contains("nct") && empty(k)) { const p = k.previousElementSibling; k.remove(); k = p; }
+      k = c.querySelector(":scope > .nct") ? c.querySelector(":scope > .nct").nextElementSibling : c.firstElementChild; while (k && empty(k)) { const n = k.nextElementSibling; k.remove(); k = n; }
+      if (!c.querySelector(":scope > :not(.nct)")) c.insertAdjacentHTML("beforeend", "<div><br></div>");
+    });
+    const small = (c) => c.textContent.replace(/\s+/g, " ").trim().length <= 260 && !c.querySelector("table,figure,img,.ncols,.nflow");
+    for (let i = 0; i + 1 < list.length; i++) if (small(list[i]) && small(list[i + 1]) && list[i].nextElementSibling === list[i + 1]) { list[i].dataset.w = "3"; list[i + 1].dataset.w = "3"; i++; }
+    return sanitizeNotes(out.innerHTML);
+  }
+  window.__zpMig = { notesToCards: (h) => notesToCards(h), planShorten: (p) => planShorten(p), sanitizeNotes: (h) => sanitizeNotes(h) };
+  function bindCards(root, ned, save) {
+    const nw = ned.closest(".d-nw") || ned.parentElement; nw.classList.add("nc-host");
+    const bar = document.createElement("div"); bar.className = "ncbar"; bar.hidden = true; bar.contentEditable = "false";
+    bar.innerHTML = '<button type="button" class="nc-grip" data-nc="drag" title="Ziehen: Kärtchen verschieben. An den linken oder rechten Rand eines anderen Kärtchens = daneben, oben oder unten = davor bzw. danach" aria-label="Kärtchen verschieben">⠿</button>' +
+      [2, 3, 4, 6].map((w) => '<button type="button" data-nc="w' + w + '" title="Breite: ' + (w === 6 ? "ganze Breite" : NC_W[w]) + '">' + NC_W[w] + "</button>").join("") +
+      '<button type="button" data-nc="menu" title="Weitere: verschieben, Titel, auflösen, löschen" aria-label="Weitere">⋯</button>';
+    nw.appendChild(bar);
+    const ind = document.createElement("div"); ind.className = "ncdrop"; ind.hidden = true; nw.appendChild(ind);
+    const add = document.createElement("div"); add.className = "ncadd";
+    add.innerHTML = '<button type="button" class="ncadd-b" data-nca="text" title="Neues Kärtchen unten anfügen (halbe Breite – zwei passen nebeneinander)">+ Neues Kärtchen</button><span class="ncadd-c"><button type="button" data-nca="list">Liste</button><button type="button" data-nca="table">Tabelle</button><button type="button" data-nca="img">Bild</button></span><span class="ncadd-h">oder unter das letzte Kärtchen klicken</span>';
+    nw.after(add);
+    let hov = null, cur = null, drag = null;
+    const cardOf = (n) => { const el = n && (n.nodeType === 1 ? n : n.parentElement), c = el && el.closest && el.closest(".ncard"); return c && c.parentElement === ned ? c : null; };
+    const caretCard = () => { const sl = getSelection(); return sl.rangeCount ? cardOf(sl.anchorNode) : null; };
+    const place = () => {
+      if (drag) return;
+      const c = (hov && hov.isConnected && hov) || caretCard();
+      if (!c || !ncMark(ned)) { bar.hidden = true; cur = null; return; }
+      cur = c; bar.hidden = false;
+      const nr = nw.getBoundingClientRect(), r = c.getBoundingClientRect();
+      bar.style.top = Math.round(r.top - nr.top - 12) + "px";
+      bar.style.left = Math.round(Math.max(0, Math.min(nr.width - bar.offsetWidth, r.left - nr.left + r.width / 2 - bar.offsetWidth / 2))) + "px";
+      const w = ncWOf(c); bar.querySelectorAll('[data-nc^="w"]').forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.nc === "w" + w)));
+    };
+    ned._ncMark = () => { ncMark(ned); place(); };
+    const commit = () => { HIST.brk = true; ncMark(ned); save(); place(); };
+    const caretIn = (el, end) => { const rg = document.createRange(); rg.selectNodeContents(el); rg.collapse(!end); const sl = getSelection(); sl.removeAllRanges(); sl.addRange(rg); };
+    // Beim Öffnen: lose Zeilen in Kärtchen packen; ganz leere Notizen beginnen mit einem Kärtchen
+    ned.querySelectorAll(":scope > .ncard").forEach(ncNorm);
+    if (!ned.textContent.trim() && !ned.querySelector("img,figure,table,.nprep")) { ned.innerHTML = ""; ned.appendChild(ncNew(6)); }
+    ncMark(ned);
+    ned.addEventListener("mousemove", (e) => { const c = cardOf(e.target); if (c !== hov) { hov = c; place(); } });
+    nw.addEventListener("mouseleave", () => { hov = null; place(); });
+    document.addEventListener("selectionchange", () => { if (!ned.isConnected) return; if (!hov) place(); });
+    let it = 0; ned.addEventListener("input", () => { clearTimeout(it); it = setTimeout(() => { ncMark(ned); place(); }, 120); });
+    bar.addEventListener("mousedown", (e) => e.preventDefault());
+    bar.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-nc]"); if (!b || !cur) return; const c = cur;
+      if (/^w\d$/.test(b.dataset.nc)) { c.dataset.w = b.dataset.nc.slice(1); commit(); return; }
+      if (b.dataset.nc !== "menu") return;
+      const r = b.getBoundingClientRect(), tt = (c.querySelector(":scope > .nct") || {}).textContent || "";
+      const items = [["up", "▲ Nach vorne"], ["down", "▼ Nach hinten"]];
+      if (!c.querySelector(":scope > .nct")) items.push(["title", "Titel hinzufügen"]);
+      items.push("-", ["unwrap", "Kärtchen auflösen (der Text bleibt)"], ["del", "Kärtchen löschen …", 1]);
+      cellMenu(r.left, r.bottom + 4, tt.trim() ? "Kärtchen «" + tt.trim().slice(0, 40) + "»" : "Kärtchen", items, (op) => {
+        if (op === "up") { const p = c.previousElementSibling; if (p && p.classList.contains("ncard")) p.before(c); commit(); }
+        else if (op === "down") { const n = c.nextElementSibling; if (n) n.after(c); commit(); }
+        else if (op === "title") { const h = document.createElement("div"); h.className = "nct"; h.innerHTML = "<br>"; c.prepend(h); ned.focus(); caretIn(h); commit(); }
+        else if (op === "unwrap") { const h = c.querySelector(":scope > .nct"); if (h) { const d = document.createElement("div"); d.innerHTML = h.textContent.trim() ? "<b>" + esc(h.textContent.trim()) + "</b>" : "<br>"; h.replaceWith(d); } c.replaceWith(...c.childNodes); hov = null; commit(); }
+        else if (op === "del") { if (!confirm(tt.trim() ? "Kärtchen «" + tt.trim() + "» mit seinem ganzen Inhalt löschen?" : "Dieses Kärtchen mit seinem ganzen Inhalt löschen?")) return; c.remove(); hov = null; commit(); }
+      });
+    });
+    // Ziehen am Griff: neben ein anderes Kärtchen (links/rechts) oder davor/danach (oben/unten)
+    const dropAt = (x, y, card) => {
+      bar.style.visibility = "hidden"; const u = document.elementFromPoint(x, y); bar.style.visibility = "";
+      const t = cardOf(u);
+      if (t && t !== card) { const r = t.getBoundingClientRect(), rx = (x - r.left) / r.width, ry = (y - r.top) / r.height; return { t, side: rx < 0.3 ? "l" : rx > 0.7 ? "r" : ry < 0.5 ? "t" : "b" }; }
+      const cs = [...ned.querySelectorAll(":scope > .ncard")].filter((c) => c !== card), last = cs[cs.length - 1];
+      if (last && y > Math.max(...cs.map((c) => c.getBoundingClientRect().bottom))) return { end: true, t: last };
+      return null;
+    };
+    const showInd = (at) => {
+      if (!at) { ind.hidden = true; return; }
+      const nr = nw.getBoundingClientRect(), r = at.t.getBoundingClientRect(); ind.hidden = false;
+      if (at.end) Object.assign(ind.style, { left: ned.getBoundingClientRect().left - nr.left + 8 + "px", top: Math.max(...[...ned.querySelectorAll(":scope > .ncard")].map((c) => c.getBoundingClientRect().bottom)) - nr.top + 5 + "px", width: ned.clientWidth - 16 + "px", height: "3px" });
+      else if (at.side === "l" || at.side === "r") Object.assign(ind.style, { left: (at.side === "l" ? r.left - 8 : r.right + 5) - nr.left + "px", top: r.top - nr.top + "px", width: "3px", height: r.height + "px" });
+      else Object.assign(ind.style, { left: r.left - nr.left + "px", top: (at.side === "t" ? r.top - 8 : r.bottom + 5) - nr.top + "px", width: r.width + "px", height: "3px" });
+    };
+    const grip = bar.querySelector(".nc-grip");
+    grip.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0 || !cur) return; e.preventDefault();
+      try { grip.setPointerCapture(e.pointerId); } catch (err) {}
+      const card = cur; drag = { card, at: null }; card.classList.add("nc-moving"); document.body.classList.add("nc-dragging");
+      const mv = (ev) => { drag.at = dropAt(ev.clientX, ev.clientY, card); showInd(drag.at); };
+      const up = () => {
+        grip.removeEventListener("pointermove", mv); grip.removeEventListener("pointerup", up); grip.removeEventListener("pointercancel", up);
+        card.classList.remove("nc-moving"); document.body.classList.remove("nc-dragging"); showInd(null);
+        const at = drag.at; drag = null;
+        if (at) {
+          if (at.end) ned.querySelectorAll(":scope > .ncard")[ned.querySelectorAll(":scope > .ncard").length - 1].after(card);
+          else if (at.side === "l" || at.side === "t") at.t.before(card); else at.t.after(card);
+          // daneben gezogen und zu breit für eine Zeile: beide halb
+          if ((at.side === "l" || at.side === "r") && ncWOf(card) + ncWOf(at.t) > 6) { card.dataset.w = "3"; at.t.dataset.w = "3"; }
+          hov = card; commit();
+        } else place();
+      };
+      grip.addEventListener("pointermove", mv); grip.addEventListener("pointerup", up); grip.addEventListener("pointercancel", up);
+    });
+    // Neues Kärtchen (unten anfügen)
+    const newCard = (kind) => {
+      HIST.brk = true;
+      if (!ncMark(ned) && (ned.textContent.trim() || ned.querySelector("img,figure,table"))) {
+        // bisherige Notizen ohne Kärtchen: zuerst als ein Kärtchen (ganze Breite) zusammenfassen, die graue Box bleibt oben
+        const c0 = document.createElement("div"); c0.className = "ncard"; c0.dataset.w = "6";
+        [...ned.childNodes].forEach((n) => { if (!(n.nodeType === 1 && n.classList.contains("nprep"))) c0.appendChild(n); });
+        ned.appendChild(c0); ncNorm(c0);
+      }
+      const c = ncNew(3, kind); ned.appendChild(c); ncMark(ned);
+      ned.focus({ preventScroll: true });
+      if (kind === "table" || kind === "img") caretIn(c.querySelector(":scope > div:not(.nct)")); else caretIn(c.querySelector(".nct"));
+      c.scrollIntoView({ block: "nearest" }); hov = null; save(); place();
+      if (kind === "table") { const b = root.querySelector("#d-ntabb"); if (b) b.click(); }
+      if (kind === "img") { const f = root.querySelector("#d-nimg"); if (f) f.click(); }
+      return c;
+    };
+    add.addEventListener("mousedown", (e) => e.preventDefault());
+    add.addEventListener("click", (e) => { const b = e.target.closest("[data-nca]"); if (b) newCard(b.dataset.nca); });
+    // Klick in den leeren Bereich unter dem letzten Kärtchen = neues Kärtchen; Klick in eine Lücke dazwischen tut nichts
+    ned.addEventListener("click", (e) => {
+      if (e.target !== ned || e.detail !== 1 || !ned.classList.contains("ncards")) return;
+      e.stopImmediatePropagation();
+      const bottom = Math.max(...[...ned.children].map((k) => k.getBoundingClientRect().bottom));
+      if (e.clientY > bottom + 6) newCard("text");
+    }, true);
+    ned.addEventListener("dblclick", (e) => { if (e.target === ned && ned.classList.contains("ncards")) e.stopImmediatePropagation(); }, true);
+    // Tasten: Enter im Titel = in die erste Zeile; Rücktaste/Entf am Rand eines Kärtchens führt nie zwei Kärtchen zusammen
+    ned.addEventListener("keydown", (e) => {
+      if (e.isComposing || !/^(Enter|Backspace|Delete)$/.test(e.key)) return;
+      const sl = getSelection(); if (!sl.rangeCount) return;
+      const r = sl.getRangeAt(0), card = cardOf(r.startContainer); if (!card) return;
+      if (!sl.isCollapsed) { if (cardOf(r.endContainer) !== card && e.key !== "Enter") { e.preventDefault(); e.stopImmediatePropagation(); $("#d-nmsg").textContent = "Über mehrere Kärtchen hinweg lässt sich nicht löschen. Bitte in einem Kärtchen markieren (ganzes Kärtchen löschen: «⋯»)."; } return; }
+      let blk = r.startContainer.nodeType === 1 ? r.startContainer : r.startContainer.parentElement; while (blk && blk.parentElement !== card) blk = blk.parentElement;
+      if (!blk) { ncNorm(card); return; }
+      const edge = (start) => { const p = document.createRange(); p.selectNodeContents(blk); if (start) p.setEnd(r.startContainer, r.startOffset); else p.setStart(r.startContainer, r.startOffset); return !p.toString().replace(/​/g, "").length && !p.cloneContents().querySelector("img,table,figure"); };
+      const stop = () => { e.preventDefault(); e.stopImmediatePropagation(); };
+      if (e.key === "Enter" && blk.classList.contains("nct") && !e.shiftKey) { stop(); let nx = blk.nextElementSibling; if (!nx) { nx = document.createElement("div"); nx.innerHTML = "<br>"; blk.after(nx); } caretIn(nx); return; }
+      if (e.key === "Backspace" && edge(true)) {
+        const pv = blk.previousElementSibling;
+        if (!pv && !/^(UL|OL)$/.test(blk.tagName)) { stop(); return; }
+        if (pv && pv.classList.contains("nct")) { stop(); if (!blk.textContent.trim() && !blk.querySelector("img,table,figure") && blk.nextElementSibling) blk.remove(); caretIn(pv, true); save(); }
+        return;
+      }
+      if (e.key === "Delete" && edge(false) && !blk.nextElementSibling) stop();
+    }, true);
+    setTimeout(place, 0);
+  }
   function bindNotes(root, ned, x, changed, nopt) {
     nopt = nopt || {};
     let secSig = null;
@@ -6565,7 +6881,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     let mv = null;
     const mvEnd = () => { if (!mv) return; mv.ind.remove(); mv.fig.classList.remove("moving"); mv = null; };
     const mvAt = (x, y) => {
-      const under = document.elementFromPoint(x, y), col = under && under.closest && under.closest(".ncol");
+      const under = document.elementFromPoint(x, y), col = under && under.closest && under.closest(".ncol, .ncard");
       const box = col && ned.contains(col) ? col : ned, br = box.getBoundingClientRect();
       const kids = [...box.children].filter((k) => k !== mv.fig && !(k.dataset && k.dataset.fill && !k.textContent.trim()));
       const hit = kids.find((k) => { const r = k.getBoundingClientRect(); return y >= r.top && y <= r.bottom; });
@@ -6678,7 +6994,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const figLock = () => ned.querySelectorAll("figure.nfig").forEach((f) => { f.contentEditable = "false"; });
     figLock(); nsecDeco(ned);
     // ----- Abschnitte -----
-    const topOf = (n) => { while (n && n.parentElement !== ned) n = n.parentElement; return n; };
+    const topOf = (n) => { while (n && n.parentElement !== ned && !(n.parentElement && n.parentElement.classList.contains("ncard") && n.parentElement.parentElement === ned)) n = n.parentElement; return n; };
     const caretTop = () => {
       const sl = getSelection(); const a = sl.rangeCount ? sl.anchorNode : null; if (!a || !ned.contains(a)) return null;
       if (a === ned) { const k = ned.childNodes; return k[sl.anchorOffset] || k[sl.anchorOffset - 1] || null; } // Schreibmarke zwischen zwei Absätzen
@@ -7152,7 +7468,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const r0 = sl.getRangeAt(0), sn = r0.startContainer, so = r0.startOffset, en = r0.endContainer, eo = r0.endOffset;
       let el = sn.nodeType === 1 ? sn : sn.parentElement;
       while (el && el !== ned && !/^(DIV|P|LI|H[1-6]|BLOCKQUOTE|TD|TH)$/.test(el.tagName)) el = el.parentElement;
-      if (!el || !el.matches(".ncol, .nflow")) return;
+      if (!el || !el.matches(".ncol, .nflow, .ncard")) return;
       let run = []; const wrap = () => { if (run.length) { const d = document.createElement("div"); run[0].before(d); run.forEach((n) => d.appendChild(n)); } run = []; };
       [...el.childNodes].forEach((n) => { if (n.nodeType === 3 || (n.nodeType === 1 && !/^(DIV|P|UL|OL|TABLE|FIGURE|H[1-6]|BLOCKQUOTE)$/.test(n.tagName))) run.push(n); else wrap(); }); wrap();
       if (!el.firstChild) el.appendChild(Object.assign(document.createElement("div"), { innerHTML: "<br>" }));
@@ -7274,20 +7590,26 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         const sel = getSelection(); if (!sel.rangeCount || !ned.contains(sel.anchorNode)) { $("#d-nmsg").textContent = "Zuerst in die Notizen klicken oder Zeilen markieren."; return; }
         const rg = sel.getRangeAt(0), el = (nd) => (nd.nodeType === 1 ? nd : nd.parentElement);
         const box = el(rg.startContainer).closest(".nprep");
-        const par = box && ned.contains(box) ? box : ned;
+        const crd = el(rg.startContainer).closest(".ncard");
+        const par = box && ned.contains(box) ? box : crd && crd.parentElement === ned ? crd : ned;
         let kids = [...par.childNodes].filter((c) => rg.intersectsNode(c) && !(c.nodeType === 3 && !c.textContent.trim()));
         if (!kids.length) { const c = el(rg.startContainer); let k = c; while (k && k.parentNode !== par) k = k.parentNode; if (k) kids = [k]; }
-        kids = kids.filter((k) => !(k.nodeType === 1 && k.classList.contains("nprep")));
+        kids = kids.filter((k) => !(k.nodeType === 1 && (k.classList.contains("nprep") || k.classList.contains("nct") || k.classList.contains("ncard"))));
         if (!kids.length) return;
         if (par === box) {
           // heraus: direkt unter die Box (Anfang des Teils «Für die Klasse»), Reihenfolge bleibt
-          let ref = box; kids.forEach((k) => { ref.after(k); ref = k; });
+          // bei Kärtchen: an den Anfang des ersten Kärtchens (nach dem Titel)
+          const c1 = ned.querySelector(":scope > .ncard");
+          let ref = c1 ? c1.querySelector(":scope > .nct") : box;
+          if (c1 && !ref) { kids.slice().reverse().forEach((k) => c1.prepend(k)); }
+          else kids.forEach((k) => { ref.after(k); ref = k; });
           if (!box.textContent.trim() && !box.querySelector("img,table,figure")) box.remove();
         } else {
           let b = [...ned.children].find((c) => c.classList.contains("nprep"));
           if (!b) { b = document.createElement("div"); b.className = "nprep"; ned.prepend(b); }
           b.removeAttribute("data-c");
           kids.forEach((k) => b.appendChild(k));
+          if (par !== ned && !par.querySelector(":scope > :not(.nct)")) par.insertAdjacentHTML("beforeend", "<div><br></div>");
         }
         sel.removeAllRanges(); const r2 = document.createRange(); r2.selectNodeContents(kids[kids.length - 1]); r2.collapse(false); sel.addRange(r2);
         HIST.brk = true; save();
@@ -7312,10 +7634,18 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const ov = ned.closest(".overlay"); if (ov) ov.addEventListener("scroll", () => markPop(false));
     }
     // ----- Ausschnitt aus einem Arbeitsblatt hineinziehen (rechts im Lektionsfenster) -----
-    const cutRef = (y) => [...ned.children].filter((k) => !(k.dataset && k.dataset.fill && !k.textContent.trim())).find((k) => { const r = k.getBoundingClientRect(); return r.top + r.height / 2 > y; }) || null;
+    const cutRef = (y, x) => {
+      const cd = x != null && ned.classList.contains("ncards") ? [...ned.querySelectorAll(":scope > .ncard")].find((c) => { const r = c.getBoundingClientRect(); return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom; }) : null;
+      if (cd) return [...cd.children].filter((k) => !k.classList.contains("nct")).find((k) => { const r = k.getBoundingClientRect(); return r.top + r.height / 2 > y; }) || { card: cd };
+      return cutRef0(y);
+    };
+    const cutRef0 = (y) => [...ned.children].filter((k) => !(k.dataset && k.dataset.fill && !k.textContent.trim())).find((k) => { const r = k.getBoundingClientRect(); return r.top + r.height / 2 > y; }) || null;
     const placeBlock = (el, ref) => {
-      if (ref === undefined) { const t = ned._lastTop(); ref = t ? t.nextElementSibling : null; if (!t) ref = null; }
-      if (ref && ref.parentElement === ned) ref.before(el); else ned.appendChild(el);
+      if (ref === undefined) { const t = ned._lastTop(); ref = t ? t.nextElementSibling : null; if (t && !ref && t.parentElement.classList.contains("ncard")) ref = { card: t.parentElement }; }
+      if (ref && ref.card) ref.card.appendChild(el);
+      else if (ref && (ref.parentElement === ned || (ref.parentElement && ref.parentElement.classList.contains("ncard")))) ref.before(el);
+      else if (ref === null && ned.classList.contains("ncards")) { const cs = ned.querySelectorAll(":scope > .ncard"); cs[cs.length - 1].appendChild(el); }
+      else ned.appendChild(el);
       if (!el.nextElementSibling) { const d = document.createElement("div"); d.innerHTML = "<br>"; el.after(d); }
     };
     ned._insCut = (o, ref) => {
@@ -7339,13 +7669,13 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     ned.addEventListener("dragover", (e) => {
       if (!CUT) return; e.preventDefault(); e.stopPropagation(); try { e.dataTransfer.dropEffect = "copy"; } catch (err) {}
       if (!cutInd) { cutInd = document.createElement("div"); cutInd.className = "tt-drop"; document.body.appendChild(cutInd); }
-      const ref = cutRef(e.clientY), br = ned.getBoundingClientRect(), y = ref ? ref.getBoundingClientRect().top - 2 : (ned.lastElementChild ? ned.lastElementChild.getBoundingClientRect().bottom + 2 : br.top + 4);
+      const ref = cutRef(e.clientY, e.clientX), br0 = ned.getBoundingClientRect(), br = ref && ref.card ? ref.card.getBoundingClientRect() : ref && ref.parentElement && ref.parentElement.classList.contains("ncard") ? ref.parentElement.getBoundingClientRect() : br0, y = ref && ref.card ? (ref.card.lastElementChild ? ref.card.lastElementChild.getBoundingClientRect().bottom + 2 : br.top + 4) : ref ? ref.getBoundingClientRect().top - 2 : (ned.lastElementChild ? ned.lastElementChild.getBoundingClientRect().bottom + 2 : br.top + 4);
       Object.assign(cutInd.style, { left: br.left + "px", top: y + "px", width: br.width + "px", height: "3px" });
     }, true);
     ned.addEventListener("dragleave", (e) => { if (!ned.contains(e.relatedTarget)) cutEnd(); });
     ned.addEventListener("drop", (e) => {
       if (!CUT) return; e.preventDefault(); e.stopPropagation(); cutEnd();
-      const o = CUT, ref = cutRef(e.clientY); CUT = null;
+      const o = CUT, ref = cutRef(e.clientY, e.clientX); CUT = null;
       if (o.blob) ned._insImg(o.blob, ref); else ned._insCut(o, ref);
     }, true);
     document.addEventListener("dragend", cutEnd);
@@ -7536,7 +7866,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const x = chLessonX(c, i), L = chLetterOf(mr, rid), s = Number((ch.spans || {})[i]) || 1;
     dirtyU.add(mid);
     window.__vctxRid = rid;
-    openDetailBox({ editDocs: true, title: mr.title || "Masterreihe", sub: L + "·" + lessonLabel(i, s) + " · aus «" + (ch.title || "Unterreihe") + "» – Änderungen gelten auch in der Unterreihe", x, textLabel: "Kurzeintrag in der Tabelle", plan: x.plan, reiheFiles: [...(mr.mainFiles || []), ...(ch.mainFiles || [])],
+    openDetailBox({ editDocs: true, rid: mid, title: mr.title || "Masterreihe", sub: L + "·" + lessonLabel(i, s) + " · aus «" + (ch.title || "Unterreihe") + "» – Änderungen gelten auch in der Unterreihe", x, textLabel: "Kurzeintrag in der Tabelle", plan: x.plan, reiheFiles: [...(mr.mainFiles || []), ...(ch.mainFiles || [])],
       changed: () => { putChOv(mid, rid, i, x, 900); },
       onClose: () => { window.__vctx = null; window.__vctxRid = null; uFlush("r:" + rid); uFlush("r:" + mid); renderU(); } });
   }
@@ -9229,7 +9559,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       const asL = isMat && (it.asLesson === true || (it.asLesson == null && hasPlan(x.plan)));
       const modeSwitch = isMat ? { cur: asL ? "l" : "m", set: (v) => { const rr = U.reihen[id]; if (!rr) return; putLessonX(rr, i, x); const k = lnIdx(i); rr.lnItems = (rr.lnItems || []).slice(); rr.lnItems[k] = { ...(rr.lnItems[k] || {}), asLesson: v === "l" }; saveReihe(id, 0); closeModal(); setTimeout(() => openLessonDetail(i, id, after), 30); } } : null;
       if (isMat && !asL) { openMatPage(i, id, after); return; }
-      openDetailBox({ editDocs: true, modeSwitch, title: r.title || "Reihe", sub: lnLabel(r, i), x, textLabel: isMat ? "Kurzzusammenfassung" : "Kurzeintrag in der Tabelle", plan: x.plan, reiheFiles: [...(r.mainFiles || []), ...(r.files || [])],
+      openDetailBox({ editDocs: true, modeSwitch, rid: id, title: r.title || "Reihe", sub: lnLabel(r, i), x, textLabel: isMat ? "Kurzzusammenfassung" : "Kurzeintrag in der Tabelle", plan: x.plan, reiheFiles: [...(r.mainFiles || []), ...(r.files || [])],
         onPrint: (o) => { const rr = U.reihen[id]; if (rr) printLesson(rr, i, o); },
         changed: () => { const rr = U.reihen[id]; if (rr) { putLessonX(rr, i, x); saveReihe(id, 900); } },
         onClose: () => { uFlush("r:" + id); renderU(); if (after) after(); } });
@@ -9239,7 +9569,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const x = lessonX(r, i);
     dirtyU.add(id);
     openDetailBox({
-      editDocs: true,
+      editDocs: true, rid: id,
       title: r.title || "Reihe", sub: r.own ? "Eigene Lektion · " + ((K.klassen[r.klasse] || {}).name || "Klasse") : lname(r, i, s) + (phaseOf(r, i) ? " · " + phaseOf(r, i) : ""), x, textLabel: r.own ? "Kurznotiz (Kurzeintrag)" : "Kurzeintrag in der Tabelle", plan: x.plan, reiheFiles: [...(r.mainFiles || []), ...(r.files || [])],
       onPrint: (o) => { const rr = U.reihen[id]; if (rr) printLesson(rr, i, o); },
       changed: () => { const rr = U.reihen[id]; if (rr) { putLessonX(rr, i, x); saveReihe(id, 900); } },
@@ -11814,7 +12144,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   // Nur erlaubte Formatierungen bleiben erhalten (Klassen statt freier Stile)
   const LK_BLK = /^(H1|H2|H3|P|DIV|UL|OL|BLOCKQUOTE|HR|FIGURE|TABLE)$/;
   function lkSanitize(html) {
-    const tpl = document.createElement("template"); tpl.innerHTML = html || ""; let out = "";
+    const tpl = document.createElement("template"); tpl.innerHTML = html || ""; lsSpFix(tpl.content); let out = "";
     const ok = { H1: "h1", H2: "h2", H3: "h3", P: "p", DIV: "div", UL: "ul", OL: "ol", LI: "li", B: "b", STRONG: "b", I: "i", EM: "i", U: "u", BLOCKQUOTE: "blockquote" };
     const blockCls = (n) => {
       const c = [];
@@ -11889,7 +12219,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   function lkStripNotes(html) {
     const hideLs = !lkLsShow() && /class="[^"]*\bls\b/.test(html || "");
     if (!/lk-note/.test(html || "") && !hideLs) return html || "";
-    const t = document.createElement("template"); t.innerHTML = html; t.content.querySelectorAll(".lk-note").forEach((n) => n.remove());
+    const t = document.createElement("template"); t.innerHTML = html; lsSpFix(t.content); t.content.querySelectorAll(".lk-note").forEach((n) => n.remove());
     if (hideLs) t.content.querySelectorAll(".ls").forEach((n) => { if (n.closest(".lk-sp")) return;
       if (n.querySelector(".lk-sp")) { const tw = document.createTreeWalker(n, NodeFilter.SHOW_TEXT), ts = []; let q; while ((q = tw.nextNode())) if (!q.parentElement.closest(".lk-sp")) ts.push(q); ts.forEach((q) => { q.nodeValue = "\u00a0".repeat(q.nodeValue.length); }); n.classList.add("ls-x"); n.style.visibility = "visible"; n.style.color = "transparent"; return; } n.textContent = "\u00a0".repeat(Math.min(200, Math.max(1, n.textContent.length))); n.classList.add("ls-x"); });
     t.content.querySelectorAll("ul, ol").forEach((l) => { if (!l.children.length) l.remove(); });
@@ -12087,7 +12417,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     let hcur = null;
     const blkOf = (t) => {
       const nt = t && t.closest && t.closest(".lk-plantext .notes"); if (!nt) return null;
-      let k = t; while (k && k !== nt && !(k.parentElement && (k.parentElement === nt || k.parentElement.matches(".nprep, .ncols")))) k = k.parentElement;
+      let k = t; while (k && k !== nt && !(k.parentElement && (k.parentElement === nt || k.parentElement.matches(".nprep, .ncols, .ncard")))) k = k.parentElement;
+      if (k && k.nodeType === 1 && k.matches(".nct")) k = k.parentElement; // Titel eines Kärtchens = ganzes Kärtchen
       if (!k || k === nt || k.nodeType !== 1 || k.matches(".nprep, .ncols, .nsec, .nend, br")) return null;
       if (!k.textContent.trim() && !k.querySelector("img, table, figure")) return null;
       return k;
@@ -12111,8 +12442,9 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         LK.range = null; lkStat("Bild in die Seite übernommen. Rechtsklick bzw. lange drücken aufs Bild: Grösse und Lage."); hShow(null); return;
       }
       const c = k.cloneNode(true); c.classList.remove("lk-hovon");
+      if (k.classList.contains("ncard")) { const h = c.querySelector(":scope > .nct"); if (h) { if (h.textContent.trim()) h.outerHTML = "<p><b>" + esc(h.textContent.trim()) + "</b></p>"; else h.remove(); } }
       const ot = [...k.querySelectorAll("table")], ct = [...c.querySelectorAll("table")]; ct.forEach((t, n) => { if (ot[n]) t.replaceWith(tabKeepW(ot[n])); });
-      lkInsertBlocks(lkSanitize(k.classList.contains("ncol") ? c.innerHTML : c.outerHTML), LK.range); LK.range = null; lkStat("In die Seite übernommen."); hShow(null);
+      lkInsertBlocks(lkSanitize(k.classList.contains("ncol") || k.classList.contains("ncard") ? c.innerHTML : c.outerHTML), LK.range); LK.range = null; lkStat("In die Seite übernommen."); hShow(null);
     });
     // Tabelle zuklappbar; Klick auf einen Abschnitt in der Tabelle springt hin
     const th = [...box.querySelectorAll(".lk-plantext h3")].find((h) => h.textContent.trim() === "Lektionsplanung");
@@ -12624,7 +12956,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   const alertMsg = (t) => lkStat(t);
   // ---------- Projizieren: dieselbe Seite, ohne Kopfzeile, Leisten nur bei Bedarf ----------
   function lkLsSet(on) {
-    LS_SHOW = !!on;
+    on = false; LS_SHOW = false; // Lehrerschrift wird nie projiziert (Katharina, 18.11.2026)
     document.documentElement.classList.toggle("ls-on", on);
     lkOpenHead(); if (lkBeaming()) lkPrRender(false);
     document.querySelectorAll(".lk-show").forEach((ov) => ov.dispatchEvent(new Event("lsredraw")));
