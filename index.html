@@ -2869,6 +2869,10 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
 .nb.rbig.rdel.ask { background: #c0392b; color: #fff; }
 .panel.nosec .rg:has(#d-nsec) { display: none; }
 .ncbar .nc-del.ask { background: #c0392b; color: #fff; border-radius: 5px; padding: 0 8px; font-size: 0.8rem; font-weight: 700; width: auto; }
+
+.ncdot { position: absolute; z-index: 6; width: 14px; height: 14px; padding: 0; border-radius: 50%; border: 2px solid var(--surface); background: color-mix(in srgb, var(--muted) 55%, transparent); cursor: pointer; box-shadow: 0 0 0 1px var(--line); }
+.ncdot:hover, .ncdot[aria-expanded="true"] { background: var(--accent); }
+.ncdot[hidden] { display: none; }
 </style>
 
 <!-- Startbild: ein Buch geht auf und bleibt, bis die Daten geladen sind (cloud.js ruft zpIntroDone); bei «weniger Bewegung» ohne Bewegung, im Beamer-Fenster ausgelassen -->
@@ -6942,6 +6946,10 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       '<button type="button" data-nc="menu" title="Weitere: verschieben, Titel, auflösen, löschen" aria-label="Weitere">⋯</button>' +
       '<button type="button" class="nc-del" data-nc="del" title="Kärtchen löschen (zweimal klicken; mit Rückgängig wieder da)" aria-label="Kärtchen löschen">🗑</button>';
     nw.appendChild(bar);
+    const dot = document.createElement("button"); dot.type = "button"; dot.className = "ncdot"; dot.hidden = true; dot.contentEditable = "false"; dot.title = "Kästchen: Breite, verschieben, löschen …"; dot.setAttribute("aria-label", "Kästchen-Leiste öffnen");
+    nw.appendChild(dot); let barFor = null;
+    dot.addEventListener("mousedown", (e) => e.preventDefault());
+    dot.addEventListener("click", () => { barFor = barFor === cur ? null : cur; place(); });
     const ind = document.createElement("div"); ind.className = "ncdrop"; ind.hidden = true; nw.appendChild(ind);
     const add = document.createElement("div"); add.className = "ncadd";
     add.innerHTML = '<button type="button" class="ncadd-b" data-nca="text" title="Neues Kärtchen unten anfügen (halbe Breite – zwei passen nebeneinander)">+ Neues Kärtchen</button><span class="ncadd-c"><button type="button" data-nca="list">Liste</button><button type="button" data-nca="table">Tabelle</button><button type="button" data-nca="img">Bild</button></span><span class="ncadd-h">oder unter das letzte Kärtchen klicken</span>';
@@ -6952,11 +6960,14 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const place = () => {
       if (drag) return;
       const c = (hov && hov.isConnected && hov) || caretCard();
-      if (!c || !ncMark(ned)) { bar.hidden = true; cur = null; return; }
-      cur = c; bar.hidden = false;
-      const nr = nw.getBoundingClientRect(), r = c.getBoundingClientRect();
-      bar.style.top = Math.round(r.top - nr.top - 12) + "px";
-      bar.style.left = Math.round(Math.max(0, Math.min(nr.width - bar.offsetWidth, r.left - nr.left + r.width / 2 - bar.offsetWidth / 2))) + "px";
+      if (!c || !ncMark(ned)) { bar.hidden = true; dot.hidden = true; cur = null; barFor = null; return; }
+      // 21.11.2026: Leiste nicht mehr automatisch oben, sondern erst nach Klick auf den Punkt links am Kästchen
+      if (barFor && barFor !== c) barFor = null;
+      cur = c; dot.hidden = false; bar.hidden = barFor !== c;
+      const nr = nw.getBoundingClientRect(), r = c.getBoundingClientRect(), my = Math.round(r.top - nr.top + Math.min(r.height / 2, 60));
+      dot.style.top = my - 7 + "px"; dot.style.left = Math.round(r.left - nr.left - 7) + "px";
+      dot.setAttribute("aria-expanded", String(!bar.hidden));
+      if (!bar.hidden) { bar.style.top = Math.round(my - bar.offsetHeight / 2) + "px"; bar.style.left = Math.round(Math.max(0, Math.min(nr.width - bar.offsetWidth, r.left - nr.left + 12))) + "px"; }
       const w = ncWOf(c); bar.querySelectorAll('[data-nc^="w"]').forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.nc === "w" + w)));
     };
     ned._ncMark = () => { ncMark(ned); place(); };
