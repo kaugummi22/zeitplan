@@ -2859,6 +2859,11 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
 .d-sl.pfold > :not(.sh-head):not(.pinfo):not(.pab-h) { display: none !important; }
 .panel.lfull #d-pfold, .panel.lfull #d-pleft, .panel.lfull #d-p3 { display: none !important; }
 @media (max-width: 599px) { .pinfo-b .field { grid-template-columns: 1fr; gap: 2px; } .pinfo-l { margin-left: 0; } }
+
+.sh-top .sh-fold { border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 0.8rem; font-weight: 600; border-radius: 7px; padding: 2px 10px; cursor: pointer; white-space: nowrap; }
+.sh-top .sh-fold:hover { border-color: var(--accent); color: var(--accent); }
+.sh-top .sh-fold.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.ncbar .nc-del.ask { background: #c0392b; color: #fff; border-radius: 5px; padding: 0 8px; font-size: 0.8rem; font-weight: 700; width: auto; }
 </style>
 
 <!-- Startbild: ein Buch geht auf und bleibt, bis die Daten geladen sind (cloud.js ruft zpIntroDone); bei «weniger Bewegung» ohne Bewegung, im Beamer-Fenster ausgelassen -->
@@ -6232,7 +6237,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const tick = setInterval(() => { if (!root.isConnected) { clearInterval(tick); return; } if (sp.classList.contains("rail")) hint(); }, 1500);
     setTimeout(hint, 400);
     const pin = (v) => { sp.classList.toggle("peek", v); sp.classList.toggle("pin", v); rail.setAttribute("aria-expanded", String(v)); btns(); };
-    rail.addEventListener("click", () => { if (!wide()) { set("top"); return; } pin(!sp.classList.contains("pin")); });
+    // Klick auf die Leiste: ganz ausklappen – die Planung steht dann wieder im Blatt über dem Anhang (21.11.2026)
+    rail.addEventListener("click", () => { if (!wide() || sp.closest(".panel.lfull")) { set("top"); return; } pin(!sp.classList.contains("pin")); });
     if (cl) cl.addEventListener("click", () => pin(false));
     if (tb) tb.addEventListener("click", () => set("top"));
     if (lb) lb.addEventListener("click", () => set("left"));
@@ -6566,8 +6572,13 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     if (sl && !sl.querySelector(".sh-head")) {
       const parts = String(opt.sub || "").split(" · "), n = parts.shift() || "", rest = parts.join(" · ");
       const h = document.createElement("div"); h.className = "sh-head";
-      h.innerHTML = '<div class="sh-top"><span>' + esc(opt.title || "") + "</span><span>Lektionsplanung</span></div><h2>" + (rest ? '<span class="sh-n">' + esc(n) + "</span>" + esc(rest) : esc(n)) + "</h2>";
+      h.innerHTML = '<div class="sh-top"><span>' + esc(opt.title || "") + '</span><button type="button" class="sh-fold" title="Infos, Ablauf und Notizen zum Ablauf an den linken Rand einklappen – nur der Anhang bleibt. Maus auf die Leiste = kurz zeigen, Klick = wieder ganz ausklappen"></button></div><h2>' + (rest ? '<span class="sh-n">' + esc(n) + "</span>" + esc(rest) : esc(n)) + "</h2>";
       sl.prepend(h);
+      const shf = h.querySelector(".sh-fold"), spl = root.querySelector("#d-split");
+      const shfSet = () => { const rail = spl.classList.contains("rail"); shf.textContent = rail ? "⤓ Ganz ausklappen" : "◂ Alles einklappen"; shf.classList.toggle("on", rail); };
+      shf.addEventListener("click", () => { if (!root._ptab) return; root._ptab.set(spl.classList.contains("rail") ? "top" : "rail"); shfSet(); });
+      if (window.MutationObserver) new MutationObserver(shfSet).observe(spl, { attributes: true, attributeFilter: ["class"] });
+      shfSet();
       // Allgemeine Infos (ein-/ausklappbar): Lernziel, Kerninhalt, Kommentar, Links … – die alte graue Box «Vorbereitung» aus den Notizen wandert hierher
       const plan = opt.plan, ned = root.querySelector("#d-notes");
       if (ned && !filled(plan.info || "")) { const pr = ned.querySelector(":scope > .nprep"); if (pr) { plan.info = sanitize(pr.innerHTML); pr.remove(); if (ned._save) ned._save(); else opt.changed(); } }
@@ -6920,7 +6931,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const bar = document.createElement("div"); bar.className = "ncbar"; bar.hidden = true; bar.contentEditable = "false";
     bar.innerHTML = '<button type="button" class="nc-grip" data-nc="drag" title="Ziehen: Kärtchen verschieben. An den linken oder rechten Rand eines anderen Kärtchens = daneben, oben oder unten = davor bzw. danach" aria-label="Kärtchen verschieben">⠿</button>' +
       [2, 3, 4, 6].map((w) => '<button type="button" data-nc="w' + w + '" title="Breite: ' + (w === 6 ? "ganze Breite" : NC_W[w]) + '">' + NC_W[w] + "</button>").join("") +
-      '<button type="button" data-nc="menu" title="Weitere: verschieben, Titel, auflösen, löschen" aria-label="Weitere">⋯</button>';
+      '<button type="button" data-nc="menu" title="Weitere: verschieben, Titel, auflösen, löschen" aria-label="Weitere">⋯</button>' +
+      '<button type="button" class="nc-del" data-nc="del" title="Kärtchen löschen (zweimal klicken; mit Rückgängig wieder da)" aria-label="Kärtchen löschen">🗑</button>';
     nw.appendChild(bar);
     const ind = document.createElement("div"); ind.className = "ncdrop"; ind.hidden = true; nw.appendChild(ind);
     const add = document.createElement("div"); add.className = "ncadd";
@@ -6954,6 +6966,14 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     bar.addEventListener("click", (e) => {
       const b = e.target.closest("[data-nc]"); if (!b || !cur) return; const c = cur;
       if (/^w\d$/.test(b.dataset.nc)) { c.dataset.w = b.dataset.nc.slice(1); commit(); return; }
+      if (b.dataset.nc === "del") {
+        // Nachfragen (Regel: jedes Löschen fragt), aber ohne Fenster: erster Klick fragt «Wirklich?», zweiter löscht
+        if (!b.classList.contains("ask")) { b.classList.add("ask"); b.textContent = "Wirklich löschen?"; clearTimeout(b._t); b._t = setTimeout(() => { b.classList.remove("ask"); b.textContent = "🗑"; }, 3500); return; }
+        clearTimeout(b._t); b.classList.remove("ask"); b.textContent = "🗑";
+        c.remove(); hov = null; commit(); place();
+        const m = $("#d-nmsg"); if (m) { m.textContent = "Kärtchen gelöscht – «↶ Rückgängig» (Strg+Z) holt es zurück."; setTimeout(() => { if (m.textContent.startsWith("Kärtchen gelöscht")) m.textContent = ""; }, 6000); }
+        return;
+      }
       if (b.dataset.nc !== "menu") return;
       const r = b.getBoundingClientRect(), tt = (c.querySelector(":scope > .nct") || {}).textContent || "";
       const items = [["up", "▲ Nach vorne"], ["down", "▼ Nach hinten"]];
