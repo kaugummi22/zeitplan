@@ -1948,6 +1948,9 @@ main.wrap:has(#view-lektion:not([hidden])) { max-width: none; }
 .ueb-pgx.armed { font-size: 0.78rem; font-weight: 700; color: #fff; background: var(--danger, #c0392b); border-radius: 6px; padding: 1px 7px; margin-left: 2px; }
 .ueb-name { font-weight: 700; color: var(--accent); }
 .ueb-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; }
+.ueb-rbn { border: 1px solid var(--line); border-radius: 6px; position: static; margin-top: 4px; }
+.ueb-rbn .rpan.ueb-tools { align-items: stretch; }
+.rg:has(> .rgb > [hidden]:only-child) { display: none; }
 .ueb-right { margin-left: auto; display: flex; gap: 4px; }
 .ueb-right .btn { padding: 2px 6px; font-size: 0.85rem; white-space: nowrap; }
 .ueb-scroll { flex: 1; overflow: auto; min-height: 0; }
@@ -2329,6 +2332,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
 .sh-top .sh-fold { border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 0.8rem; font-weight: 600; border-radius: 7px; padding: 2px 10px; cursor: pointer; white-space: nowrap; }
 .sh-top .sh-fold:hover { border-color: var(--accent); color: var(--accent); }
 .sh-top .sh-fold.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.nb.rbig.rdel.ask { background: #c0392b; color: #fff; }
+.panel.nosec .rg:has(#d-nsec) { display: none; }
 .ncbar .nc-del.ask { background: #c0392b; color: #fff; border-radius: 5px; padding: 0 8px; font-size: 0.8rem; font-weight: 700; width: auto; }
 </style>
 
@@ -6029,7 +6034,10 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     };
     tabs.forEach((b) => b.addEventListener("click", () => show(b.dataset.rt)));
     { let k0 = "start"; try { k0 = localStorage.getItem("zp-rtab") || "start"; } catch (e) {} show(k0); }
-    const ca = rb.querySelector("#d-ncard"); if (ca) ca.addEventListener("click", () => { const b = root.querySelector(".ncadd-b"); if (b) b.click(); });
+    const ned0 = root.querySelector("#d-notes");
+    const ca = rb.querySelector("#d-ncard"); if (ca) ca.addEventListener("click", () => { if (ned0 && ned0._cardNew) ned0._cardNew(); else { const b = root.querySelector(".ncadd-b"); if (b) b.click(); } });
+    const co = rb.querySelector("#d-ncoff"); if (co) co.addEventListener("click", () => { if (ned0 && ned0._cardOff) ned0._cardOff(); });
+    const cd = rb.querySelector("#d-ncdel"); if (cd) cd.addEventListener("click", () => { if (ned0 && ned0._cardDel) ned0._cardDel(cd); });
     if (!opt.plan || !pn) return;
     // Menüband oben unter dem Titel (klebt beim Scrollen mit)
     const tt = root.querySelector(".d-title"); if (tt) { tt.appendChild(rb); rb.classList.add("rtop"); }
@@ -6129,7 +6137,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       RG("Tabelle", '<span class="ntab-w">' + RB("d-ntabb", "▦", "Tabelle", "Tabelle einfügen: Grösse im Raster wählen oder Spalten und Zeilen eingeben") + '<div class="ntab-pop" id="d-ntabp" hidden><div class="ntab-grid">' + Array.from({ length: 64 }, (_, k) => '<button type="button" class="ntab-c" data-r="' + (Math.floor(k / 8) + 1) + '" data-c="' + (k % 8 + 1) + '"></button>').join("") + '</div><div class="ntab-lbl">Grösse im Raster wählen</div><div class="ntab-num"><label>Spalten <input type="number" id="d-ntc" min="1" max="20" value="3"></label><label>Zeilen <input type="number" id="d-ntr" min="1" max="60" value="3"></label><button type="button" class="btn primary" id="d-ntok">Einfügen</button></div></div></span>') +
       RG("Material", '<label class="nb rbig" title="Bild oder Screenshot einfügen (auch mit Strg+V)"><span class="ric">🖼</span><span class="rlt">Bild</span><input type="file" id="d-nimg" accept="image/*" multiple hidden></label>' +
         RB("d-nword", "📄", "Word-Arbeitsblatt", "Word-Dokument (Arbeitsblatt) in die Notizen einfügen – grösser/kleiner wie ein Bild, Doppelklick = direkt bearbeiten und in dieselbe Datei speichern") + '<input type="file" id="d-nwordf" accept=".docx" hidden>') +
-      RG("Kästchen", (opt.plan ? RB("d-ncard", "▢", "Kästchen", "Neues Kästchen unten anfügen (zwei passen nebeneinander)") : "") +
+      RG("Kästchen", (opt.plan ? RB("d-ncard", "▢", "Kästchen", "Text markiert: daraus ein Kästchen machen. Nichts markiert: neues Kästchen unten anfügen") + RB("d-ncoff", "⬚", "Kästchen auflösen", "Kästchen mit der Schreibmarke auflösen – der Text bleibt stehen") + RB("d-ncdel", "🗑", "Kästchen löschen", "Kästchen mit der Schreibmarke löschen (zweimal klicken; mit Rückgängig wieder da)", "rdel") : "") +
         RB("d-ntask", "◧", "Aufgabe | Notizen", "Seite teilen: markierte Aufgabe links, rechts Lösungen und Notizen schreiben (Linie dazwischen lässt sich ziehen)") +
         '<label class="nlh rcol" title="Spalten einfügen, z. B. Fragen links, Antworten rechts"><span class="ric">▥</span><select id="d-ncols"><option value="">Spalten</option><option value="2">2 Spalten</option><option value="3">3 Spalten</option><option value="t">Aufgabe | Notizen</option><option value="0">Spalten aufheben</option></select></label>') +
       RG("Gliederung", 
@@ -6505,6 +6513,46 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       if (kind === "table") { const b = root.querySelector("#d-ntabb"); if (b) b.click(); }
       if (kind === "img") { const f = root.querySelector("#d-nimg"); if (f) f.click(); }
       return c;
+    };
+    // Menüband «Einfügen» (21.11.2026): markierter Text wird ein Kästchen; Kästchen auflösen (Text bleibt) oder löschen – alles mit Rückgängig
+    const nmsg = (t) => { const m = $("#d-nmsg"); if (!m) return; m.textContent = t; clearTimeout(m._t); m._t = setTimeout(() => { if (m.textContent === t) m.textContent = ""; }, 6000); };
+    ned._cardNew = () => {
+      const sl = getSelection(), r = sl.rangeCount ? sl.getRangeAt(0) : null;
+      if (!r || sl.isCollapsed || !ned.contains(r.commonAncestorContainer)) { newCard("text"); return; }
+      const sc = cardOf(r.startContainer), ec = cardOf(r.endContainer);
+      if (sc !== ec) { nmsg("Bitte nur Text innerhalb eines Kästchens (oder nur ausserhalb) markieren."); return; }
+      const box = sc || ned;
+      const topIn = (n) => { let e = n; while (e && e.parentNode !== box) e = e.parentNode; return e; };
+      let a = topIn(r.startContainer), b = topIn(r.endContainer); if (!a || !b) return;
+      if (a.nodeType === 1 && a.classList.contains("nct") && a !== b) a = a.nextSibling;
+      const blocks = []; for (let n = a; n; n = n.nextSibling) { blocks.push(n); if (n === b) break; }
+      HIST.brk = true;
+      const c = document.createElement("div"); c.className = "ncard"; c.dataset.w = sc ? sc.dataset.w || "6" : "6";
+      if (sc) {
+        // Kästchen teilen: davor bleibt, Markiertes wird ein eigenes Kästchen, der Rest danach ein weiteres
+        const rest = []; for (let n = b.nextSibling; n; n = n.nextSibling) rest.push(n);
+        sc.after(c); blocks.forEach((n) => c.appendChild(n));
+        if (rest.some((n) => n.textContent.trim() || (n.nodeType === 1 && n.querySelector("img,figure,table")))) { const c2 = document.createElement("div"); c2.className = "ncard"; c2.dataset.w = sc.dataset.w || "6"; rest.forEach((n) => c2.appendChild(n)); c.after(c2); ncNorm(c2); }
+        else rest.forEach((n) => n.remove());
+        if (!sc.textContent.trim() && !sc.querySelector("img,figure,table")) sc.remove(); else ncNorm(sc);
+      } else { a.before(c); blocks.forEach((n) => c.appendChild(n)); }
+      ncNorm(c); ncMark(ned); hov = null; save(); place();
+      ned.focus({ preventScroll: true }); caretIn(c, true);
+      nmsg("Markierter Text ist jetzt ein Kästchen – «↶ Rückgängig» macht es wieder rückgängig.");
+    };
+    ned._cardOff = () => {
+      const c = caretCard(); if (!c) { nmsg("Zuerst in das Kästchen klicken, das aufgelöst werden soll."); return; }
+      HIST.brk = true;
+      const h = c.querySelector(":scope > .nct"); if (h) { const d = document.createElement("div"); d.innerHTML = h.textContent.trim() ? "<b>" + esc(h.textContent.trim()) + "</b>" : "<br>"; h.replaceWith(d); }
+      c.replaceWith(...c.childNodes); hov = null; commit();
+      nmsg("Kästchen aufgelöst, der Text bleibt. Markieren und «Kästchen» = wieder ein Kästchen.");
+    };
+    ned._cardDel = (btn) => {
+      const c = caretCard(); if (!c) { nmsg("Zuerst in das Kästchen klicken, das gelöscht werden soll."); return; }
+      if (btn && !btn.classList.contains("ask")) { btn.classList.add("ask"); const l = btn.querySelector(".rlt"); if (l) { l._o = l._o || l.textContent; l.textContent = "Wirklich löschen?"; } clearTimeout(btn._t); btn._t = setTimeout(() => { btn.classList.remove("ask"); if (l) l.textContent = l._o; }, 3500); return; }
+      if (btn) { clearTimeout(btn._t); btn.classList.remove("ask"); const l = btn.querySelector(".rlt"); if (l && l._o) l.textContent = l._o; }
+      c.remove(); hov = null; commit();
+      nmsg("Kästchen gelöscht – «↶ Rückgängig» (Strg+Z) holt es zurück.");
     };
     add.addEventListener("mousedown", (e) => e.preventDefault());
     add.addEventListener("click", (e) => { const b = e.target.closest("[data-nca]"); if (b) newCard(b.dataset.nca); });
@@ -7947,19 +7995,17 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const refs = pgRefs(u0, pgFiles(), rid, ctx && ctx.key), nRefs = new Set(refs.map((x) => x.rid)).size;
     const refsHtml = refs.length ? '<button type="button" class="ueb-refs" id="ueb-refs" title="Diese Seite kommt auch hier vor (Kopien bzw. gleiches Dokument). Klick: Liste aufklappen">↗ auch in ' + nRefs + (nRefs === 1 ? " Reihe" : " Reihen") + " ▾</button>" : "";
     const TB = (cmd, label, title, cls) => '<button type="button" class="nb' + (cls ? " " + cls : "") + '" data-ucmd="' + cmd + '" title="' + title + '" aria-label="' + title + '">' + label + "</button>";
-    pane.innerHTML = '<div class="ueb-in"><div class="ueb-bar">' + (ctx ? '<div class="ueb-top"><span class="ueb-name">' + esc(ctx.name || "Seite") + "</span>" + tabsHtml + refsHtml + (ctx.right || "") + "</div>" : '<div class="ueb-top"><span class="ueb-name">Übersichtsseite</span>' + tabsHtml + refsHtml + '<span class="ueb-right"><button type="button" class="btn ghost" id="ueb-solo"></button><button type="button" class="btn ghost" id="ueb-close" title="Übersichtsseite einklappen – die Reihenliste erscheint wieder">✕ Einklappen</button></span></div>') + '<span class="ueb-tools">' +
-      '<button type="button" class="nb" id="ueb-undo"' + (ctx ? " hidden" : "") + ' title="Letzte Änderung rückgängig machen" aria-label="Rückgängig">↶</button><span class="nsep"></span>' +
-      '<button type="button" class="nb nimg ueb-free" id="ueb-free" aria-pressed="false" title="Frei schreiben: irgendwo hinklicken und schreiben, Bilder frei hinlegen (wie in OneNote). Ausgeschaltet: normale Seite">✥ Frei schreiben</button><span class="nsep"></span>' +
-      TB("bold", "<b>F</b>", "Fett (Strg+B)") + TB("italic", "<i>K</i>", "Kursiv (Strg+I)") + TB("underline", "<u>U</u>", "Unterstrichen (Strg+U)") + '<span class="nsep"></span>' +
-      TB("size:2", '<span style="font-size:11px">A</span>', "Kleine Schrift (markierter Text)") + TB("size:3", '<span style="font-size:14px">A</span>', "Normale Schrift (markierter Text)") + TB("size:4", '<span style="font-size:17px">A</span>', "Grosse Schrift (markierter Text)") + TB("size:5", '<span style="font-size:20px">A</span>', "Sehr grosse Schrift (markierter Text)") +
-      '<button type="button" class="nb nimg" id="ueb-lh" aria-haspopup="menu" title="Zeilenabstand der markierten Zeilen oder der ganzen Seite, Schriftgrösse der ganzen Seite">Zeilenabstand ▾</button><span class="nsep"></span>' + TB("hl", "", "Gelb markieren", "sw-y") + TB("hlx", "✕", "Markierung entfernen", "sw-x") +
-      TB("al:", "⯇≡", "Linksbündig") + TB("al:al-c", "≡", "Zentriert") + TB("al:al-r", "≡⯈", "Rechtsbündig") + TB("al:al-j", "☰", "Blocksatz") + '<span class="nsep"></span>' + TB("insertUnorderedList", "•", "Aufzählung") + TB("ls", '<span class="ls">✎</span>', "Lehrerschrift (Strg+Umschalt+L)", "nls") + '<span class="nsep"></span>' +
-      '<button type="button" class="nb nimg" id="ueb-sec" title="Abschnitt mit Titel einfügen (lässt sich zuklappen und samt Inhalt und freien Notizen nach oben/unten schieben)">§ Abschnitt</button>' +
-      '<label class="nb nimg" title="Bild einfügen">🖼 Bild<input type="file" id="ueb-img" accept="image/*" multiple hidden></label></span>' +
+    const URG = (a, h) => '<div class="rg"><div class="rgb">' + h + '</div><span class="rgl">' + a + "</span></div>";
+    pane.innerHTML = '<div class="ueb-in"><div class="ueb-bar">' + (ctx ? '<div class="ueb-top"><span class="ueb-name">' + esc(ctx.name || "Seite") + "</span>" + tabsHtml + refsHtml + (ctx.right || "") + "</div>" : '<div class="ueb-top"><span class="ueb-name">Übersichtsseite</span>' + tabsHtml + refsHtml + '<span class="ueb-right"><button type="button" class="btn ghost" id="ueb-solo"></button><button type="button" class="btn ghost" id="ueb-close" title="Übersichtsseite einklappen – die Reihenliste erscheint wieder">✕ Einklappen</button></span></div>') + '<div class="nbar rbn ueb-rbn"><div class="rtabs" role="tablist"><button type="button" role="tab" class="rtab on" data-urt="start">Start</button><button type="button" role="tab" class="rtab" data-urt="ein">Einfügen</button></div>' +
+      '<div class="rpan ueb-tools" data-urp="start">' + URG("Rückgängig", '<button type="button" class="nb" id="ueb-undo"' + (ctx ? " hidden" : "") + ' title="Letzte Änderung rückgängig machen" aria-label="Rückgängig">↶</button>') + URG("Schrift", '<div class="rrow">' + TB("size:2", '<span style="font-size:11px">A</span>', "Kleine Schrift (markierter Text)") + TB("size:3", '<span style="font-size:14px">A</span>', "Normale Schrift (markierter Text)") + TB("size:4", '<span style="font-size:17px">A</span>', "Grosse Schrift (markierter Text)") + TB("size:5", '<span style="font-size:20px">A</span>', "Sehr grosse Schrift (markierter Text)") + '</div><div class="rrow">' + TB("bold", "<b>F</b>", "Fett (Strg+B)") + TB("italic", "<i>K</i>", "Kursiv (Strg+I)") + TB("underline", "<u>U</u>", "Unterstrichen (Strg+U)") + '<span class="nsep"></span>' + TB("hl", "", "Gelb markieren", "sw-y") + TB("hlx", "✕", "Markierung entfernen", "sw-x") + '</div>') +
+      URG("Absatz", '<div class="rrow">' + TB("al:", "⯇≡", "Linksbündig") + TB("al:al-c", "≡", "Zentriert") + TB("al:al-r", "≡⯈", "Rechtsbündig") + TB("al:al-j", "☰", "Blocksatz") + '</div><div class="rrow">' + TB("insertUnorderedList", "•", "Aufzählung") + TB("ls", '<span class="ls">✎</span>', "Lehrerschrift (Strg+Umschalt+L)", "nls") + '<button type="button" class="nb nimg" id="ueb-lh" aria-haspopup="menu" title="Zeilenabstand der markierten Zeilen oder der ganzen Seite, Schriftgrösse der ganzen Seite">Zeilenabstand ▾</button>' + '</div>') + '</div>' +
+      '<div class="rpan ueb-tools" data-urp="ein" hidden>' + URG("Schreiben", '<button type="button" class="nb nimg ueb-free" id="ueb-free" aria-pressed="false" title="Frei schreiben: irgendwo hinklicken und schreiben, Bilder frei hinlegen (wie in OneNote). Ausgeschaltet: normale Seite">✥ Frei schreiben</button>') + URG("Einfügen", '<button type="button" class="nb nimg" id="ueb-sec" title="Abschnitt mit Titel einfügen (lässt sich zuklappen und samt Inhalt und freien Notizen nach oben/unten schieben)">§ Abschnitt</button>' + '<label class="nb nimg" title="Bild einfügen">🖼 Bild<input type="file" id="ueb-img" accept="image/*" multiple hidden></label>') + '</div></div>' +
       "</div>" +
       '<div class="ueb-scroll"><div class="ueb-sheet"><div class="ueb-mline" aria-hidden="true"></div><div class="notes-ed ueb-cm" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Kommentare im Rand" data-ph="Kommentare, Stichpunkte … auf der gewünschten Höhe hineinklicken."></div><button type="button" class="ueb-tab" id="ueb-tab"></button><div class="notes-ed ueb-page" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Übersichtsseite" data-ph="Notizen zur Reihe: was alles hinein muss, Gedanken, wo welches Material ist … Screenshots mit Strg+V.">' + u0.html + '</div></div></div>' +
       '<div class="ueb-hint" id="ueb-msg"></div></div>';
     if (ctx && ctx.onPage) ctx.onPage(u0);
+    // Register «Start» / «Einfügen» wie im Menüband der Lektion (21.11.2026)
+    { const rb = pane.querySelector(".ueb-rbn"); if (rb) { const show = (k) => { rb.querySelectorAll("[data-urt]").forEach((b) => b.classList.toggle("on", b.dataset.urt === k)); rb.querySelectorAll("[data-urp]").forEach((x) => { x.hidden = x.dataset.urp !== k; }); }; rb.addEventListener("mousedown", (e) => { if (e.target.closest("[data-urt]")) e.preventDefault(); }); rb.querySelectorAll("[data-urt]").forEach((b) => b.addEventListener("click", () => show(b.dataset.urt))); } }
     const root = pane.firstElementChild; // Ereignisse hier anhängen: das Feld selbst bleibt beim Neuaufbau bestehen
     const sheet = pane.querySelector(".ueb-sheet"), page = pane.querySelector(".ueb-page"), sc = pane.querySelector(".ueb-scroll"), msg = pane.querySelector("#ueb-msg");
     const HINT_N = "Normale Seite: einfach schreiben. «✥ Frei schreiben» einschalten, um irgendwo daneben, dazwischen oder darunter zu schreiben.";
