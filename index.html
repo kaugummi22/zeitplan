@@ -2882,6 +2882,8 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
 .notes-ed .ncard { scroll-margin-top: 175px; }
 .notes-ed .ncard.nc-flash { animation: ncflash 1.8s ease-out; }
 @keyframes ncflash { 0%, 35% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent); background: var(--accent-soft); } 100% { box-shadow: 0 0 0 0 transparent; } }
+.notes-ed .ncard[data-ref] { position: relative; }
+.notes-ed .ncard[data-ref]::after { content: attr(data-ref); position: absolute; top: -0.75em; right: 14px; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 6px; font: 11px/1.5 system-ui, sans-serif; color: var(--muted); background: var(--surface, #fff); border-radius: 8px; pointer-events: none; opacity: .85; }
 </style>
 
 <!-- Startbild: ein Buch geht auf und bleibt, bis die Daten geladen sind (cloud.js ruft zpIntroDone); bei «weniger Bewegung» ohne Bewegung, im Beamer-Fenster ausgelassen -->
@@ -4666,6 +4668,17 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   const pickedColor = (root, name) => root.querySelector('.swatches[data-for="' + name + '"] .sw[aria-pressed="true"]')?.dataset.color || "";
 
   let onClose = null;
+  // zweite Ebene über einem offenen Fenster (z. B. über dem Lektionsfenster), ohne dieses zu schliessen
+  const ov2Esc = (e) => { if (e.key === "Escape" && document.getElementById("ov2")) { e.stopImmediatePropagation(); e.preventDefault(); closeModal2(); } };
+  function closeModal2() { const o = document.getElementById("ov2"); if (o) o.remove(); document.removeEventListener("keydown", ov2Esc, true); }
+  function openModal2(html, onReady) {
+    closeModal2();
+    const o = document.createElement("div"); o.className = "overlay"; o.id = "ov2"; o.style.zIndex = "2600";
+    o.innerHTML = '<div class="panel" role="dialog" aria-modal="true">' + html + "</div>";
+    o.addEventListener("mousedown", (e) => { if (e.target === o) closeModal2(); });
+    document.addEventListener("keydown", ov2Esc, true);
+    document.body.appendChild(o); onReady(o);
+  }
   function closeModal() { const f = onClose; onClose = null; $("#modalRoot").innerHTML = ""; if (f) f(); }
   function openModal(html, onReady) {
     const root = $("#modalRoot");
@@ -4887,7 +4900,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       if (cur) items.push("-", ["x", "Verbindung lösen"]);
       cellMenu(cx, cy, "Zeile " + (ri + 1) + " verbinden mit …", items, (op) => {
         if (op === "x") abSet(p, ri, []); else { const c = cs[+op.slice(1)]; if (!c) return; abSet(p, ri, [PCARD.idOf(c.el)]); }
-        tbl.innerHTML = planTableInner(p); changed();
+        tbl.innerHTML = planTableInner(p); changed(); if (PCARD.deco) PCARD.deco();
         if (op !== "x") PCARD.go(abGet(p, ri)[0]);
       });
     };
@@ -6327,6 +6340,18 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       },
     };
     { const tb = tbl(); if (tb && !SEC_ON) tb.innerHTML = planTableInner(p); }
+    // Rückverweis: im Kästchen klein die Zeile(n) des Ablaufs, zu der es gehört (nur Anzeige, wird nicht gespeichert)
+    const refDeco = () => {
+      if (!ned.isConnected) return;
+      const lab = {};
+      (p.rows || []).forEach((row, ri) => abGet(p, ri).forEach((id) => { const t = [row[0], row[1]].map((v) => htmlToPlain(v || "").replace(/\s+/g, " ").trim()).filter(Boolean).join(" · ") || "Zeile " + (ri + 1); (lab[id] = lab[id] || []).push(t); }));
+      ned.querySelectorAll(":scope > .ncard").forEach((c) => { const v = c.dataset.id && lab[c.dataset.id] ? lab[c.dataset.id].join("  /  ") : ""; if (v) { if (c.getAttribute("data-ref") !== v) c.setAttribute("data-ref", v); } else if (c.hasAttribute("data-ref")) c.removeAttribute("data-ref"); });
+    };
+    PCARD.deco = refDeco;
+    { let rt = 0; const soon = () => { clearTimeout(rt); rt = setTimeout(refDeco, 250); };
+      new MutationObserver(soon).observe(ned, { childList: true });
+      root.addEventListener("input", (e) => { if (e.target.closest && e.target.closest("#p-table")) soon(); });
+      refDeco(); }
     // --- Spalte «Abschnitt» ---
     const redraw = () => { const tb = tbl(); if (!tb) return; if (tb.contains(document.activeElement) && document.activeElement.isContentEditable) { tb._abLater = true; return; } tb.innerHTML = planTableInner(p); };
     root.addEventListener("focusout", (e) => { const tb = tbl(); if (tb && tb._abLater && tb.contains(e.target)) { tb._abLater = false; setTimeout(() => { if (!tb.contains(document.activeElement)) tb.innerHTML = planTableInner(p); }, 0); } });
@@ -6613,6 +6638,25 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   // Grundschrift des Blatts: pro Gerät, Standard «Source Serif»; "" = Schrift der App
   const SFF = () => { try { const v = localStorage.getItem("zp-sff"); return v == null ? "s" : v; } catch (e) { return "s"; } };
   { const st = document.createElement("style"); st.textContent = FF.map(([k, , f]) => ".panel.sff-" + k + " :is(.notes-ed, .ptable, #p-note, .sh-head h2, #p-info, #p-ziele, .d-cm){font-family:" + f + "}").join(""); document.head.appendChild(st); }
+  // Beta: Kästchen → Schülerblatt (Lehrerschrift weg, Abgedecktes = Leerzeile, «Aufgabe | Notizen» nur links)
+  function studentSheet(card) {
+    const c = card.cloneNode(true);
+    c.querySelectorAll("button, .ncdot, .ncbar, figure.ndoc, [contenteditable='false']:not(figure)").forEach((n) => n.remove());
+    const h = c.querySelector(":scope > .nct"), title = h ? h.textContent.replace(/\s+/g, " ").trim() : ""; if (h) h.remove();
+    c.querySelectorAll(".lk-sp").forEach((n) => { n.replaceWith(document.createTextNode("_".repeat(28))); });
+    c.querySelectorAll(".ls").forEach((n) => n.remove());
+    c.querySelectorAll(".ncols").forEach((b) => {
+      const cols = [...b.querySelectorAll(":scope > .ncol")], keep = cols.length === 2 && b.dataset.w ? cols.slice(0, 1) : cols, frag = document.createDocumentFragment();
+      keep.forEach((k) => { const d = document.createElement("div"); while (k.firstChild) d.appendChild(k.firstChild); frag.appendChild(d); });
+      b.replaceWith(frag);
+    });
+    c.querySelectorAll(".nflow").forEach((b) => { const frag = document.createDocumentFragment(); while (b.firstChild) frag.appendChild(b.firstChild); b.replaceWith(frag); });
+    c.querySelectorAll("figure.nfig").forEach((f) => { const w = /\bw(25|33|50|75|100)\b/.exec(f.className); if (!parseFloat(f.style.width)) f.style.width = (w ? w[1] : 100) + "%"; f.className = "nfig"; f.querySelectorAll("figcaption").forEach((x) => x.remove()); });
+    c.querySelectorAll("li").forEach((li) => { if (!li.textContent.trim() && !li.querySelector("img")) li.remove(); });
+    c.querySelectorAll("ul, ol").forEach((l) => { if (!l.children.length) l.remove(); });
+    c.querySelectorAll("div, p").forEach((d) => { if (!d.textContent.replace(/\u00a0/g, " ").trim() && !d.querySelector("img, figure, table, li")) d.remove(); });
+    return { title, html: c.innerHTML };
+  }
   function ribbonInit(root, opt) {
     const rb = root.querySelector(".nbar.rbn"); if (!rb) return;
     const pn = root.querySelector(".panel"), tabs = [...rb.querySelectorAll("[data-rt]")];
@@ -6628,6 +6672,14 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const ca = rb.querySelector("#d-ncard"); if (ca) ca.addEventListener("click", () => { if (ned0 && ned0._cardNew) ned0._cardNew(); else { const b = root.querySelector(".ncadd-b"); if (b) b.click(); } });
     const co = rb.querySelector("#d-ncoff"); if (co) co.addEventListener("click", () => { if (ned0 && ned0._cardOff) ned0._cardOff(); });
     const cd = rb.querySelector("#d-ncdel"); if (cd) cd.addEventListener("click", () => { if (ned0 && ned0._cardDel) ned0._cardDel(cd); });
+    const shb = rb.querySelector("#d-nsheet"); if (shb && ned0) shb.addEventListener("click", () => {
+      const nm = root.querySelector("#d-nmsg"), sl = getSelection(), an = sl.rangeCount ? sl.anchorNode : null, el = an && (an.nodeType === 1 ? an : an.parentElement);
+      const card = el && ned0.contains(el) ? el.closest(".ncard") : null;
+      if (!card || !ned0.contains(card)) { if (nm) nm.textContent = "Klicken Sie zuerst in das Kästchen, aus dem ein Schülerblatt werden soll."; return; }
+      const r = opt.rid && U.reihen[opt.rid];
+      const { title, html } = studentSheet(card);
+      lkOutput({ title, html, fname: "Schülerblatt – " + (title || (r && r.title) || "Lektion"), folder: r && r.folder });
+    });
     if (!opt.plan || !pn) return;
     // Menüband oben unter dem Titel (klebt beim Scrollen mit)
     const tt = root.querySelector(".d-title"); if (tt) { tt.appendChild(rb); rb.classList.add("rtop"); }
@@ -6727,7 +6779,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       RG("Tabelle", '<span class="ntab-w">' + RB("d-ntabb", "▦", "Tabelle", "Tabelle einfügen: Grösse im Raster wählen oder Spalten und Zeilen eingeben") + '<div class="ntab-pop" id="d-ntabp" hidden><div class="ntab-grid">' + Array.from({ length: 64 }, (_, k) => '<button type="button" class="ntab-c" data-r="' + (Math.floor(k / 8) + 1) + '" data-c="' + (k % 8 + 1) + '"></button>').join("") + '</div><div class="ntab-lbl">Grösse im Raster wählen</div><div class="ntab-num"><label>Spalten <input type="number" id="d-ntc" min="1" max="20" value="3"></label><label>Zeilen <input type="number" id="d-ntr" min="1" max="60" value="3"></label><button type="button" class="btn primary" id="d-ntok">Einfügen</button></div></div></span>') +
       RG("Material", '<label class="nb rbig" title="Bild oder Screenshot einfügen (auch mit Strg+V)"><span class="ric">🖼</span><span class="rlt">Bild</span><input type="file" id="d-nimg" accept="image/*" multiple hidden></label>' +
         RB("d-nword", "📄", "Word-Arbeitsblatt", "Word-Dokument (Arbeitsblatt) in die Notizen einfügen – grösser/kleiner wie ein Bild, Doppelklick = direkt bearbeiten und in dieselbe Datei speichern") + '<input type="file" id="d-nwordf" accept=".docx" hidden>') +
-      RG("Kästchen", (opt.plan ? RB("d-ncard", "▢", "Kästchen", "Text markiert: daraus ein Kästchen machen. Nichts markiert: neues Kästchen unten anfügen") + RB("d-ncoff", "⬚", "Kästchen auflösen", "Kästchen mit der Schreibmarke auflösen – der Text bleibt stehen") + RB("d-ncdel", "🗑", "Kästchen löschen", "Kästchen mit der Schreibmarke löschen (zweimal klicken; mit Rückgängig wieder da)", "rdel") : "") +
+      RG("Kästchen", (opt.plan ? RB("d-ncard", "▢", "Kästchen", "Text markiert: daraus ein Kästchen machen. Nichts markiert: neues Kästchen unten anfügen") + RB("d-ncoff", "⬚", "Kästchen auflösen", "Kästchen mit der Schreibmarke auflösen – der Text bleibt stehen") + RB("d-ncdel", "🗑", "Kästchen löschen", "Kästchen mit der Schreibmarke löschen (zweimal klicken; mit Rückgängig wieder da)", "rdel") + RB("d-nsheet", "🧾", "Schülerblatt β", "Beta: aus dem Kästchen mit der Schreibmarke ein Word-Blatt für die Klasse machen – ohne Lehrerschrift, Abgedecktes wird zur Leerzeile, bei «Aufgabe | Notizen» nur die Aufgabe") : "") +
         RB("d-ntask", "◧", "Aufgabe | Notizen", "Seite teilen: markierte Aufgabe links, rechts Lösungen und Notizen schreiben (Linie dazwischen lässt sich ziehen)") +
         RB("d-nuntask", "▭", "Aufteilung aufheben", "Aufteilung «Aufgabe | Notizen» bzw. Spalten mit der Schreibmarke aufheben – der Inhalt bleibt untereinander stehen (mit Rückgängig wieder da). Auch per Rechtsklick in die Aufteilung.") +
         '<label class="nlh rcol" title="Spalten einfügen, z. B. Fragen links, Antworten rechts"><span class="ric">▥</span><select id="d-ncols"><option value="">Spalten</option><option value="2">2 Spalten</option><option value="3">3 Spalten</option><option value="t">Aufgabe | Notizen</option><option value="0">Spalten aufheben</option></select></label>') +
@@ -14070,9 +14122,9 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     return zip.generateAsync({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
   }
   const LK_MIME = { docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", pdf: "application/pdf" };
-  async function lkMakeFile(fmt, title, say) {
+  async function lkMakeFile(fmt, title, say, spec) {
     const pg = $("#lk-page"); say("Erstellt die Word-Datei …");
-    const docx = await lkDocx(pg ? lkStripNotes(pg.innerHTML) : "", title);
+    const docx = spec ? await lkDocx(spec.html, spec.title || "") : await lkDocx(pg ? lkStripNotes(pg.innerHTML) : "", title);
     if (fmt === "docx") return docx;
     if (!window.ZLOCAL || !window.ZLOCAL.toPdf) throw new Error("PDF-Datei geht nur mit OneDrive. Bitte «Drucken» und dort «Als PDF speichern» wählen.");
     say("Microsoft wandelt in ein PDF um …");
@@ -14080,21 +14132,25 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     catch (e) { throw new Error("Microsoft konnte kein PDF erstellen (" + (e.message || e) + "). Bitte «Drucken» und dort «Als PDF speichern» wählen."); }
   }
   const lkFname = (t) => (String(t || "Lektion").replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, " ").trim() || "Lektion").slice(0, 120);
-  function lkOutput() {
-    lkSave();
-    const x = lkLessons(LK.kid).find((y) => y.key === LK.sel); if (!x) return;
-    const k = K.klassen[LK.kid] || {}, title = x.u.label + (x.u.phase ? " · " + x.u.phase : "");
+  function lkOutput(spec) {
+    let k, title;
+    if (spec) { k = { name: "", folder: spec.folder || "" }; title = spec.title || ""; }
+    else {
+      lkSave();
+      const x = lkLessons(LK.kid).find((y) => y.key === LK.sel); if (!x) return;
+      k = K.klassen[LK.kid] || {}; title = x.u.label + (x.u.phase ? " · " + x.u.phase : "");
+    }
     let fmt = "docx"; try { fmt = localStorage.getItem("zeitplan-lkfmt") || "docx"; } catch (e) {}
     const Z = window.ZLOCAL;
-    openModal('<h3>Ausgeben</h3><label class="lo-row">Dateiname<input type="text" id="lo-name" value="' + esc(lkFname(title + " – " + (k.name || ""))) + '"></label>' +
+    (spec ? openModal2 : openModal)('<h3>Ausgeben</h3><label class="lo-row">Dateiname<input type="text" id="lo-name" value="' + esc(lkFname(spec ? spec.fname : title + " – " + (k.name || ""))) + '"></label>' +
       '<div class="lo-row"><span>Format</span><div class="seg" id="lo-fmt"><button type="button" data-f="docx" aria-pressed="' + (fmt === "docx") + '">Word (.docx)</button><button type="button" data-f="pdf" aria-pressed="' + (fmt === "pdf") + '">PDF</button></div></div>' +
-      '<div class="lo-acts"><button type="button" class="btn primary" id="lo-dev" title="Einen Ordner auf diesem Gerät auswählen">💾 Speichern unter …</button>' + (Z && Z.list ? '<button type="button" class="btn" id="lo-od" title="Einen Ordner in Ihrem OneDrive (0_Planung) auswählen">☁ In OneDrive-Ordner …</button>' : "") + '<button type="button" class="btn ghost" id="lo-print" title="Druckdialog öffnen – dort geht auch «Als PDF speichern»">🖨 Drucken</button></div>' +
+      '<div class="lo-acts"><button type="button" class="btn primary" id="lo-dev" title="Einen Ordner auf diesem Gerät auswählen">💾 Speichern unter …</button>' + (Z && Z.list ? '<button type="button" class="btn" id="lo-od" title="Einen Ordner in Ihrem OneDrive (0_Planung) auswählen">☁ In OneDrive-Ordner …</button>' : "") + (spec ? "" : '<button type="button" class="btn ghost" id="lo-print" title="Druckdialog öffnen – dort geht auch «Als PDF speichern»">🖨 Drucken</button>') + "</div>" + (spec ? '<p class="msg">Beta: Schülerblatt aus dem Kästchen – ohne Lehrerschrift; Abgedecktes wird zur Leerzeile. In Word können Sie es danach fertig gestalten.</p>' : "") +
       '<p class="msg" id="lo-msg"></p><div id="lo-od-box" hidden></div><div class="actions"><button type="button" class="btn ghost" id="lo-close">Schliessen</button></div>', (root) => {
       const msg = root.querySelector("#lo-msg"), say = (t, w) => { msg.className = "msg" + (w ? " warn" : ""); msg.textContent = t; };
       const name = () => lkFname(root.querySelector("#lo-name").value) + "." + fmt;
-      root.querySelector("#lo-close").onclick = closeModal;
+      root.querySelector("#lo-close").onclick = () => (spec ? closeModal2 : closeModal)();
       root.querySelector("#lo-fmt").addEventListener("click", (e) => { const b = e.target.closest("[data-f]"); if (!b) return; fmt = b.dataset.f; try { localStorage.setItem("zeitplan-lkfmt", fmt); } catch (e2) {} root.querySelectorAll("#lo-fmt [data-f]").forEach((y) => y.setAttribute("aria-pressed", String(y === b))); });
-      root.querySelector("#lo-print").onclick = () => { closeModal(); lkPrint(); };
+      if (!spec) root.querySelector("#lo-print").onclick = () => { (spec ? closeModal2 : closeModal)(); lkPrint(); };
       root.querySelector("#lo-dev").onclick = async () => {
         let handle = null;
         if (window.showSaveFilePicker) {
@@ -14102,7 +14158,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
           catch (e) { if (e && e.name === "AbortError") return; handle = null; }
         }
         try {
-          const blob = await lkMakeFile(fmt, title, say);
+          const blob = await lkMakeFile(fmt, title, say, spec);
           if (handle) { const w = await handle.createWritable(); await w.write(blob); await w.close(); say("✓ Gespeichert: " + handle.name); }
           else { await state.downloads.save({ filename: name(), data: blob }); say("✓ Heruntergeladen: " + name()); }
         } catch (err) { console.error(err); say(err.message || String(err), true); }
@@ -14130,7 +14186,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
             try {
               if (b.id === "lo-here" && (await Z.exists(path))) { say("«" + name() + "» gibt es in diesem Ordner schon.", true); b.insertAdjacentHTML("afterend", '<button type="button" class="btn danger" id="lo-over">Ersetzen</button>'); return; }
               b.disabled = true;
-              const blob = await lkMakeFile(fmt, title, say);
+              const blob = await lkMakeFile(fmt, title, say, spec);
               say("Speichert in OneDrive …");
               if (b.id === "lo-over") await Z.write(path, blob); else await Z.place(cur, name(), blob, false);
               try { localStorage.setItem("zeitplan-lkout", cur); } catch (e2) {}
