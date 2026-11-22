@@ -1195,7 +1195,7 @@ html.phone .lesson.mat-slim .ldocs { grid-column: 1 / -1; }
 .notes-ed, .notes { display: flow-root; }
 .nfig { margin: 6px 0; width: fit-content; max-width: 100%; }
 .nfig img { display: block; max-width: 100%; height: auto; margin: 0; }
-.nfig[class*=" w"] img { width: 100%; max-width: 100%; }
+.nfig[class*=" w"] img, .nfig[style*="width"] img { width: 100%; max-width: 100%; }
 .nfig.w25 { width: 25%; } .nfig.w33 { width: 33%; } .nfig.w50 { width: 50%; } .nfig.w75 { width: 75%; } .nfig.w100 { width: 100%; }
 .nfig figcaption { contain: inline-size; font-size: 0.8em; line-height: 1.3; color: var(--muted); font-style: italic; margin-top: 3px; overflow-wrap: anywhere; }
 .nfig.p-l { float: left; margin: 3px 16px 8px 0; } .nfig.p-r { float: right; margin: 3px 0 8px 16px; } .nfig.p-c { margin-left: auto; margin-right: auto; }
@@ -2339,6 +2339,15 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
 .ncdot { position: absolute; z-index: 6; width: 14px; height: 14px; padding: 0; border-radius: 50%; border: 2px solid var(--surface); background: color-mix(in srgb, var(--muted) 55%, transparent); cursor: pointer; box-shadow: 0 0 0 1px var(--line); }
 .ncdot:hover, .ncdot[aria-expanded="true"] { background: var(--accent); }
 .ncdot[hidden] { display: none; }
+/* Zeile der Lektionsplanung ↔ Kästchen: dezenter Verweis */
+.ptable .pcl { display: inline-block; vertical-align: middle; width: 18px; height: 18px; padding: 0; margin: 0 1px 0 0; border: 0; border-radius: 4px; background: none; color: var(--muted); font-size: 12px; line-height: 18px; cursor: pointer; opacity: 0; transition: opacity .15s; }
+.ptable tr:hover .pcl, .ptable .pcl:focus-visible { opacity: .55; }
+.ptable .pcl.on { opacity: .85; color: var(--accent); font-size: 13px; }
+.ptable .pcl:hover { opacity: 1; background: var(--accent-soft); color: var(--accent); }
+@media (hover: none) { .ptable .pcl { opacity: .5; } }
+.notes-ed .ncard { scroll-margin-top: 175px; }
+.notes-ed .ncard.nc-flash { animation: ncflash 1.8s ease-out; }
+@keyframes ncflash { 0%, 35% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent); background: var(--accent-soft); } 100% { box-shadow: 0 0 0 0 transparent; } }
 </style>
 
 <!-- Startbild: ein Buch geht auf und bleibt, bis die Daten geladen sind (cloud.js ruft zpIntroDone); bei «weniger Bewegung» ohne Bewegung, im Beamer-Fenster ausgelassen -->
@@ -2960,7 +2969,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
           if (/^[\w-]{1,80}$/.test(id)) out += '<figure class="nfig ndoc' + (w ? " w" + w[1] : "") + (ps ? " p-" + ps[1] : "") + '" data-doc="' + id + '" data-name="' + esc((n.getAttribute("data-name") || "").slice(0, 200)) + '"' + (/^\d{1,6}$/.test(n.getAttribute("data-ch") || "") && +n.getAttribute("data-ch") > 0 ? ' data-ct="' + (/^\d{1,6}$/.test(n.getAttribute("data-ct") || "") ? n.getAttribute("data-ct") : "0") + '" data-ch="' + n.getAttribute("data-ch") + '"' : "") + (/^[a-z0-9]{1,16}$/.test(n.getAttribute("data-v") || "") ? ' data-v="' + n.getAttribute("data-v") + '"' : "") + '>' + (cap ? "<figcaption>" + esc(cap) + "</figcaption>" : "") + "</figure>";
           continue;
         }
-        if (tag === "FIGURE") { const im = n.querySelector("img"), src = (im && im.getAttribute("src")) || ""; if (/^\/_blob\/[0-9a-f]{8,64}$/.test(src)) { const c = n.className || "", w = /\bw(25|33|50|75|100)\b/.exec(c), ps = /\bp-([lrc])\b/.exec(c), fc = n.querySelector("figcaption"), cap = fc ? fc.textContent.replace(/[\u00a0\u200b]/g, " ").trim() : ""; out += '<figure class="nfig' + (w ? " w" + w[1] : "") + (ps ? " p-" + ps[1] : "") + '"><img src="' + src + '" alt="">' + (cap ? "<figcaption>" + esc(cap) + "</figcaption>" : "") + "</figure>"; } continue; }
+        if (tag === "FIGURE") { const im = n.querySelector("img"), src = (im && im.getAttribute("src")) || ""; if (/^\/_blob\/[0-9a-f]{8,64}$/.test(src)) { const c = n.className || "", w = /\bw(25|33|50|75|100)\b/.exec(c), ps = /\bp-([lrc])\b/.exec(c), fc = n.querySelector("figcaption"), cap = fc ? fc.textContent.replace(/[\u00a0\u200b]/g, " ").trim() : "", pw = /^(\d{1,3})(?:\.\d+)?%$/.exec((n.style && n.style.width) || ""), pwv = pw && +pw[1] >= 10 && +pw[1] <= 100 ? +pw[1] : 0; out += '<figure class="nfig' + (w && !pwv ? " w" + w[1] : "") + (ps ? " p-" + ps[1] : "") + '"' + (pwv ? ' style="width:' + pwv + '%"' : "") + '><img src="' + src + '" alt="">' + (cap ? "<figcaption>" + esc(cap) + "</figcaption>" : "") + "</figure>"; } continue; }
         if (tag === "IMG") { const src = n.getAttribute("src") || ""; if (/^\/_blob\/[0-9a-f]{8,64}$/.test(src)) { const w = /\bw(25|33|50|75)\b/.exec(n.className || ""); out += '<img src="' + src + '"' + (w ? ' class="w' + w[1] + '"' : "") + ' alt="">'; } continue; }
         if (tag === "STYLE" || tag === "SCRIPT" || tag === "META" || tag === "TITLE") continue;
         if (tag === "TABLE") {
@@ -2972,7 +2981,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         if (tag === "DIV" && n.classList.contains("ncard")) {
           // Kärtchen (Breite in Sechsteln); kein Kärtchen im Kärtchen
           if (n.parentElement && n.parentElement.closest(".ncard")) { walk(n); continue; }
-          const w = +n.getAttribute("data-w"); out += '<div class="ncard" data-w="' + ([2, 3, 4, 6].includes(w) ? w : 6) + '">'; walk(n); out += "</div>"; continue;
+          const w = +n.getAttribute("data-w"), cid = n.getAttribute("data-id") || ""; out += '<div class="ncard" data-w="' + ([2, 3, 4, 6].includes(w) ? w : 6) + '"' + (/^[a-z0-9]{4,12}$/.test(cid) ? ' data-id="' + cid + '"' : "") + '>'; walk(n); out += "</div>"; continue;
         }
         if (tag === "DIV" && n.classList.contains("nct")) {
           // Titel eines Kärtchens (nur Text)
@@ -4227,6 +4236,14 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   // Der Code bleibt; zum Wiedereinschalten SEC_ON = true setzen (bestehende Abschnitte wurden in fette Titel umgewandelt).
   const SEC_ON = false;
   let PAB = null;
+  // offenes Lektionsfenster: Kästchen in den Notizen, mit denen eine Zeile der Lektionsplanung verbunden werden kann (Verweis steht wie früher die Abschnitte hinter den Zellen der Zeile)
+  let PCARD = null;
+  const pclOf = (p, ri) => { const cs = PCARD ? PCARD.list() : []; const id = abGet(p, ri).find((v) => cs.some((c) => c.id === v)); return id ? cs.find((c) => c.id === id) : null; };
+  const pclCell = (p, ri) => {
+    if (!PCARD || PAB || !PCARD.list().length) return "";
+    const c = pclOf(p, ri);
+    return '<button type="button" class="pcl' + (c ? " on" : "") + '" data-pcl="' + ri + '" title="' + (c ? "Zum Kästchen «" + esc(c.t) + "» springen (Rechtsklick: Verbindung ändern)" : "Diese Zeile mit einem Kästchen in den Notizen verbinden") + '" aria-label="Kästchen">' + (c ? "↘" : "＋") + "</button>";
+  };
   let CUT = null; // Ausschnitt, der gerade aus dem Arbeitsblatt in die Notizen gezogen wird
   const secId = () => (Math.random().toString(36).slice(2) + "0000000").slice(0, 7);
   const fnv = (str) => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }; // im offenen Lektionsfenster: { secs() → [{id, t}], col(id) }
@@ -4240,7 +4257,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     return colgroup(p, PAB ? 26 : 48, PAB ? "4.6em" : "") + "<thead><tr>" + p.cols.map((c, j) => '<th><div class="pcell" contenteditable="true" data-pc="' + j + '" aria-label="Spaltentitel">' + esc(c) + "</div>" +
       (j < p.cols.length - 1 ? '<span class="crz" data-crz="' + j + '" title="Ziehen, um die Spalte breiter oder schmaler zu machen"></span>' : "") + "</th>").join("") + (PAB ? '<th class="pab-h" title="Abschnitte aus den Notizen, die zu dieser Phase gehören (Farbpunkt: Klick springt hin). Text in den Notizen markieren und «§ Als Abschnitt» wählen, dann hier mit + zuordnen">§</th>' : "") + '<th class="rm"></th></tr></thead><tbody>' +
       p.rows.map((row, ri) => "<tr" + (PAB ? ' style="--pc:' + rowCol(ri) + '"' : "") + ">" + p.cols.map((c, j) => '<td><div class="rich pcell" contenteditable="true" data-pr="' + ri + '" data-pj="' + j + '" aria-label="' + esc(c) + '">' + sanitize(row[j] || "") + "</div></td>").join("") + abCell(p, ri) +
-        '<td class="rm">' + (PAB || !SEC_ON ? "" : '<button type="button" class="psec" data-psec="' + ri + '" title="Abschnitt in den Notizen zu dieser Zeile: hinspringen bzw. anlegen" aria-label="Abschnitt in den Notizen">§</button>') + '<span class="pgrip" data-pgrip="' + ri + '" title="Ziehen: Zeile nach oben oder unten verschieben. Rechtsklick: Zeile einfügen, löschen …" aria-label="Zeile verschieben">⠿</span></td></tr>').join("") + "</tbody>";
+        '<td class="rm">' + (PAB || !SEC_ON ? pclCell(p, ri) : '<button type="button" class="psec" data-psec="' + ri + '" title="Abschnitt in den Notizen zu dieser Zeile: hinspringen bzw. anlegen" aria-label="Abschnitt in den Notizen">§</button>') + '<span class="pgrip" data-pgrip="' + ri + '" title="Ziehen: Zeile nach oben oder unten verschieben. Rechtsklick: Zeile einfügen, löschen …" aria-label="Zeile verschieben">⠿</span></td></tr>').join("") + "</tbody>";
   }
   function planHtml(p) {
     ensurePlan(p);
@@ -4327,14 +4344,36 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       if (!confirm("Zeile " + (ri + 1) + (t ? " «" + (t.length > 60 ? t.slice(0, 60) + "…" : t) + "»" : " (leer)") + " löschen? (Mit «Rückgängig» lässt es sich wiederherstellen.)")) return false;
       HIST.brk = true; p.rows.splice(ri, 1); if (!p.rows.length) p.rows.push(p.cols.map(() => "")); return true;
     };
+    // Zeile ↔ Kästchen: Klick springt zum Kästchen, sonst (oder per Rechtsklick) Kästchen wählen
+    const pclMenu = (cx, cy, ri) => {
+      if (!PCARD) return;
+      const cs = PCARD.list(), cur = pclOf(p, ri);
+      if (!cs.length) return;
+      const items = cs.map((c) => ["c" + c.k, (cur && cur.id === c.id ? "✓ " : "") + (c.k + 1) + " · " + c.t]);
+      if (cur) items.push("-", ["x", "Verbindung lösen"]);
+      cellMenu(cx, cy, "Zeile " + (ri + 1) + " verbinden mit …", items, (op) => {
+        if (op === "x") abSet(p, ri, []); else { const c = cs[+op.slice(1)]; if (!c) return; abSet(p, ri, [PCARD.idOf(c.el)]); }
+        tbl.innerHTML = planTableInner(p); changed();
+        if (op !== "x") PCARD.go(abGet(p, ri)[0]);
+      });
+    };
+    tbl.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-pcl]"); if (!b || !PCARD) return;
+      e.preventDefault(); const ri = +b.dataset.pcl, c = pclOf(p, ri);
+      if (c && PCARD.go(c.id)) return;
+      const r = b.getBoundingClientRect(); pclMenu(r.right + 4, r.top, ri);
+    });
+    tbl.addEventListener("contextmenu", (e) => { const b = e.target.closest("[data-pcl]"); if (!b || !PCARD) return; e.preventDefault(); e.stopImmediatePropagation(); pclMenu(e.clientX, e.clientY, +b.dataset.pcl); }, true);
     const rowMenu = (cx, cy, ri) => {
       const items = [];
+      if (PCARD && !PAB && PCARD.list().length) items.push(["kc", pclOf(p, ri) ? "↘ Verbindung zum Kästchen ändern …" : "＋ Mit einem Kästchen verbinden …"], "-");
       if (ri > 0) items.push(["ru", "▲ Zeile nach oben"]); if (ri < p.rows.length - 1) items.push(["rd", "▼ Zeile nach unten"]);
       items.push("-", ["rb", "+ Zeile darüber einfügen"], ["ra", "+ Zeile darunter einfügen"], "-", ["rx", "Zeile löschen …", 1]);
       cellMenu(cx, cy, "Zeile " + (ri + 1), items, (op) => {
         if (op === "ru" || op === "rd") { const k = op === "ru" ? ri - 1 : ri + 1, t = p.rows[ri]; p.rows[ri] = p.rows[k]; p.rows[k] = t; }
         else if (op === "rb" || op === "ra") p.rows.splice(op === "rb" ? ri : ri + 1, 0, p.cols.map(() => ""));
         else if (op === "rx") { if (!delRow(ri)) return; }
+        else if (op === "kc") { setTimeout(() => pclMenu(cx, cy, ri), 0); return; }
         tbl.innerHTML = planTableInner(p); changed();
       });
     };
@@ -4366,7 +4405,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
   }
 
   // ---------- Drucken: eine Datei, die sich im Browser öffnet und gleich das Druckfenster zeigt ----------
-  const PRINT_CSS = "@page{size:A4;margin:10mm 11mm}body{font-family:Arial,Helvetica,sans-serif;font-size:9.5pt;color:#111;line-height:1.3;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}h1{font-size:13pt;margin:0 0 4px}h2{font-size:11pt;margin:10px 0 4px;padding-bottom:2px;border-bottom:1.2px solid #333}h3{font-size:8.5pt;margin:6px 0 2px;text-transform:uppercase;letter-spacing:.04em;color:#444}.meta{color:#444;margin:0 0 10px}.box{border:1px solid #bbb;border-radius:4px;padding:6px 8px;margin:4px 0}table{width:100%;border-collapse:collapse;margin:4px 0;table-layout:fixed}th,td{border:1px solid #999;padding:4px 6px;vertical-align:top;text-align:left;overflow-wrap:break-word}th{background:#eee;font-size:9.5pt}.pre{white-space:pre-wrap}tr{break-inside:avoid}.notes img{max-width:100%;max-height:120mm}.notes img.w50{max-width:50%}.notes img.w33{max-width:33%}.notes img.w25{max-width:25%}.notes img.w75{max-width:75%}.notes{display:flow-root}.nfig{margin:4px 0;width:fit-content;max-width:100%;break-inside:avoid}.nfig img{display:block;max-width:100%;max-height:120mm}.nfig[class*=\" w\"] img{width:100%}.nfig.w25{width:25%}.nfig.w33{width:33%}.nfig.w50{width:50%}.nfig.w75{width:75%}.nfig.w100{width:100%}.nfig figcaption{contain:inline-size;font-size:8pt;font-style:italic;color:#555;margin-top:2px}.nfig.p-l{float:left;margin:2px 10px 6px 0}.nfig.p-r{float:right;margin:2px 0 6px 10px}.nfig.p-c{margin-left:auto;margin-right:auto}.nfig.p-c figcaption{text-align:center}.pnote{margin:4px 0 8px}.pnote-l{display:block;font-size:8pt;text-transform:uppercase;letter-spacing:.04em;color:#555;margin-bottom:1px}.ls{font-family:'Ink Free','Segoe Print','Bradley Hand',Noteworthy,'Comic Sans MS',cursive;color:#2459c9}table caption{caption-side:bottom;text-align:left;font-size:8pt;font-style:italic;color:#555;padding-top:2px}table.tp-l{float:left;margin:2px 10px 6px 0}table.tp-r{float:right;margin:2px 0 6px 10px}table.tp-c{margin-left:auto;margin-right:auto}mark.hl-y{background:#fff1a6}mark.hl-g{background:#d3f2c4}mark.hl-b{background:#cfe4ff}mark{color:inherit}.fs-s{font-size:85%}.fs-l{font-size:125%}.fs-xl{font-size:150%}.one h1{border-bottom:1.2px solid #333;padding-bottom:2px}.lhn-1{line-height:1.15}.lhn-2{line-height:1.5}.lhn-3{line-height:1.8}.lhn-4{line-height:2.2}.al-c{text-align:center}.al-r{text-align:right}.al-j{text-align:justify}.notes ul,.notes ol{margin:2px 0;padding-left:20px}.ncols{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);margin:4px 0;break-inside:avoid}.ncol{padding:2px 8px}.ncol+.ncol{border-left:1px solid #999}.nflow{column-count:2;column-gap:8mm;column-rule:1px solid #bbb;margin:4px 0}.nflow[data-n=\"3\"]{column-count:3}.nflow li{break-inside:avoid}.nsec{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px 0 4px;font-size:8.5pt;font-weight:700;color:#555;break-after:avoid}.nsec::before,.nsec::after{content:\"\";flex:0 1 22%;border-top:1px solid #999}.nsec .nsec-tg{display:none}.phase{font-weight:400;color:#555}ul{margin:2px 0;padding-left:18px}@media screen{body{max-width:190mm;margin:20px auto;padding:0 12px}}figure.ndoc::before{content:\"📄 \" attr(data-name);display:block;color:#555;font-style:italic}.ls{font-style:italic}.nend{display:none}.pph{font-weight:700;font-size:10.5pt;margin:12px 0 2px;break-after:avoid}.psec{margin:0 0 6px}.psec h4{margin:6px 0 3px;font-size:10pt;border-bottom:1px solid #000;padding-bottom:1px;break-after:avoid}.psec-ref{color:#444;font-style:italic;margin:2px 0 6px}.pcm{font-size:8.5pt;color:#222;border-left:2px solid #000;padding:2px 0 2px 7px;margin:4px 0}.pcut{position:relative;overflow:hidden;margin:4px auto;outline:1px solid #888;outline-offset:0;break-inside:avoid;background:#fff}.pcut-in{transform-origin:0 0}.pcut-n{font-size:7.5pt;color:#444;font-style:italic;margin:-2px 0 6px}.psheet{break-before:page}.psheet h3{margin:0 0 4px}.psheet img{max-width:100%;display:block;margin:0 auto 6px;border:1px solid #888}td.pab-p{font-size:8.5pt}td.pab-p .pab-s{display:block;margin-bottom:2px}.nprep{background:#f1f3f6;border:1px solid #cfd5dd;border-radius:4px;padding:4px 8px;margin:2px 0 8px;color:#333}.nprep::before{content:\"Vorbereitung\";display:block;font-size:7.5pt;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:2px}.nprep .nprep{background:none;border:0;padding:0;margin:0}.nprep .nprep::before{content:none}.notes.ncards{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px 8px;align-items:start}.notes.ncards>*{grid-column:1/-1}.notes.ncards>.ncard{grid-column:span 6;border:1px solid #999;border-radius:5px;padding:4px 7px;break-inside:avoid}.notes.ncards>.ncard[data-w=\"2\"]{grid-column:span 2}.notes.ncards>.ncard[data-w=\"3\"]{grid-column:span 3}.notes.ncards>.ncard[data-w=\"4\"]{grid-column:span 4}.nct{font-weight:700;font-size:10pt;border-bottom:1px solid #bbb;margin:0 0 3px;padding-bottom:1px}" + FF_CSS;
+  const PRINT_CSS = "@page{size:A4;margin:10mm 11mm}body{font-family:Arial,Helvetica,sans-serif;font-size:9.5pt;color:#111;line-height:1.3;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}h1{font-size:13pt;margin:0 0 4px}h2{font-size:11pt;margin:10px 0 4px;padding-bottom:2px;border-bottom:1.2px solid #333}h3{font-size:8.5pt;margin:6px 0 2px;text-transform:uppercase;letter-spacing:.04em;color:#444}.meta{color:#444;margin:0 0 10px}.box{border:1px solid #bbb;border-radius:4px;padding:6px 8px;margin:4px 0}table{width:100%;border-collapse:collapse;margin:4px 0;table-layout:fixed}th,td{border:1px solid #999;padding:4px 6px;vertical-align:top;text-align:left;overflow-wrap:break-word}th{background:#eee;font-size:9.5pt}.pre{white-space:pre-wrap}tr{break-inside:avoid}.notes img{max-width:100%;max-height:120mm}.notes img.w50{max-width:50%}.notes img.w33{max-width:33%}.notes img.w25{max-width:25%}.notes img.w75{max-width:75%}.notes{display:flow-root}.nfig{margin:4px 0;width:fit-content;max-width:100%;break-inside:avoid}.nfig img{display:block;max-width:100%;max-height:120mm}.nfig[class*=\" w\"] img,.nfig[style*=width] img{width:100%}.nfig.w25{width:25%}.nfig.w33{width:33%}.nfig.w50{width:50%}.nfig.w75{width:75%}.nfig.w100{width:100%}.nfig figcaption{contain:inline-size;font-size:8pt;font-style:italic;color:#555;margin-top:2px}.nfig.p-l{float:left;margin:2px 10px 6px 0}.nfig.p-r{float:right;margin:2px 0 6px 10px}.nfig.p-c{margin-left:auto;margin-right:auto}.nfig.p-c figcaption{text-align:center}.pnote{margin:4px 0 8px}.pnote-l{display:block;font-size:8pt;text-transform:uppercase;letter-spacing:.04em;color:#555;margin-bottom:1px}.ls{font-family:'Ink Free','Segoe Print','Bradley Hand',Noteworthy,'Comic Sans MS',cursive;color:#2459c9}table caption{caption-side:bottom;text-align:left;font-size:8pt;font-style:italic;color:#555;padding-top:2px}table.tp-l{float:left;margin:2px 10px 6px 0}table.tp-r{float:right;margin:2px 0 6px 10px}table.tp-c{margin-left:auto;margin-right:auto}mark.hl-y{background:#fff1a6}mark.hl-g{background:#d3f2c4}mark.hl-b{background:#cfe4ff}mark{color:inherit}.fs-s{font-size:85%}.fs-l{font-size:125%}.fs-xl{font-size:150%}.one h1{border-bottom:1.2px solid #333;padding-bottom:2px}.lhn-1{line-height:1.15}.lhn-2{line-height:1.5}.lhn-3{line-height:1.8}.lhn-4{line-height:2.2}.al-c{text-align:center}.al-r{text-align:right}.al-j{text-align:justify}.notes ul,.notes ol{margin:2px 0;padding-left:20px}.ncols{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);margin:4px 0;break-inside:avoid}.ncol{padding:2px 8px}.ncol+.ncol{border-left:1px solid #999}.nflow{column-count:2;column-gap:8mm;column-rule:1px solid #bbb;margin:4px 0}.nflow[data-n=\"3\"]{column-count:3}.nflow li{break-inside:avoid}.nsec{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px 0 4px;font-size:8.5pt;font-weight:700;color:#555;break-after:avoid}.nsec::before,.nsec::after{content:\"\";flex:0 1 22%;border-top:1px solid #999}.nsec .nsec-tg{display:none}.phase{font-weight:400;color:#555}ul{margin:2px 0;padding-left:18px}@media screen{body{max-width:190mm;margin:20px auto;padding:0 12px}}figure.ndoc::before{content:\"📄 \" attr(data-name);display:block;color:#555;font-style:italic}.ls{font-style:italic}.nend{display:none}.pph{font-weight:700;font-size:10.5pt;margin:12px 0 2px;break-after:avoid}.psec{margin:0 0 6px}.psec h4{margin:6px 0 3px;font-size:10pt;border-bottom:1px solid #000;padding-bottom:1px;break-after:avoid}.psec-ref{color:#444;font-style:italic;margin:2px 0 6px}.pcm{font-size:8.5pt;color:#222;border-left:2px solid #000;padding:2px 0 2px 7px;margin:4px 0}.pcut{position:relative;overflow:hidden;margin:4px auto;outline:1px solid #888;outline-offset:0;break-inside:avoid;background:#fff}.pcut-in{transform-origin:0 0}.pcut-n{font-size:7.5pt;color:#444;font-style:italic;margin:-2px 0 6px}.psheet{break-before:page}.psheet h3{margin:0 0 4px}.psheet img{max-width:100%;display:block;margin:0 auto 6px;border:1px solid #888}td.pab-p{font-size:8.5pt}td.pab-p .pab-s{display:block;margin-bottom:2px}.nprep{background:#f1f3f6;border:1px solid #cfd5dd;border-radius:4px;padding:4px 8px;margin:2px 0 8px;color:#333}.nprep::before{content:\"Vorbereitung\";display:block;font-size:7.5pt;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#666;margin-bottom:2px}.nprep .nprep{background:none;border:0;padding:0;margin:0}.nprep .nprep::before{content:none}.notes.ncards{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px 8px;align-items:start}.notes.ncards>*{grid-column:1/-1}.notes.ncards>.ncard{grid-column:span 6;border:1px solid #999;border-radius:5px;padding:4px 7px;break-inside:avoid}.notes.ncards>.ncard[data-w=\"2\"]{grid-column:span 2}.notes.ncards>.ncard[data-w=\"3\"]{grid-column:span 3}.notes.ncards>.ncard[data-w=\"4\"]{grid-column:span 4}.nct{font-weight:700;font-size:10pt;border-bottom:1px solid #bbb;margin:0 0 3px;padding-bottom:1px}" + FF_CSS;
   const safeName = (t) => String(t || "Planung").replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, " ").trim().slice(0, 120);
   async function inlineImgs(body) {
     const ids = [...new Set([...body.matchAll(/src="\/_blob\/([0-9a-f]+)"/g)].map((m) => m[1]))];
@@ -5741,6 +5780,19 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     const p = opt.plan, sp = root.querySelector("#d-split"), dp = root.querySelector("#d-ws"), wsb = root.querySelector("#d-wsb"), pn = root.querySelector(".panel"), msg = root.querySelector("#d-nmsg");
     const files = () => { const seen = new Set(); return [...(x.files || []), ...(opt.reiheFiles || [])].filter((f) => f && f.id && !seen.has(f.id) && seen.add(f.id)); };
     const tbl = () => root.querySelector("#p-table");
+    // --- Zeilen der Lektionsplanung ↔ Kästchen in den Notizen ---
+    const cardT = (c, k) => { const h = c.querySelector(":scope > .nct"), b = h && h.textContent.trim() ? h : [...c.querySelectorAll("div, li, p")].find((d) => !d.querySelector("div, li, p") && d.textContent.trim()), t = ((b && b.textContent) || "").replace(/\s+/g, " ").trim(); return t ? (t.length > 46 ? t.slice(0, 44) + " …" : t) : "Kästchen " + (k + 1); };
+    PCARD = {
+      list: () => { if (!ned.isConnected) return []; const seen = new Set(); return [...ned.querySelectorAll(":scope > .ncard")].map((c, k) => { if (c.dataset.id && seen.has(c.dataset.id)) delete c.dataset.id; if (c.dataset.id) seen.add(c.dataset.id); return { id: c.dataset.id || "", el: c, k, t: cardT(c, k) }; }); },
+      idOf: (c) => { if (!c.dataset.id) { c.dataset.id = secId(); ned.dispatchEvent(new Event("input", { bubbles: true })); } return c.dataset.id; },
+      go: (id) => {
+        const c = id && ned.querySelector(':scope > .ncard[data-id="' + id + '"]'); if (!c) return false;
+        c.scrollIntoView({ behavior: "smooth", block: "start" });
+        c.classList.remove("nc-flash"); void c.offsetWidth; c.classList.add("nc-flash"); setTimeout(() => c.classList.remove("nc-flash"), 1900);
+        return true;
+      },
+    };
+    { const tb = tbl(); if (tb && !SEC_ON) tb.innerHTML = planTableInner(p); }
     // --- Spalte «Abschnitt» ---
     const redraw = () => { const tb = tbl(); if (!tb) return; if (tb.contains(document.activeElement) && document.activeElement.isContentEditable) { tb._abLater = true; return; } tb.innerHTML = planTableInner(p); };
     root.addEventListener("focusout", (e) => { const tb = tbl(); if (tb && tb._abLater && tb.contains(e.target)) { tb._abLater = false; setTimeout(() => { if (!tb.contains(document.activeElement)) tb.innerHTML = planTableInner(p); }, 0); } });
@@ -6143,6 +6195,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         RB("d-nword", "📄", "Word-Arbeitsblatt", "Word-Dokument (Arbeitsblatt) in die Notizen einfügen – grösser/kleiner wie ein Bild, Doppelklick = direkt bearbeiten und in dieselbe Datei speichern") + '<input type="file" id="d-nwordf" accept=".docx" hidden>') +
       RG("Kästchen", (opt.plan ? RB("d-ncard", "▢", "Kästchen", "Text markiert: daraus ein Kästchen machen. Nichts markiert: neues Kästchen unten anfügen") + RB("d-ncoff", "⬚", "Kästchen auflösen", "Kästchen mit der Schreibmarke auflösen – der Text bleibt stehen") + RB("d-ncdel", "🗑", "Kästchen löschen", "Kästchen mit der Schreibmarke löschen (zweimal klicken; mit Rückgängig wieder da)", "rdel") : "") +
         RB("d-ntask", "◧", "Aufgabe | Notizen", "Seite teilen: markierte Aufgabe links, rechts Lösungen und Notizen schreiben (Linie dazwischen lässt sich ziehen)") +
+        RB("d-nuntask", "▭", "Aufteilung aufheben", "Aufteilung «Aufgabe | Notizen» bzw. Spalten mit der Schreibmarke aufheben – der Inhalt bleibt untereinander stehen (mit Rückgängig wieder da). Auch per Rechtsklick in die Aufteilung.") +
         '<label class="nlh rcol" title="Spalten einfügen, z. B. Fragen links, Antworten rechts"><span class="ric">▥</span><select id="d-ncols"><option value="">Spalten</option><option value="2">2 Spalten</option><option value="3">3 Spalten</option><option value="t">Aufgabe | Notizen</option><option value="0">Spalten aufheben</option></select></label>') +
       RG("Gliederung", 
         '<button type="button" class="nb nimg" id="d-nsec" aria-haspopup="menu" title="Abschnitt einfügen: Trennstrich mit Titel, z. B. eine Phase aus der Lektionsplanung; lässt sich zuklappen">§ Abschnitt</button><button type="button" class="nb" id="d-neye" aria-pressed="true" title="Abschnitte (Trennstriche und § in der Lektionsplanung) zeigen oder ausblenden">👁</button>') +
@@ -6604,13 +6657,17 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     let t = null; ned.addEventListener("input", () => { clearTimeout(t); t = setTimeout(save, 250); });
     ned.addEventListener("blur", () => { clearTimeout(t); save(); });
     const msg = $("#d-nmsg");
-    const insertImgs = async (files) => {
+    const insertImgs = async (files, at) => {
       if (!state.assets) { msg.textContent = "Bilder einfügen geht nur in der Claude-Ansicht."; return; }
       for (const f of files) {
         if (!/^image\//.test(f.type)) continue;
         msg.textContent = "Bild wird gespeichert …";
         try {
           const r = await state.assets.upload(f, { type: f.type === "image/svg+xml" ? "image/png" : f.type });
+          if (at) { // hineingezogen: dort einsetzen, wo losgelassen wurde
+            HIST.brk = true; const fig = document.createElement("figure"); fig.className = "nfig"; fig.contentEditable = "false"; fig.innerHTML = '<img src="/_blob/' + r.id + '" alt="">';
+            await putFig(fig, at.x, at.y, true); at = { x: at.x, y: at.y + 30 }; continue;
+          }
           ned.focus(); const sl = getSelection(); if (sl.rangeCount && ned.contains(sl.anchorNode)) sl.collapseToEnd(); else { const rg = document.createRange(); rg.selectNodeContents(ned); rg.collapse(false); sl.removeAllRanges(); sl.addRange(rg); }
           document.execCommand("insertHTML", false, '<figure class="nfig" contenteditable="false"><img src="/_blob/' + r.id + '" alt=""></figure><div><br></div>');
           figLock(); msg.textContent = "Bild eingefügt. Ein Klick aufs Bild: Grösse, Lage und Quelle."; save();
@@ -6629,16 +6686,75 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     // Bild ziehen = verschieben (nicht kopieren): zwischen Absätze, neben Text (Bild rückt auf die Seite, zu der es gezogen wird)
     let mv = null;
     const mvEnd = () => { if (!mv) return; mv.ind.remove(); mv.fig.classList.remove("moving"); mv = null; };
-    const mvAt = (x, y) => {
+    const mvAt = (x, y, fig0) => {
+      const fg = fig0 || (mv && mv.fig);
       const under = document.elementFromPoint(x, y), col = under && under.closest && under.closest(".ncol, .ncard");
       const box = col && ned.contains(col) ? col : ned, br = box.getBoundingClientRect();
-      const kids = [...box.children].filter((k) => k !== mv.fig && !(k.dataset && k.dataset.fill && !k.textContent.trim()));
-      const hit = kids.find((k) => { const r = k.getBoundingClientRect(); return y >= r.top && y <= r.bottom; });
+      const kids = [...box.children].filter((k) => k !== fg && !(k.dataset && k.dataset.fill && !k.textContent.trim()));
+      const inY = (k) => { const r = k.getBoundingClientRect(); return y >= r.top && y <= r.bottom; }, inX = (k) => { const r = k.getBoundingClientRect(); return x >= r.left && x <= r.right; };
+      const hit = kids.find((k) => inY(k) && inX(k) && !/\bp-[lr]\b/.test(k.className || "")) || kids.find((k) => inY(k) && inX(k)) || kids.find(inY);
       const ref = hit || kids.find((k) => k.getBoundingClientRect().top > y) || null;
       const text = !!(hit && !hit.matches("figure, table") && hit.textContent.trim());
       const side = x > br.left + br.width / 2 ? "r" : "l";
       const ry = ref ? ref.getBoundingClientRect().top - 2 : (kids.length ? kids[kids.length - 1].getBoundingClientRect().bottom + 2 : br.top + 4);
-      return { box, ref, text, side, ind: text ? { left: (side === "r" ? br.right - 3 : br.left) + "px", top: ry + "px", width: "3px", height: Math.max(24, hit.getBoundingClientRect().height) + "px" } : { left: br.left + "px", top: ry + "px", width: br.width + "px", height: "3px" } };
+      return { box, ref, hit, text, side, ind: text ? { left: (side === "r" ? br.right - 3 : br.left) + "px", top: ry + "px", width: "3px", height: Math.max(24, hit.getBoundingClientRect().height) + "px" } : { left: br.left + "px", top: ry + "px", width: br.width + "px", height: "3px" } };
+    };
+    // Bild neben Bestehendes: nur das neue Bild passt sich an (Breite = freier Platz daneben); Text und andere Bilder bleiben, wie sie waren
+    const fitBeside = (fig, hit, side, box) => {
+      const cs = getComputedStyle(box), b0 = box.getBoundingClientRect(), L = b0.left + parseFloat(cs.paddingLeft || 0), R = b0.right - parseFloat(cs.paddingRight || 0), W = R - L, gap = 20;
+      const im = fig.querySelector("img"), asp = im && im.naturalWidth && im.naturalHeight ? im.naturalWidth / im.naturalHeight : 4 / 3;
+      const freeOf = (el) => {
+        if (el.nodeType !== 1 || el.matches("figure, table, .ncols, .nflow, .nsec, .nend, .nprep, hr")) return 0;
+        if (el.matches("div[data-fill]") && !el.textContent.trim()) return W;
+        // nur die Textzeilen messen (nicht die Kästen der Absätze)
+        let mx = -1e9, mn = 1e9; const tw = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), rg = document.createRange();
+        for (let t = tw.nextNode(); t; t = tw.nextNode()) { if (!t.nodeValue.trim()) continue; rg.selectNodeContents(t); for (const r of rg.getClientRects()) { if (r.width < 1) continue; mx = Math.max(mx, r.right); mn = Math.min(mn, r.left); } }
+        if (el.querySelector("img, figure, table")) return 0;
+        if (mx < -1e8) return W;
+        return side === "r" ? R - mx - gap : mn - L - gap - (/^(UL|OL)$/.test(el.tagName) ? 30 : 0);
+      };
+      // liegt auf dieser Seite schon ein Bild daneben, ist dort kein Platz
+      const h0 = hit.getBoundingClientRect();
+      if ([...box.children].some((f) => f !== fig && f.matches && f.matches("figure.nfig.p-" + (side === "r" ? "r" : "l")) && (() => { const r = f.getBoundingClientRect(); return r.bottom > h0.top + 2 && r.top < h0.bottom - 2; })())) return 0;
+      let w = freeOf(hit); const top = h0.top;
+      for (let k = hit.nextElementSibling; k && w > 0; k = k.nextElementSibling) {
+        if (k === fig) continue;
+        const kt = k.getBoundingClientRect().top; if (kt >= top + w / asp) break;
+        const f = freeOf(k); if (f >= w) continue;
+        const wc = (kt - top - 8) * asp; // so gross, dass das Bild oberhalb davon endet
+        if (wc > f) { w = wc; break; } w = f;
+      }
+      return W > 0 && w >= Math.max(60, W * 0.12) ? Math.min(75, Math.max(10, Math.floor(w / W * 100))) : 0;
+    };
+    const putFig = async (fig, x, y, isNew) => {
+      const im = fig.querySelector("img"); if (im && !(im.complete && im.naturalWidth)) { try { await im.decode(); } catch (err) {} }
+      fig.remove();
+      const d = mvAt(x, y, fig), side0 = d.side;
+      const strip = () => { fig.className = fig.className.replace(/\s*\b(p-[lrc]|w(25|33|50|75|100))\b/g, ""); fig.style.removeProperty("width"); };
+      let msg2 = "";
+      if (d.box.matches(".ncol") && !d.box.textContent.trim() && !d.box.querySelector("img, table, figure")) {
+        // leere Spalte (z. B. rechts bei «Aufgabe | Notizen»): Bild füllt die Spalte, links bleibt alles gleich
+        // nicht höher als der Inhalt daneben (mind. etwa 140 px), damit darunter nichts verrutscht
+        const im2 = fig.querySelector("img"), asp = im2 && im2.naturalWidth && im2.naturalHeight ? im2.naturalWidth / im2.naturalHeight : 4 / 3;
+        const cs = getComputedStyle(d.box), cw = d.box.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0);
+        const hMax = Math.max(140, ...[...d.box.parentElement.children].filter((c) => c !== d.box).map((c) => c.scrollHeight - 12));
+        const pc = cw > 0 ? Math.min(100, Math.floor(hMax * asp / cw * 100)) : 100;
+        strip(); if (pc >= 100) fig.classList.add("w100"); else fig.style.width = Math.max(20, pc) + "%"; d.box.innerHTML = ""; d.box.appendChild(fig);
+        figLock(); dropFill(null); save(); $("#d-nmsg").textContent = isNew ? "Bild eingefügt. Ein Klick aufs Bild: Grösse, Lage und Quelle." : ""; return;
+      } else {
+        const floated = /\bp-[lr]\b/.test(fig.className);
+        const hit = d.text ? d.hit : floated && d.ref && !d.ref.matches("figure, table") && d.ref.textContent.trim() ? d.ref : null;
+        let side = side0, pw = 0;
+        if (hit) { pw = fitBeside(fig, hit, side, d.box); if (!pw) { const o = side === "r" ? "l" : "r"; pw = fitBeside(fig, hit, o, d.box); if (pw) side = o; } }
+        if (d.ref) d.box.insertBefore(fig, d.ref); else d.box.appendChild(fig);
+        if (hit) {
+          strip(); fig.classList.add("p-" + side);
+          if (pw) fig.style.width = pw + "%"; else { fig.classList.add("w25"); msg2 = "Daneben war kaum Platz – das Bild ist schmal. Ein Klick aufs Bild: Grösse und Lage ändern."; }
+        } else if (floated) strip();
+      }
+      if (!fig.nextSibling) { const dv = document.createElement("div"); dv.innerHTML = "<br>"; fig.after(dv); }
+      figLock(); dropFill(null); save();
+      $("#d-nmsg").textContent = msg2 || (isNew ? "Bild eingefügt. Ein Klick aufs Bild: Grösse, Lage und Quelle." : "");
     };
     ned.addEventListener("dragstart", (e) => {
       const img = e.target.closest && e.target.closest("img"); if (!img || !ned.contains(img)) return;
@@ -6655,17 +6771,9 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
     ned.addEventListener("drop", (e) => {
       if (mv) {
         e.preventDefault(); e.stopPropagation();
-        const fig = mv.fig, d = mvAt(e.clientX, e.clientY); mvEnd();
-        if (d.ref) d.box.insertBefore(fig, d.ref); else d.box.appendChild(fig);
-        // neben Text: Bild auf die Seite, zu der es gezogen wurde; der Text fliesst daneben
-        if (d.text || /\bp-[lr]\b/.test(fig.className)) {
-          fig.className = fig.className.replace(/\s*\bp-[lrc]\b/g, "") + " p-" + d.side;
-          if (d.text && !/\bw(25|33|50|75)\b/.test(fig.className)) fig.className = fig.className.replace(/\s*\bw100\b/g, "") + " w50";
-        }
-        if (!fig.nextSibling) { const dv = document.createElement("div"); dv.innerHTML = "<br>"; fig.after(dv); }
-        figLock(); dropFill(null); save(); return;
+        const fig = mv.fig; mvEnd(); HIST.brk = true; putFig(fig, e.clientX, e.clientY); return;
       }
-      const f = [...(e.dataTransfer.files || [])]; if (f.length) { e.preventDefault(); const dx = f.filter(isDocx); if (dx.length) addDocx(dx); insertImgs(f.filter((y) => !isDocx(y))); }
+      const f = [...(e.dataTransfer.files || [])]; if (f.length) { e.preventDefault(); const dx = f.filter(isDocx); if (dx.length) addDocx(dx); insertImgs(f.filter((y) => !isDocx(y)), { x: e.clientX, y: e.clientY }); }
     });
     $("#d-nimg").addEventListener("change", (e) => { const f = [...e.target.files]; e.target.value = ""; insertImgs(f); });
     // Word-Dokumente in den Notizen: Vorschau wie ein Bild (Grösse, Lage), Doppelklick = bearbeiten und in dieselbe Datei speichern
@@ -6816,6 +6924,35 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
       setTimeout(() => { if (!ph.length || d) m.querySelector("#nsm-in").focus(); }, 0);
     };
     $("#d-ntask").addEventListener("click", () => { const sel = $("#d-ncols"); sel.value = "t"; sel.dispatchEvent(new Event("change")); });
+    // Aufteilung (Aufgabe | Notizen, Spalten) aufheben: Inhalt bleibt, links zuerst, dann rechts; leere Spalten fallen weg
+    const ncUnwrap = (block) => {
+      HIST.brk = true; const frag = document.createDocumentFragment();
+      block.querySelectorAll(":scope > .ncol").forEach((c) => {
+        if (!c.textContent.trim() && !c.querySelector("img, figure, table")) return;
+        let line = null;
+        [...c.childNodes].forEach((k) => {
+          if (k.nodeType === 3 || (k.nodeType === 1 && /^(SPAN|B|I|U|EM|STRONG|MARK|A|BR|FONT|SUB|SUP)$/.test(k.tagName))) { if (!line) { line = document.createElement("div"); frag.appendChild(line); } line.appendChild(k); if (k.nodeName === "BR") line = null; return; }
+          line = null; frag.appendChild(k);
+        });
+      });
+      const first = frag.firstChild; block.replaceWith(frag); figLock();
+      if (first && first.nodeType === 1) putCaret(first);
+      $("#d-nmsg").textContent = "Aufteilung aufgehoben – der Inhalt steht jetzt untereinander. Rückgängig holt sie zurück."; save();
+    };
+    ned._ncUnwrap = ncUnwrap;
+    $("#d-nuntask").addEventListener("click", () => {
+      const sl = getSelection(), n = sl.rangeCount ? sl.anchorNode : null, el = n && (n.nodeType === 1 ? n : n.parentElement);
+      let b = el && ned.contains(el) ? el.closest(".ncols") : null;
+      if (!b && el && ned.contains(el)) { const cd = el.closest(".ncard"); const bs = cd ? cd.querySelectorAll(".ncols") : []; if (bs.length === 1) b = bs[0]; }
+      if (!b) { const all = ned.querySelectorAll(".ncols"); if (all.length === 1) b = all[0]; }
+      if (!b || !ned.contains(b)) { $("#d-nmsg").textContent = "Klicken Sie zuerst in die Aufteilung (Aufgabe | Notizen), die aufgehoben werden soll."; return; }
+      ncUnwrap(b);
+    });
+    ned.addEventListener("contextmenu", (e) => {
+      const b = e.target.closest && e.target.closest(".ncols"); if (!b || !ned.contains(b) || e.target.closest("figure, table, .nsec")) return;
+      e.preventDefault(); e.stopPropagation();
+      cellMenu(e.clientX, e.clientY, "Aufteilung", [["un", "▭ Aufteilung aufheben (Inhalt bleibt)"]], (op) => { if (op === "un") ncUnwrap(b); });
+    }, true);
     $("#d-nsec").addEventListener("click", () => {
       nsecShow(true); const at = caretTop() || (lastTop && lastTop.isConnected ? lastTop : null);
       const d = nsecInsert("Abschnitt " + (ned.querySelectorAll(":scope > .nsec").length + 1), !at, at); if (nopt.onSecs) nopt.onSecs(); if (d) setTimeout(() => nsecEdit(d), 0);
@@ -6987,7 +7124,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         if (b.dataset.nx != null) { fpClose(); save(); return; }
         if (b.dataset.nedit != null) { fpClose(); save(); openDoc(fig); return; }
         if (b.dataset.ncrop != null) { fpClose(); cropStart(fig); return; }
-        if (b.dataset.nw != null) { fig.className = fig.className.replace(/\s*\bw(25|33|50|75|100)\b/g, "") + (b.dataset.nw ? " w" + b.dataset.nw : ""); mark(); place(); save(); return; }
+        if (b.dataset.nw != null) { fig.style.removeProperty("width"); fig.className = fig.className.replace(/\s*\bw(25|33|50|75|100)\b/g, "") + (b.dataset.nw ? " w" + b.dataset.nw : ""); mark(); place(); save(); return; }
         if (b.dataset.np != null) { fig.className = fig.className.replace(/\s*\bp-[lrc]\b/g, "") + (b.dataset.np ? " p-" + b.dataset.np : ""); mark(); place(); save(); return; }
         if (b.dataset.nmv) {
           const box = fig.parentElement.closest(".ncol") || ned; let u = fig; while (u.parentElement && u.parentElement !== box) u = u.parentElement;
@@ -7123,9 +7260,7 @@ header.top .codebtn svg { width: calc(16px * var(--hs)); height: calc(16px * var
         const fl0 = el && el.closest(".nflow");
         if (fl0 && ned.contains(fl0) && (!block || block.contains(fl0))) { HIST.brk = true; const frag = document.createDocumentFragment(); while (fl0.firstChild) frag.appendChild(fl0.firstChild); fl0.replaceWith(frag); save(); return; }
         if (!block) { $("#d-nmsg").textContent = "Setzen Sie den Cursor zuerst in die Spalten, die aufgehoben werden sollen."; return; }
-        const frag = document.createDocumentFragment();
-        block.querySelectorAll(":scope > .ncol").forEach((c) => { const d = document.createElement("div"); d.innerHTML = c.innerHTML; frag.appendChild(d); });
-        block.replaceWith(frag); save(); return;
+        ncUnwrap(block); return;
       }
       if (v === "t") {
         // Aufgabe | Notizen: markierter Inhalt (z. B. die Aufgabe) kommt nach links, rechts wird geschrieben
